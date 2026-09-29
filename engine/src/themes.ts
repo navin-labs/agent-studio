@@ -38,3 +38,16 @@ export const THEMES: Record<ThemeName, Theme> = {
     accent: '#2B4BFF', onAccent: '#FFFFFF', flow: '#0B0B0B', ok: '#1F9D55', alert: '#E5484D', shadow: '#0B0B0B',
   },
 };
+
+// ---- React plumbing: a composition provides its theme once; components read it with useTheme().
+import React from 'react';
+
+export const ThemeCtx = React.createContext<Theme>(THEMES.paper);
+export const useTheme = () => React.useContext(ThemeCtx);
+
+// '#RRGGBB' + alpha -> 'rgba(r,g,b,a)', so translucent colours still come from role tokens.
+export const alpha = (hex: string, a: number) =>
+  `rgba(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(',')},${a})`;
+
+// Brand card: 3px stroke + hard offset shadow.
+export const card = (t: Theme) => ({background: t.surface, border: `3px solid ${t.ink}`, borderRadius: 20, boxShadow: `8px 8px 0 ${t.shadow}`});

@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "theautomationguy.navin content engine: JSON script in, reel MP4 or carousel PNGs out.",
+  "description": "theautomationguy.navin content engine: story JSON in, reel MP4 out.",
   "scripts": {
     "studio": "remotion studio src/index.ts",
     "make": "node scripts/make.mjs",
     "vo": "node scripts/make.mjs --vo-only",
     "watch": "node scripts/watch.mjs",
     "watch:install": "node scripts/watch.mjs --install",
-    "contrast": "node scripts/contrast.ts"
+    "gate:themes": "node scripts/theme-gate.ts"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.527",

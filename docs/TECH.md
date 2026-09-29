@@ -78,7 +78,7 @@ Role tokens (every theme defines all): `bg, surface, ink, muted, rule, accent, o
 | mono | #E4E3DF | #F4F4F2 | #161616 | #C6F432 | C2, C3 |
 | studio | #FFFFFF | #F6F6F6 | #0B0B0B | #2B4BFF | C1 alternate, C3 |
 
-Rules (enforced by the gate, `npm run contrast`): WCAG AA contrast (ink on bg, ink on surface, onAccent on accent, muted on bg and surface); max 3 colours per frame; no hex outside `themes.ts` (grep check); new themes need Navin's OK once. Brand fixed everywhere: Inter Tight + JetBrains Mono, signal-lime highlighter, 3px strokes, hard offset shadows, ink-wipe end card, authorship line.
+Rules (enforced by `npm run gate:themes`, which `make.mjs` runs before every render): WCAG AA contrast (ink on bg, ink on surface, onAccent on accent, muted on bg and surface); max 3 colours per frame; no raw colour (hex, rgb, hsl, white, black) in `src/` outside `themes.ts`; new themes need Navin's OK once. Brand fixed everywhere: Inter Tight + JetBrains Mono, signal-lime highlighter, 3px strokes, hard offset shadows, ink-wipe end card, authorship line.
 
 ## Novelty rules (Recipe redraws until all pass)
 | Check | Rule |

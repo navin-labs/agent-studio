@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 // Usage:
-//   npm run make -- content/reels/my-reel.json            render a reel (generates voiceover if a TTS key is set)
 //   npm run make -- content/stories/my-story.json         render a story reel (silent unless VOICE=on in .env)
-//   npm run make -- content/carousels/my-deck.json        render carousel slides as PNGs
-//   npm run make -- content/reels/*.json                  several at once
+//   npm run make -- content/stories/*.json                several at once
 // Flags:
 //   --check      validate only, render nothing
 //   --vo-only    generate voiceover files only
@@ -16,6 +14,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
+import {THEMES} from '../src/themes.ts';
 
 const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
@@ -35,7 +34,7 @@ const args = process.argv.slice(2);
 const flags = new Set(args.filter((a) => a.startsWith('--')));
 const files = args.filter((a) => !a.startsWith('--'));
 if (!files.length) {
-  console.log('Usage: npm run make -- content/reels/<file>.json [--check|--vo-only|--force-vo|--no-vo|--force]');
+  console.log('Usage: npm run make -- content/stories/<file>.json [--check|--vo-only|--force-vo|--no-vo|--force]');
   process.exit(1);
 }
 
@@ -64,12 +63,9 @@ const BANNED = [
   [/\b100 ?%/, 'absolute claim'],
 ];
 
-const LIMITS = {inbox: ['emails', 5], sheet: ['rows', 6], chat: ['messages', 5], steps: ['steps', 6], flow: ['nodes', 4], notify: ['items', 3], math: ['lines', 4]};
-const REEL_TYPES = new Set(['hook', 'statement', 'inbox', 'sheet', 'chat', 'steps', 'flow', 'notify', 'math', 'myth', 'cta']);
 const STORY_TYPES = new Set(['hook', 'beat', 'cta']);
 const STORY_TEMPLATES = {'pile-to-flow': 6, 'invoice-chase': 6}; // invoice-chase = old name, same template
 const VOICE_ON = process.env.VOICE === 'on'; // ponytail: voiceover parked, silent by default // template -> number of scenes it animates
-const SLIDE_TYPES = new Set(['cover', 'point', 'list', 'statement', 'cta']);
 
 const allStrings = (obj, out = []) => {
   if (typeof obj === 'string') out.push(obj);
@@ -89,17 +85,6 @@ const checkIcons = (obj, warn, where) => {
   scan(obj);
 };
 
-const checkBlock = (kind, block, err, where) => {
-  const lim = LIMITS[kind];
-  if (!lim) return;
-  const [field, max] = lim;
-  const arr = block[field];
-  if (!Array.isArray(arr) || !arr.length) err(`${where}: "${field}" must be a non-empty list`);
-  else if (arr.length > max) err(`${where}: max ${max} ${field}, got ${arr.length}`);
-  if (kind === 'sheet' && block.columns?.length > 4) err(`${where}: max 4 columns`);
-  if (kind === 'sheet' && block.rows?.some((r) => r.length !== block.columns.length)) err(`${where}: every row needs ${block.columns.length} cells`);
-};
-
 const validate = (doc) => {
   const errors = [];
   const warnings = [];
@@ -109,55 +94,30 @@ const validate = (doc) => {
   for (const s of allStrings(doc)) {
     for (const [re, why] of BANNED) if (re.test(s)) err(`banned: ${why} -> "${s.slice(0, 80)}"`);
   }
-  if (doc.format === 'reel' || doc.format === 'story') {
-    const sc = doc.scenes || [];
-    const story = doc.format === 'story';
-    const TYPES = story ? STORY_TYPES : REEL_TYPES;
-    if (story) {
-      const need = STORY_TEMPLATES[doc.template];
-      if (!need) err(`unknown template "${doc.template}" (use one of: ${Object.keys(STORY_TEMPLATES).join(', ')})`);
-      else if (sc.length !== need) err(`template "${doc.template}" needs exactly ${need} scenes, got ${sc.length}`);
-    } else if (sc.length < 4 || sc.length > 9) err(`reel needs 4 to 9 scenes, got ${sc.length}`);
-    if (story) checkWorld(doc, err);
-    if (story) checkPattern(doc, err);
-    if (sc[0]?.type !== 'hook') err('first scene must be type "hook"');
-    if (sc.at(-1)?.type !== 'cta') err('last scene must be type "cta"');
-    let total = 0;
-    sc.forEach((s, i) => {
-      const w = `scene ${i + 1} (${s.type})`;
-      if (!TYPES.has(s.type)) return err(`${w}: unknown type`);
-      if (!s.vo) err(`${w}: missing "vo"`);
-      if (words(s.vo) > 28) err(`${w}: vo is ${words(s.vo)} words, max 28`);
-      else if (words(s.vo) > 22) warn(`${w}: vo is ${words(s.vo)} words, aim for 22 or less`);
-      if ((s.type === 'hook' || s.type === 'statement') && words(s.text) > 10) err(`${w}: text max 10 words`);
-      if (s.title && words(s.title) > 6) warn(`${w}: title over 6 words`);
-      if (s.kicker && words(s.kicker) > 4) warn(`${w}: kicker over 4 words`);
-      checkBlock(s.type, s, err, w);
-      total += Math.max(estimateSeconds(s.vo) + 0.6, 1.5);
-    });
-    if (sc[0]?.vo && words(sc[0].vo) > 12) warn('hook vo over 12 words, the first 3 seconds must land fast');
-    if (story && sc[0]?.vo && words(sc[0].vo) > 7) err('story hook vo max 7 words: silent hook must be read in 2 seconds');
-    if (total > 42) warn(`estimated length ${total.toFixed(0)}s, aim for 20 to 40s`);
-    if (total < 16) warn(`estimated length ${total.toFixed(0)}s, too short to teach anything`);
-    checkIcons(sc, warn, 'reel');
-  } else if (doc.format === 'carousel') {
-    const sl = doc.slides || [];
-    if (sl.length < 6 || sl.length > 10) err(`carousel needs 6 to 10 slides, got ${sl.length}`);
-    if (sl[0]?.type !== 'cover') err('first slide must be "cover"');
-    if (sl.at(-1)?.type !== 'cta') err('last slide must be "cta"');
-    sl.forEach((s, i) => {
-      const w = `slide ${i + 1} (${s.type})`;
-      if (!SLIDE_TYPES.has(s.type)) return err(`${w}: unknown type`);
-      if (s.type === 'cover' && words(s.text) > 12) err(`${w}: cover max 12 words`);
-      if (s.title && words(s.title) > 12) err(`${w}: title max 12 words`);
-      const bodyWords = words(s.body) + words(s.title) + words(s.text) + words(s.sub) + (s.items || []).reduce((a, t) => a + words(t), 0);
-      if (bodyWords > 32) err(`${w}: ${bodyWords} words on one slide, max 32`);
-      if (s.ui && s.body && words(s.body) > 16) err(`${w}: body max 16 words when the slide has a UI card`);
-      if (s.items && s.items.length > 5) err(`${w}: max 5 list items`);
-      if (s.ui) checkBlock(s.ui.kind, s.ui, err, `${w} ui`);
-    });
-    checkIcons(sl, warn, 'carousel');
-  } else err('format must be "reel", "story" or "carousel"');
+  if (doc.format !== 'story') err('format must be "story" (reel and carousel formats were removed)');
+  if (doc.theme !== undefined && !THEMES[doc.theme]) err(`unknown theme "${doc.theme}" (use one of: ${Object.keys(THEMES).join(', ')})`);
+  const sc = doc.scenes || [];
+  const need = STORY_TEMPLATES[doc.template];
+  if (!need) err(`unknown template "${doc.template}" (use one of: ${Object.keys(STORY_TEMPLATES).join(', ')})`);
+  else if (sc.length !== need) err(`template "${doc.template}" needs exactly ${need} scenes, got ${sc.length}`);
+  checkWorld(doc, err);
+  checkPattern(doc, err);
+  if (sc[0]?.type !== 'hook') err('first scene must be type "hook"');
+  if (sc.at(-1)?.type !== 'cta') err('last scene must be type "cta"');
+  let total = 0;
+  sc.forEach((s, i) => {
+    const w = `scene ${i + 1} (${s.type})`;
+    if (!STORY_TYPES.has(s.type)) return err(`${w}: unknown type`);
+    if (!s.vo) err(`${w}: missing "vo"`);
+    if (words(s.vo) > 28) err(`${w}: vo is ${words(s.vo)} words, max 28`);
+    else if (words(s.vo) > 22) warn(`${w}: vo is ${words(s.vo)} words, aim for 22 or less`);
+    if (s.type === 'hook' && words(s.text) > 10) err(`${w}: text max 10 words`);
+    total += Math.max(estimateSeconds(s.vo) + 0.6, 1.5);
+  });
+  if (sc[0]?.vo && words(sc[0].vo) > 7) err('story hook vo max 7 words: silent hook must be read in 2 seconds');
+  if (total > 42) warn(`estimated length ${total.toFixed(0)}s, aim for 20 to 40s`);
+  if (total < 16) warn(`estimated length ${total.toFixed(0)}s, too short to teach anything`);
+  checkIcons(sc, warn, 'story');
   if (!doc.caption) warn('no caption');
   else if (!/DM AUDIT|[Ff]ollow/.test(doc.caption)) warn('caption should end with a CTA: follow line or DM AUDIT');
   if (doc.caption && !VOICE_ON && /voiceover|voice-over/i.test(doc.caption)) err('caption discloses a voiceover but the video is silent (VOICE is off)');
@@ -421,7 +381,7 @@ const renderReel = async (script) => {
   const inputProps = {script, timing: {audio, durations, music}};
   const browserExecutable = findBrowser();
   const url = await getBundle();
-  const composition = await selectComposition({serveUrl: url, id: script.format === 'story' ? 'Story' : 'Reel', inputProps, browserExecutable});
+  const composition = await selectComposition({serveUrl: url, id: 'Story', inputProps, browserExecutable});
   const outDir = path.join(OUT, script.id);
   fs.mkdirSync(outDir, {recursive: true});
   const secs = (composition.durationInFrames / composition.fps).toFixed(1);
@@ -450,24 +410,14 @@ const renderReel = async (script) => {
   console.log(c.green(`  -> ${path.relative(ROOT, outDir)}/reel.mp4, cover.png, caption.txt`));
 };
 
-const renderCarousel = async (deck) => {
-  const {renderStill, selectComposition} = await import('@remotion/renderer');
-  const browserExecutable = findBrowser();
-  const url = await getBundle();
-  const outDir = path.join(OUT, deck.id);
-  fs.mkdirSync(outDir, {recursive: true});
-  for (let i = 0; i < deck.slides.length; i++) {
-    const inputProps = {deck, index: i};
-    const composition = await selectComposition({serveUrl: url, id: 'Slide', inputProps, browserExecutable});
-    await renderStill({composition, serveUrl: url, output: path.join(outDir, `slide-${String(i + 1).padStart(2, '0')}.png`), inputProps, browserExecutable});
-    process.stdout.write(c.dim(`\r  slide ${i + 1}/${deck.slides.length}`));
-  }
-  console.log('');
-  writeCaption(deck, outDir);
-  console.log(c.green(`  -> ${path.relative(ROOT, outDir)}/slide-01.png ... caption.txt`));
-};
-
 // ---------- main ----------
+// Theme gate first: contrast + no raw colours in src/. A broken theme must never render.
+const gate = spawnSync(process.execPath, [path.join(ROOT, 'scripts/theme-gate.ts')], {encoding: 'utf8'});
+if (gate.status !== 0) {
+  console.log(c.red(gate.stdout.split('\n').filter((l) => l.startsWith('FAIL')).join('\n')));
+  console.log(c.red('Theme gate failed: fix src/themes.ts or remove raw colours (npm run gate:themes).'));
+  process.exit(1);
+}
 let failed = 0;
 for (const f of files) {
   const doc = JSON.parse(fs.readFileSync(path.resolve(f), 'utf8'));
@@ -482,7 +432,6 @@ for (const f of files) {
   }
   if (!errors.length) console.log(c.green('  quality gate passed'));
   if (flags.has('--check')) continue;
-  if (doc.format === 'reel' || doc.format === 'story') await renderReel(doc);
-  else await renderCarousel(doc);
+  await renderReel(doc);
 }
 process.exit(failed ? 1 : 0);

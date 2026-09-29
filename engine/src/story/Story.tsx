@@ -11,8 +11,9 @@ import {ensureFonts} from '../fonts';
 import {Sfx, SfxEnabled} from '../lib/frame';
 import {parseAccent, splitWords, wordStarts} from '../lib/text';
 import {computeFrames, LEAD, voSpanFrames} from '../lib/timing';
-import {Captions} from '../reel/Captions';
-import {C, CARD, FONT, HANDLE, P, TYPE} from '../theme';
+import {Captions} from './Captions';
+import {FONT, HANDLE, TYPE} from '../theme';
+import {alpha, card, THEMES, ThemeCtx, useTheme} from '../themes';
 import type {ReelProps, World} from '../types';
 import {Icon} from '../ui/Icon';
 
@@ -179,8 +180,10 @@ const Layer: React.FC<{cam: Cam; k: number; children: React.ReactNode; style?: R
 };
 
 // ---------- background: paper with a faint drifting 2% ink dot grid. No blobs, bokeh or glow. ----------
-const Backdrop: React.FC<{cam: Cam; f: number}> = ({cam, f}) => (
-  <AbsoluteFill style={{background: P.paper}}>
+const Backdrop: React.FC<{cam: Cam; f: number}> = ({cam, f}) => {
+  const th = useTheme();
+  return (
+  <AbsoluteFill style={{background: th.bg}}>
     <Layer cam={cam} k={0.35}>
       <div
         style={{
@@ -189,18 +192,20 @@ const Backdrop: React.FC<{cam: Cam; f: number}> = ({cam, f}) => (
           top: -1600,
           width: 5600,
           height: 5000,
-          backgroundImage: 'radial-gradient(rgba(17,17,17,0.09) 2.5px, transparent 2.5px)',
+          backgroundImage: `radial-gradient(${alpha(th.ink, 0.09)} 2.5px, transparent 2.5px)`,
           backgroundSize: '48px 48px',
         }}
       />
     </Layer>
   </AbsoluteFill>
-);
+  );
+};
 
 // ---------- props in the world: flat white cards, 3px ink outline, hard 8px ink shadow ----------
 const AMOUNT = (i: number) => (8000 + Math.round(random(`amt${i}`) * 520) * 100).toLocaleString('en-IN');
 
 const Invoice: React.FC<{i: number; x: number; y: number; rot: number; scale?: number; opacity?: number; z?: number}> = ({i, x, y, rot, scale = 1, opacity = 1, z}) => {
+  const th = useTheme();
   const it = React.useContext(W).item;
   return (
   <div
@@ -213,40 +218,41 @@ const Invoice: React.FC<{i: number; x: number; y: number; rot: number; scale?: n
       zIndex: z,
       opacity,
       transform: `rotate(${rot}deg) scale(${scale})`,
-      background: P.surface,
-      border: `3px solid ${P.ink}`,
+      background: th.surface,
+      border: `3px solid ${th.ink}`,
       borderRadius: 16,
-      boxShadow: `6px 6px 0 ${P.ink}`,
+      boxShadow: `6px 6px 0 ${th.shadow}`,
       padding: '14px 13px',
-      color: P.ink,
+      color: th.ink,
     }}
   >
     <div style={{fontFamily: TYPE.title, fontSize: 17, fontWeight: 900, letterSpacing: '0.06em'}}>{it.title}</div>
-    <div style={{fontFamily: TYPE.data, fontSize: 12, color: P.inkSoft, fontWeight: 600, marginTop: 3}}>{it.id}{(it.start ?? 1001) + i}</div>
+    <div style={{fontFamily: TYPE.data, fontSize: 12, color: th.muted, fontWeight: 600, marginTop: 3}}>{it.id}{(it.start ?? 1001) + i}</div>
     {[1, 0.75, 0.9].map((w, k) => (
-      <div key={k} style={{height: 6, width: `${w * 100}%`, borderRadius: 3, background: P.rule, marginTop: k ? 8 : 14}} />
+      <div key={k} style={{height: 6, width: `${w * 100}%`, borderRadius: 3, background: th.rule, marginTop: k ? 8 : 14}} />
     ))}
-    {it.amount ? <div style={{fontFamily: TYPE.data, fontSize: 19, fontWeight: 700, marginTop: 14}}>₹{AMOUNT(i)}</div> : <div style={{height: 6, width: '60%', borderRadius: 3, background: P.rule, marginTop: 8}} />}
-    <div style={{position: 'absolute', right: 10, bottom: 10, background: P.alert, color: '#fff', fontFamily: TYPE.data, fontSize: 12, fontWeight: 700, padding: '3px 8px', borderRadius: 6}}>{it.pill}</div>
+    {it.amount ? <div style={{fontFamily: TYPE.data, fontSize: 19, fontWeight: 700, marginTop: 14}}>₹{AMOUNT(i)}</div> : <div style={{height: 6, width: '60%', borderRadius: 3, background: th.rule, marginTop: 8}} />}
+    <div style={{position: 'absolute', right: 10, bottom: 10, background: th.alert, color: th.surface, fontFamily: TYPE.data, fontSize: 12, fontWeight: 700, padding: '3px 8px', borderRadius: 6}}>{it.pill}</div>
   </div>
   );
 };
 
 const NodeCard: React.FC<{k: number; appear: number; active: number; green: number}> = ({k, appear, active, green}) => {
+  const th = useTheme();
   const n = {...NODES[k], ...React.useContext(W).nodes[k]};
   const f = useCurrentFrame();
   const on = Math.max(active, green) > 0.5;
-  const tint = green > 0.5 ? P.ok : P.flow;
+  const tint = green > 0.5 ? th.ok : th.flow;
   return (
     <div
       style={{
-        ...CARD,
+        ...card(th),
         position: 'absolute',
         left: n.x - NODE_W / 2,
         top: n.y - NODE_H / 2,
         width: NODE_W,
         height: NODE_H,
-        boxShadow: `${on ? 10 : 8}px ${on ? 10 : 8}px 0 ${P.ink}`,
+        boxShadow: `${on ? 10 : 8}px ${on ? 10 : 8}px 0 ${th.shadow}`,
         opacity: appear,
         transform: `scale(${0.55 + 0.45 * appear}) translate(${on ? -2 : 0}px, ${on ? -2 : 0}px)`,
         display: 'flex',
@@ -261,9 +267,9 @@ const NodeCard: React.FC<{k: number; appear: number; active: number; green: numb
           height: 72,
           borderRadius: 16,
           flexShrink: 0,
-          border: `3px solid ${P.ink}`,
-          background: on ? tint : P.surface,
-          color: on ? '#fff' : P.ink,
+          border: `3px solid ${th.ink}`,
+          background: on ? tint : th.surface,
+          color: on ? th.surface : th.ink,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -273,19 +279,20 @@ const NodeCard: React.FC<{k: number; appear: number; active: number; green: numb
         <Icon name={n.icon} size={38} stroke={2.5} />
       </div>
       <div>
-        <div style={{fontFamily: TYPE.title, fontSize: 33, fontWeight: 800, color: P.ink, letterSpacing: '-0.02em', whiteSpace: 'nowrap'}}>{n.label}</div>
-        <div style={{fontFamily: TYPE.data, fontSize: 19, fontWeight: 600, color: P.inkSoft, marginTop: 4}}>{n.sub}</div>
+        <div style={{fontFamily: TYPE.title, fontSize: 33, fontWeight: 800, color: th.ink, letterSpacing: '-0.02em', whiteSpace: 'nowrap'}}>{n.label}</div>
+        <div style={{fontFamily: TYPE.data, fontSize: 19, fontWeight: 600, color: th.muted, marginTop: 4}}>{n.sub}</div>
       </div>
     </div>
   );
 };
 
 const Bubble: React.FC<{p: number}> = ({p}) => {
+  const th = useTheme();
   const m = React.useContext(W).message;
   return p <= 0 ? null : (
     <div
       style={{
-        ...CARD,
+        ...card(th),
         position: 'absolute',
         left: 1255,
         top: 690,
@@ -295,13 +302,13 @@ const Bubble: React.FC<{p: number}> = ({p}) => {
         opacity: Math.min(1, p * 1.5),
         transform: `scale(${0.6 + 0.4 * p})`,
         transformOrigin: '100% 100%',
-        color: P.ink,
+        color: th.ink,
         padding: '14px 18px 10px',
       }}
     >
-      <div style={{fontFamily: TYPE.data, fontSize: 14, fontWeight: 700, color: P.inkSoft}}>{m.app} · EXAMPLE</div>
+      <div style={{fontFamily: TYPE.data, fontSize: 14, fontWeight: 700, color: th.muted}}>{m.app} · EXAMPLE</div>
       <div style={{fontFamily: FONT, fontSize: 23, fontWeight: 600, lineHeight: 1.3, marginTop: 6}}>{m.text}</div>
-      <div style={{display: 'flex', justifyContent: 'flex-end', color: P.flow, marginTop: 2}}>
+      <div style={{display: 'flex', justifyContent: 'flex-end', color: th.flow, marginTop: 2}}>
         <Check size={20} strokeWidth={3} />
         <Check size={20} strokeWidth={3} style={{marginLeft: -12}} />
       </div>
@@ -340,6 +347,7 @@ const Flyers: React.FC<{T: Timeline}> = ({T}) => {
 };
 
 const Machine: React.FC<{T: Timeline}> = ({T}) => {
+  const th = useTheme();
   const f = useCurrentFrame();
   const done = React.useContext(W).done;
   const appear = T.nodeAt.map((a) => springFrom(f, a, {damping: 11, stiffness: 170}));
@@ -362,7 +370,7 @@ const Machine: React.FC<{T: Timeline}> = ({T}) => {
     if (seg === 2 && t0 + 24 < T.paidCue) continue;
     const local = t * 3 - seg;
     const pt = getPointAtLength(LINKS[seg], LINK_LEN[seg] * local);
-    tokens.push(<circle key={k} cx={pt.x} cy={pt.y} r={11} fill={seg === 2 ? P.ok : P.flow} stroke={P.ink} strokeWidth={3} />);
+    tokens.push(<circle key={k} cx={pt.x} cy={pt.y} r={11} fill={seg === 2 ? th.ok : th.flow} stroke={th.ink} strokeWidth={3} />);
   }
 
   const bursts = T.paidAt.filter((_, k) => k % 2 === 0); // a PAID badge for every other payment keeps it readable
@@ -370,7 +378,7 @@ const Machine: React.FC<{T: Timeline}> = ({T}) => {
     <>
       <svg style={{position: 'absolute', left: 0, top: 0, overflow: 'visible', zIndex: 1}} width={1} height={1}>
         {intake > 0 ? (
-          <path d={intakePath} stroke={P.inkSoft} strokeWidth={3} strokeDasharray="10 14" fill="none" style={{opacity: intake}} />
+          <path d={intakePath} stroke={th.muted} strokeWidth={3} strokeDasharray="10 14" fill="none" style={{opacity: intake}} />
         ) : null}
         {LINKS.map((d, k) => {
           if (draw[k] <= 0) return null;
@@ -378,7 +386,7 @@ const Machine: React.FC<{T: Timeline}> = ({T}) => {
           const lit = k === 2 ? green[3] : active[k + 1];
           return (
             <g key={k}>
-              <path d={d} stroke={k === 2 && lit > 0.5 ? P.ok : P.flow} strokeWidth={5} fill="none" strokeLinecap="round" strokeDasharray={ev.strokeDasharray} strokeDashoffset={ev.strokeDashoffset} />
+              <path d={d} stroke={k === 2 && lit > 0.5 ? th.ok : th.flow} strokeWidth={5} fill="none" strokeLinecap="round" strokeDasharray={ev.strokeDasharray} strokeDashoffset={ev.strokeDashoffset} />
             </g>
           );
         })}
@@ -399,7 +407,7 @@ const Machine: React.FC<{T: Timeline}> = ({T}) => {
                 width: 100 * (1 + t),
                 height: 100 * (1 + t),
                 borderRadius: '50%',
-                border: `${6 * (1 - t)}px solid ${P.ok}`,
+                border: `${6 * (1 - t)}px solid ${th.ok}`,
                 opacity: 1 - t,
               }}
             />
@@ -408,9 +416,9 @@ const Machine: React.FC<{T: Timeline}> = ({T}) => {
                 position: 'absolute',
                 left: n.x + NODE_W / 2 - 40 + 60 * t,
                 top: n.y - 60 - 140 * t + (k % 3) * 30,
-                background: P.ok,
-                color: '#fff',
-                border: `3px solid ${P.ink}`,
+                background: th.ok,
+                color: th.surface,
+                border: `3px solid ${th.ink}`,
                 borderRadius: 999,
                 padding: '4px 14px',
                 fontFamily: TYPE.data,
@@ -475,14 +483,18 @@ const Stage: React.FC<{T: Timeline}> = ({T}) => {
 
 // ---------- screen-space overlays ----------
 // Highlighter swipe: the one place `signal` appears. Sits behind ink text.
-const Highlight: React.FC<{p: number; children: React.ReactNode}> = ({p, children}) => (
+const Highlight: React.FC<{p: number; children: React.ReactNode}> = ({p, children}) => {
+  const th = useTheme();
+  return (
   <span style={{position: 'relative', display: 'inline-block'}}>
-    <span style={{position: 'absolute', left: -8, right: -8, top: '18%', bottom: '6%', background: P.signal, transformOrigin: '0 50%', transform: `scaleX(${p}) skewX(-6deg)`, borderRadius: 4, zIndex: 0}} />
-    <span style={{position: 'relative', zIndex: 1}}>{children}</span>
+    <span style={{position: 'absolute', left: -8, right: -8, top: '18%', bottom: '6%', background: th.accent, transformOrigin: '0 50%', transform: `scaleX(${p}) skewX(-6deg)`, borderRadius: 4, zIndex: 0}} />
+    <span style={{position: 'relative', zIndex: 1, color: p > 0.5 ? th.onAccent : undefined}}>{children}</span>
   </span>
-);
+  );
+};
 
 const Counter: React.FC<{T: Timeline}> = ({T}) => {
+  const th = useTheme();
   const f = useCurrentFrame();
   if (f >= T.s[5] + 6) return null;
   const landed = T.inv.filter((v) => f >= v.drop + 12).length;
@@ -490,24 +502,25 @@ const Counter: React.FC<{T: Timeline}> = ({T}) => {
   const unpaid = landed - paid;
   const appear = springFrom(f, T.s[1] - 2, {damping: 14, stiffness: 180});
   const out = prog(f, Math.min(T.lastPaid + 14, T.s[5] - 12), 10);
-  const col = paid > 0 ? P.ok : P.alert;
+  const col = paid > 0 ? th.ok : th.alert;
   const cn = React.useContext(W).counter;
   return (
     <div style={{position: 'absolute', top: 290, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: appear * (1 - out)}}>
-      <div style={{...CARD, display: 'flex', alignItems: 'center', gap: 18, padding: '12px 28px 12px 14px', borderRadius: 18, transform: `translateY(${(1 - appear) * -30}px)`}}>
-        <div style={{width: 56, height: 56, borderRadius: 12, border: `3px solid ${P.ink}`, background: col, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+      <div style={{...card(th), display: 'flex', alignItems: 'center', gap: 18, padding: '12px 28px 12px 14px', borderRadius: 18, transform: `translateY(${(1 - appear) * -30}px)`}}>
+        <div style={{width: 56, height: 56, borderRadius: 12, border: `3px solid ${th.ink}`, background: col, color: th.surface, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
           <Icon name={cn.icon} size={30} stroke={2.5} />
         </div>
-        <div style={{fontFamily: TYPE.data, fontSize: 28, fontWeight: 700, color: P.ink}}>{cn.label}</div>
-        <div style={{fontFamily: TYPE.display, fontSize: 64, fontWeight: 900, letterSpacing: '-0.04em', color: P.ink, minWidth: 76, textAlign: 'right', fontVariantNumeric: 'tabular-nums'}}>{unpaid}</div>
+        <div style={{fontFamily: TYPE.data, fontSize: 28, fontWeight: 700, color: th.ink}}>{cn.label}</div>
+        <div style={{fontFamily: TYPE.display, fontSize: 64, fontWeight: 900, letterSpacing: '-0.04em', color: th.ink, minWidth: 76, textAlign: 'right', fontVariantNumeric: 'tabular-nums'}}>{unpaid}</div>
       </div>
-      <div style={{marginTop: 14, fontFamily: TYPE.data, fontSize: 20, fontWeight: 600, color: P.inkSoft}}>EXAMPLE DATA</div>
+      <div style={{marginTop: 14, fontFamily: TYPE.data, fontSize: 20, fontWeight: 600, color: th.muted}}>EXAMPLE DATA</div>
     </div>
   );
 };
 
 // Night end card, entered with an ink wipe from the bottom. Carries the CTA and the authorship line.
 const Cta: React.FC<{T: Timeline; text: string; sub?: string}> = ({T, text, sub}) => {
+  const th = useTheme();
   const f = useCurrentFrame();
   const start = T.s[5];
   if (f < start) return null;
@@ -519,17 +532,17 @@ const Cta: React.FC<{T: Timeline; text: string; sub?: string}> = ({T, text, sub}
   const byP = springFrom(f, start + 30);
   const words = parseAccent(text);
   return (
-    <AbsoluteFill style={{clipPath: `inset(${(1 - wipe) * 100}% 0 0 0)`, background: P.night}}>
+    <AbsoluteFill style={{clipPath: `inset(${(1 - wipe) * 100}% 0 0 0)`, background: th.ink}}>
       <Img
         src={staticFile('brand/mark.png')}
         style={{position: 'absolute', left: 540 - 120, top: 470, width: 240, height: 240, opacity: logo, transform: `scale(${0.6 + 0.4 * logo}) rotate(${(1 - logo) * -120}deg)`}}
       />
-      <div style={{position: 'absolute', top: 780, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 30, fontFamily: TYPE.display, fontWeight: 900, fontSize: 150, letterSpacing: '-0.04em', color: P.paper, opacity: textP, transform: `translateY(${(1 - textP) * 40}px)`}}>
+      <div style={{position: 'absolute', top: 780, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 30, fontFamily: TYPE.display, fontWeight: 900, fontSize: 150, letterSpacing: '-0.04em', color: th.bg, opacity: textP, transform: `translateY(${(1 - textP) * 40}px)`}}>
         {words.map((w, i) =>
           w.accent ? (
-            <span key={i} style={{position: 'relative', display: 'inline-block', color: P.ink, padding: '0 14px'}}>
-              <span style={{position: 'absolute', inset: '10% 0 4% 0', background: P.signal, transformOrigin: '0 50%', transform: `scaleX(${hl})`, borderRadius: 8}} />
-              <span style={{position: 'relative', color: hl > 0.5 ? P.ink : P.paper}}>{w.w}</span>
+            <span key={i} style={{position: 'relative', display: 'inline-block', color: th.ink, padding: '0 14px'}}>
+              <span style={{position: 'absolute', inset: '10% 0 4% 0', background: th.accent, transformOrigin: '0 50%', transform: `scaleX(${hl})`, borderRadius: 8}} />
+              <span style={{position: 'relative', color: hl > 0.5 ? th.onAccent : th.bg}}>{w.w}</span>
             </span>
           ) : (
             <span key={i}>{w.w}</span>
@@ -537,11 +550,11 @@ const Cta: React.FC<{T: Timeline; text: string; sub?: string}> = ({T, text, sub}
         )}
       </div>
       {sub ? (
-        <div style={{position: 'absolute', top: 1000, left: 110, right: 110, textAlign: 'center', fontFamily: FONT, fontSize: 44, fontWeight: 700, lineHeight: 1.25, color: P.paper, opacity: subP * 0.85, transform: `translateY(${(1 - subP) * 16}px)`}}>
+        <div style={{position: 'absolute', top: 1000, left: 110, right: 110, textAlign: 'center', fontFamily: FONT, fontSize: 44, fontWeight: 700, lineHeight: 1.25, color: th.bg, opacity: subP * 0.85, transform: `translateY(${(1 - subP) * 16}px)`}}>
           {sub}
         </div>
       ) : null}
-      <div style={{position: 'absolute', top: 1160, left: 0, right: 0, textAlign: 'center', fontFamily: TYPE.data, fontSize: 28, fontWeight: 600, color: P.paper, opacity: byP * 0.75}}>
+      <div style={{position: 'absolute', top: 1160, left: 0, right: 0, textAlign: 'center', fontFamily: TYPE.data, fontSize: 28, fontWeight: 600, color: th.bg, opacity: byP * 0.75}}>
         Made by Navin Rana · {HANDLE}
       </div>
     </AbsoluteFill>
@@ -550,6 +563,7 @@ const Cta: React.FC<{T: Timeline; text: string; sub?: string}> = ({T, text, sub}
 
 // A pointer that "builds" the automation: glides to each node as it appears and clicks it.
 const Cursor: React.FC<{T: Timeline}> = ({T}) => {
+  const th = useTheme();
   const f = useCurrentFrame();
   if (f < T.landAt - 6 || f > T.readCue + 16) return null;
   const pts = NODES.map((n) => ({x: n.x + NODE_W / 2 - 60, y: n.y + 24}));
@@ -567,10 +581,10 @@ const Cursor: React.FC<{T: Timeline}> = ({T}) => {
   return (
     <div style={{position: 'absolute', left: x, top: y, zIndex: 85, opacity: fade * prog(f, T.landAt - 6, 6)}}>
       {ring < 1 ? (
-        <div style={{position: 'absolute', left: -40 * (0.4 + ring), top: -40 * (0.4 + ring), width: 80 * (0.4 + ring), height: 80 * (0.4 + ring), borderRadius: '50%', border: `4px solid ${P.flow}`, opacity: 1 - ring}} />
+        <div style={{position: 'absolute', left: -40 * (0.4 + ring), top: -40 * (0.4 + ring), width: 80 * (0.4 + ring), height: 80 * (0.4 + ring), borderRadius: '50%', border: `4px solid ${th.flow}`, opacity: 1 - ring}} />
       ) : null}
-      <svg width={54} height={60} viewBox="0 0 24 26" style={{transform: `scale(${1 - 0.15 * click})`, transformOrigin: '0 0', filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.5))'}}>
-        <path d="M2 1 L2 20 L7 15.5 L10.5 23 L14 21.5 L10.5 14 L17 14 Z" fill={P.ink} stroke="#FFFFFF" strokeWidth={1.4} strokeLinejoin="round" />
+      <svg width={54} height={60} viewBox="0 0 24 26" style={{transform: `scale(${1 - 0.15 * click})`, transformOrigin: '0 0', filter: `drop-shadow(0 6px 10px ${alpha(th.shadow, 0.5)})`}}>
+        <path d="M2 1 L2 20 L7 15.5 L10.5 23 L14 21.5 L10.5 14 L17 14 Z" fill={th.ink} stroke={th.surface} strokeWidth={1.4} strokeLinejoin="round" />
       </svg>
     </div>
   );
@@ -578,6 +592,7 @@ const Cursor: React.FC<{T: Timeline}> = ({T}) => {
 
 // Kinetic display headline for the first seconds: the scroll-stopper. Keyword gets the signal highlighter.
 const HookTitle: React.FC<{T: Timeline; text: string}> = ({T, text}) => {
+  const th = useTheme();
   const f = useCurrentFrame();
   if (!text || f > T.s[1] + 12) return null;
   const words = parseAccent(text);
@@ -598,7 +613,7 @@ const HookTitle: React.FC<{T: Timeline; text: string}> = ({T, text}) => {
         fontWeight: 900,
         letterSpacing: '-0.04em',
         lineHeight: 1.02,
-        color: P.ink,
+        color: th.ink,
         opacity: 1 - out,
         transform: `translateY(${-60 * out}px)`,
       }}
@@ -618,6 +633,8 @@ const HookTitle: React.FC<{T: Timeline; text: string}> = ({T, text}) => {
 
 // ---------- composition ----------
 export const Story: React.FC<ReelProps> = (props) => {
+  const th = THEMES[props.script.theme ?? 'paper'];
+  if (!th) throw new Error(`Unknown theme "${props.script.theme}". Use one of: ${Object.keys(THEMES).join(', ')}`);
   const frames = props.frames ?? computeFrames(props);
   const T = buildTimeline(props, frames);
   const f = useCurrentFrame();
@@ -637,9 +654,10 @@ export const Story: React.FC<ReelProps> = (props) => {
     [T.s[5] + 14, 'pop'],
   ];
   return (
+    <ThemeCtx.Provider value={th}>
     <W.Provider value={{...DEFAULT_WORLD, ...props.script.world}}>
     <SfxEnabled.Provider value={props.script.sfx !== false}>
-      <AbsoluteFill style={{background: P.paper}}>
+      <AbsoluteFill style={{background: th.bg}}>
         {whip ? (
           <CameraMotionBlur samples={8} shutterAngle={240}>
             <Stage T={T} />
@@ -652,7 +670,7 @@ export const Story: React.FC<ReelProps> = (props) => {
         {scenes.map((sc, i) =>
           i === 0 || sc.type === 'cta' ? null : (
             <Sequence key={i} from={T.s[i]} durationInFrames={frames[i]} layout="none">
-              <Captions vo={sc.vo} starts={wordStarts(sc.vo, LEAD, T.sp[i])} keywordsOnly paper top={CAPTION_TOP} />
+              <Captions vo={sc.vo} starts={wordStarts(sc.vo, LEAD, T.sp[i])} top={CAPTION_TOP} />
             </Sequence>
           ),
         )}
@@ -670,5 +688,6 @@ export const Story: React.FC<ReelProps> = (props) => {
       </AbsoluteFill>
     </SfxEnabled.Provider>
     </W.Provider>
+    </ThemeCtx.Provider>
   );
 };

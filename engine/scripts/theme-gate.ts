@@ -1,5 +1,9 @@
-// WCAG AA contrast gate for every theme. Run: node scripts/contrast.ts  (exit 1 on any fail)
+// Theme gate. Run: npm run gate:themes  (exit 1 on any fail)
+// 1. every theme passes WCAG AA for its text pairs
+// 2. no raw colour in src/ outside themes.ts, so every clip renders in every theme
 import assert from 'node:assert';
+import fs from 'node:fs';
+import path from 'node:path';
 import {THEMES, type Theme} from '../src/themes.ts';
 
 const AA = 4.5; // normal text
@@ -39,5 +43,20 @@ for (const [name, t] of Object.entries(THEMES)) {
     console.log(`${ok ? 'pass' : 'FAIL'} ${name.padEnd(6)} ${fg} on ${bg}`.padEnd(34) + r.toFixed(2));
   }
 }
-console.log(fails ? `\n${fails} failing pair(s)` : '\nall themes pass WCAG AA');
+
+// ponytail: regex scan, catches hex/rgb/hsl and quoted white/black; a CSS-in-JS parser if named colours ever slip through
+const RAW = /#[0-9a-f]{3,8}\b|\b(rgba?|hsla?)\(|['"](white|black)['"]/i;
+const SRC = path.join(import.meta.dirname, '..', 'src');
+const raw: string[] = [];
+for (const f of fs.readdirSync(SRC, {recursive: true}) as string[]) {
+  if (!/\.(ts|tsx)$/.test(f) || f === 'themes.ts') continue;
+  fs.readFileSync(path.join(SRC, f), 'utf8').split('\n').forEach((line, i) => {
+    if (RAW.test(line)) raw.push(`src/${f}:${i + 1}: ${line.trim().slice(0, 90)}`);
+  });
+}
+assert.ok(RAW.test("fill='#FFF'") && RAW.test('rgba(0,0,0,.5)') && !RAW.test('th.ink'), 'raw-colour regex broken');
+raw.forEach((r) => console.log(`FAIL raw colour outside themes.ts: ${r}`));
+fails += raw.length;
+
+console.log(fails ? `\n${fails} failure(s)` : '\nall themes pass WCAG AA; no raw colours outside themes.ts');
 process.exit(fails ? 1 : 0);

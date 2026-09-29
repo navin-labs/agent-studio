@@ -1,9 +1,10 @@
 # Reel Engine: theautomationguy.navin
 
+> This is the engine inside agent-studio (`engine/`). It is not live yet: `~/Dev/projects/reel-engine` keeps rendering daily posts until the switch-over (BUILD_PLAN task B4b). Setup paths below still point at the live copy. Only the **story** format is supported here; reels and carousels were removed (ADR 9).
+
 One JSON script in, a finished post out.
 
-- **Reels ("UI Story")**: animated app screens, Sarvam voiceover (voice `shubh`, pace 1.0), word-by-word captions and sound effects. 1080x1920.
-- **Carousels ("Founder Note")**: 1080x1350 slides with your avatar, name, handle and a slide counter.
+- **Stories**: the `pile-to-flow` motion video, silent by default (voiceover only with `VOICE=on`), captions and sound effects. 1080x1920. Renders in any theme: add `"theme": "paper" | "ink" | "mono" | "studio"` to the script (default `paper`).
 
 Every command below runs from the project folder. Open Terminal and start with:
 ```
@@ -14,7 +15,7 @@ cd ~/Dev/projects/reel-engine
 
 ## How it works (hands-free)
 
-1. Forge saves a script into `content/stories/<id>.json` (motion videos), `content/reels/<id>.json` or `content/carousels/<id>.json`.
+1. Forge saves a script into `content/stories/<id>.json`.
 2. The watcher on your Mac notices it within 3 seconds and renders it.
 3. The watcher writes `<id>.status.txt` next to the script: `ok`, or `failed` plus the errors. Forge reads it and fixes its own mistakes.
 4. The finished files are copied to **Google Drive → My Drive → Reel Engine → <id>**.
@@ -33,8 +34,8 @@ The only rule: while you're away, the Mac must be **on, plugged in, lid open and
 | **Leaving the Mac while you're out** | Plug it in, keep the lid open, leave Wi-Fi on. | Plugged in, the watcher keeps it awake. A closed lid always sleeps. |
 | **Forge says "Ready: <id>"** | Phone: Google Drive app → My Drive → Reel Engine → <id>. Open `caption.txt` and copy the text. Open `reel.mp4` → ⋮ → Send a copy → Instagram. Set `cover.png` as the cover. | Posting stays with you. |
 | **Forge says it failed twice** | Read the status file (see Troubleshooting), fix it or tell Forge what to change. | Forge makes at most 2 fix attempts, then hands over. |
-| **You want to check a script before it renders** | `npm run make -- content/reels/<id>.json --check` | Runs the quality gate only. Nothing renders and no voice credit is used. |
-| **You want to render something yourself** | `npm run make -- content/reels/<id>.json`, then `open out/<id>` | A manual render. Works any time, watcher or not. |
+| **You want to check a script before it renders** | `npm run make -- content/stories/<id>.json --check` | Runs the quality gate only. Nothing renders and no voice credit is used. |
+| **You want to render something yourself** | `npm run make -- content/stories/<id>.json`, then `open out/<id>` | A manual render. Works any time, watcher or not. |
 | **One voice line sounds wrong** | Edit that scene's `vo` (or add a `"say"` field with the spelling the voice needs) and save. | Saving triggers a re-render. Only the changed line gets a new voice clip. |
 | **You change the voice or pace** | See "Voice settings" below. | The change applies to every future render. |
 | **I send you a new engine zip** | See "Updating the engine" below. | Pulls in new features without losing your settings. |
@@ -54,7 +55,7 @@ cd ~/Dev/projects/reel-engine
 npm install
 cp .env.example .env
 open -e .env          # paste SARVAM_API_KEY, set SARVAM_SPEAKER=shubh and SARVAM_PACE=1.0, save
-npm run make -- content/reels/example-invoice-reminders.json    # test render
+npm run make -- content/stories/story-order-emails.json    # test render
 npm run watch:install # start auto-render (runs at every login from now on)
 ```
 
@@ -84,7 +85,7 @@ Your settings live in `.env`. Current setup: Sarvam, speaker `shubh`, pace `1.0`
 open -e .env                                                      # view or edit settings
 sed -i '' 's/^SARVAM_PACE=.*/SARVAM_PACE=1.0/' .env               # change speed (0.9 slower, 1.1 faster)
 sed -i '' 's/^SARVAM_SPEAKER=.*/SARVAM_SPEAKER=shubh/' .env       # change voice
-npm run make -- content/reels/<id>.json --force-vo                # rebuild a reel's voice with the new settings
+npm run make -- content/stories/<id>.json --force-vo                # rebuild a reel's voice with the new settings
 ```
 
 Voice clips are cached in `public/vo/<id>/`. A re-render after a visual-only edit uses no voice credit.
@@ -112,7 +113,8 @@ This updates the code but keeps your `.env`, your scripts and your renders.
 
 | Command | What it does |
 |---|---|
-| `npm run make -- <file>.json` | Renders a reel or carousel into `out/<id>/` |
+| `npm run make -- <file>.json` | Renders a story into `out/<id>/` |
+| `npm run gate:themes` | Contrast check for all themes + no raw colours outside `src/themes.ts` |
 | `npm run make -- <file>.json --check` | Quality gate only, no render |
 | `npm run make -- <file>.json --no-vo` | Silent preview (no voice credit) |
 | `npm run make -- <file>.json --vo-only` | Generates voice clips only |
@@ -123,7 +125,7 @@ This updates the code but keeps your `.env`, your scripts and your renders.
 | `npm run studio` | Live visual editor in your browser |
 | `open out/<id>` | Opens a finished post |
 | `pbcopy < out/<id>/caption.txt` | Copies the caption to the clipboard |
-| `ls content/reels content/carousels` | Lists the scripts Forge has saved |
+| `ls content/stories` | Lists the scripts Forge has saved |
 
 ---
 
@@ -156,7 +158,7 @@ To go back to Sarvam: delete the `CLONE_VOICE` line in `.env`.
 | Problem | Fix |
 |---|---|
 | Forge saved a script but nothing rendered | `launchctl list \| grep reelwatch`. If nothing prints, run `npm run watch:install`. Then check `tail -20 out/watch.log`. |
-| Status file says `failed` | `cat content/reels/<id>.status.txt` shows the errors. Quality gate errors mean the script breaks a rule, so Forge should fix it. |
+| Status file says `failed` | `cat content/stories/<id>.status.txt` shows the errors. Quality gate errors mean the script breaks a rule, so Forge should fix it. |
 | `Sarvam TTS 401` or `403` | The key is wrong or has no credit. Check `SARVAM_API_KEY` in `.env` and your Sarvam dashboard. |
 | A render failed because the internet dropped | Save the script again (even unchanged). The watcher only retries after a file changes. |
 | `command not found: npm` | Node isn't installed. Get the LTS version from nodejs.org. |
@@ -171,7 +173,8 @@ To go back to Sarvam: delete the `CLONE_VOICE` line in `.env`.
 - Em or en dashes
 - Client claims ("my clients", "companies like yours", "we helped")
 - Result claims ("3x", "save 20 hours", "guaranteed", "100%")
-- Wrong structure: a reel must start with `hook` and end with `cta`, and a carousel must start with `cover` and end with `cta`
+- Wrong structure: a story must start with `hook` and end with `cta`
+- Unknown theme: use `paper`, `ink`, `mono` or `studio`
 - Word limits: 28 words of voiceover per scene, 10 words of hook text, 32 words per slide
 - UI limits: 5 emails, 6 sheet rows and 4 columns, 5 chat messages, 6 steps, 4 flow nodes, 3 notifications
 
@@ -179,7 +182,7 @@ To go back to Sarvam: delete the `CLONE_VOICE` line in `.env`.
 
 ## Extras
 
-- **Background music:** put a royalty-free track in `public/music/` and add `"music": "track.mp3"` to the reel script. It plays at 7% volume.
+- **Background music:** put a royalty-free track in `public/music/` and add `"music": "track.mp3"` to the story script. It plays at 7% volume.
 - **Sound effects** are on by default. Add `"sfx": false` to a script to turn them off.
 - **Look and feel:** colours, fonts, handle and safe zones are in `src/theme.ts`. The logo is in `public/brand/`.
 

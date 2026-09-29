@@ -12,3 +12,4 @@ Why: record each big choice once, with the reason, so no session re-argues it.
 | 6 | 2026-09-30 | 4 themes on role tokens | Same clip renders in any theme; channels look distinct; contrast is checked by code | One look for every channel; hex colours in components |
 | 7 | 2026-09-30 | One repo: engine copied into `agent-studio/engine/` | Navin: build everything in agent-studio. Copy (not move) so the old reel-engine keeps posting daily until switch-over (B4b) | Two repos; moving now (breaks live posting) |
 | 8 | 2026-09-30 | Add 11th role token `onAccent` | Plan's own colours fail AA: light ink on lime (1.14), black on studio blue (3.33). onAccent passes in all themes | Changing brand accents |
+| 9 | 2026-09-30 | Remove reel and carousel formats from `engine/` | Forge only makes stories; they held about 70 hard-coded colours in their own dark palette. The old reel-engine still has them | Freezing their palette in themes.ts; converting them to themes |

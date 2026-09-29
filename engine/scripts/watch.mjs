@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Auto-render: any new or changed .json in content/reels or content/carousels gets rendered.
+// Auto-render: any new or changed .json in content/stories gets rendered.
 // The result is written next to the script as <name>.status.txt (Forge reads it).
 // Finished files are copied to Google Drive/Reel Engine/<id>/ (or iCloud, or RENDER_COPY_DIR in .env) so they reach your phone.
 //   npm run watch            run in this Terminal window
@@ -12,7 +12,7 @@ import path from 'node:path';
 import url from 'node:url';
 
 const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
-const DIRS = ['content/reels', 'content/stories', 'content/carousels'].map((d) => path.join(ROOT, d));
+const DIRS = ['content/stories'].map((d) => path.join(ROOT, d));
 const STATE = path.join(ROOT, 'out', '.watch-state.json');
 const envFile = path.join(ROOT, '.env');
 if (fs.existsSync(envFile)) {
@@ -115,7 +115,7 @@ for (const d of DIRS) {
   });
 }
 jsonFiles().forEach(enqueue); // anything saved while the watcher was off
-log(`watching content/reels, content/stories and content/carousels${COPY_TO ? `; results copied to ${COPY_TO}` : ''}`);
+log(`watching content/stories${COPY_TO ? `; results copied to ${COPY_TO}` : ''}`);
 
 function install() {
   const label = 'com.theautomationguy.reelwatch';
