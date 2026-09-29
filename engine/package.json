@@ -1,0 +1,29 @@
+{
+  "name": "reel-engine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "theautomationguy.navin content engine: JSON script in, reel MP4 or carousel PNGs out.",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "make": "node scripts/make.mjs",
+    "vo": "node scripts/make.mjs --vo-only",
+    "watch": "node scripts/watch.mjs",
+    "watch:install": "node scripts/watch.mjs --install",
+    "contrast": "node scripts/contrast.ts"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.527",
+    "@remotion/cli": "4.0.527",
+    "@remotion/fonts": "^4.0.527",
+    "@remotion/media-parser": "4.0.527",
+    "@remotion/motion-blur": "4.0.527",
+    "@remotion/noise": "4.0.527",
+    "@remotion/paths": "4.0.527",
+    "@remotion/renderer": "4.0.527",
+    "lucide-react": "1.47.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "remotion": "4.0.527"
+  }
+}

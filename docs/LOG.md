@@ -3,7 +3,7 @@
 ## 2026-09-30, session 1: docs + scaffold
 Did: Read AGENT_STUDIO_PLAN.md (v2), FORGE_CONTENT_SKILL.md and reel-engine (read only). Created repo scaffold: README, CLAUDE.md, docs, agent RULES, schema drafts, channel configs, settings, git init (no commit).
 Decisions: Commits authored by Navin only, no Claude attribution, each commit logged here. Every approved commit is pushed to origin. Channel gates taken from AGENT_STUDIO_PLAN section 7 because MULTI_CHANNEL_PLAN.md was not found. agent-studio language left TBD.
-Commit: pending "approve commit"
+Commit: 610f352 docs: scaffold agent-studio (plan docs, agent contracts, schema drafts, channel configs), pushed to origin/main
 Next: Phase A, task A1 (`themes.ts` + contrast test) in reel-engine, after the open questions below are answered.
 Open questions:
 1. `~/Downloads/MULTI_CHANNEL_PLAN.md` does not exist. Where is it, or is AGENT_STUDIO_PLAN section 1 and 7 the full source for channels and gates?
@@ -24,3 +24,10 @@ Open questions:
 16. "About 1B Muse tokens": per month, or total?
 17. C2 gate says "14 days with no missed posts", but the Forge skill allows down to 5 posts a week. Does a skipped slot count as missed?
 18. agent-studio language: TypeScript to share types with reel-engine, or something else?
+
+## 2026-09-30, session 2: A1 themes.ts + contrast test
+Did: Built `engine/src/themes.ts` (4 themes, 11 role tokens) and `engine/scripts/contrast.ts` (`npm run contrast`, WCAG AA, exits 1 on fail, self-checks its maths). Negative test: a broken theme exits 1. Copied reel-engine v1 into `engine/` (no node_modules, out, .env, voice clips, status files). Old reel-engine restored untouched.
+Decisions: ADR 7 one repo, engine in `engine/`, old reel-engine stays live until B4b switch-over. ADR 8 `onAccent` token (plan colours failed AA: ink theme 1.14, studio 3.33). Navin approved the 18 proposed colours. Open questions 6 and 14 resolved.
+Commit: pending "approve commit"
+Next: A2 refactor engine components to role tokens (needs `npm install` in engine/, about 640 MB).
+Open questions: 2, 3, 4, 5, 7 to 13, 15 to 18 from session 1 still open. Q18 leaning TypeScript (engine is TS, contrast script runs on Node 26 with no build step).

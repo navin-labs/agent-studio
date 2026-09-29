@@ -1,0 +1,162 @@
+{
+  "format": "reel",
+  "id": "example-invoice-reminders",
+  "title": "How invoice reminders can run themselves",
+  "pillar": "How automation works",
+  "roleFamily": "Accounts",
+  "scenes": [
+    {
+      "type": "hook",
+      "text": "Still chasing *payments* by hand?",
+      "vo": "Still chasing payments by hand?"
+    },
+    {
+      "type": "sheet",
+      "kicker": "The manual way",
+      "title": "Check the sheet. Every morning.",
+      "file": "Receivables.xlsx",
+      "columns": [
+        "Customer",
+        "Invoice",
+        "Due",
+        "Status"
+      ],
+      "rows": [
+        [
+          "Mehta Traders",
+          "INV-1042",
+          "12 Sep",
+          "Overdue"
+        ],
+        [
+          "Sharma & Co",
+          "INV-1038",
+          "15 Sep",
+          "Paid"
+        ],
+        [
+          "Kapoor Foods",
+          "INV-1045",
+          "16 Sep",
+          "Overdue"
+        ],
+        [
+          "Rana Logistics",
+          "INV-1047",
+          "22 Sep",
+          "Pending"
+        ],
+        [
+          "Verma Textiles",
+          "INV-1049",
+          "25 Sep",
+          "Pending"
+        ]
+      ],
+      "highlight": [
+        0,
+        2
+      ],
+      "vo": "Most teams open the same sheet every morning to find overdue invoices."
+    },
+    {
+      "type": "steps",
+      "kicker": "Then, one by one",
+      "steps": [
+        {
+          "label": "Email the customer",
+          "icon": "mail"
+        },
+        {
+          "label": "Call if no reply",
+          "icon": "phone"
+        },
+        {
+          "label": "Follow up on WhatsApp",
+          "icon": "chat"
+        },
+        {
+          "label": "Update the sheet",
+          "icon": "sheet"
+        }
+      ],
+      "strike": true,
+      "vo": "Then they email, call, or WhatsApp each customer. One by one."
+    },
+    {
+      "type": "flow",
+      "kicker": "How it can work",
+      "nodes": [
+        {
+          "label": "Invoice goes overdue",
+          "sub": "Trigger",
+          "icon": "clock"
+        },
+        {
+          "label": "Polite reminder sent",
+          "sub": "Automatic",
+          "icon": "send"
+        },
+        {
+          "label": "Still unpaid after 3 days",
+          "sub": "Check",
+          "icon": "hourglass"
+        },
+        {
+          "label": "Your team gets an alert",
+          "sub": "Only when needed",
+          "icon": "bell"
+        }
+      ],
+      "vo": "Here's how it can work. Invoice goes overdue, a reminder goes out, and if it's still unpaid, your team gets an alert."
+    },
+    {
+      "type": "notify",
+      "kicker": "What your team sees",
+      "items": [
+        {
+          "app": "Reminders",
+          "title": "Reminder sent to Mehta Traders",
+          "body": "INV-1042, 11 days overdue",
+          "icon": "send",
+          "color": "#2F80ED"
+        },
+        {
+          "app": "Reminders",
+          "title": "Still unpaid: Kapoor Foods",
+          "body": "INV-1045. Call suggested today.",
+          "icon": "alert",
+          "color": "#E5484D"
+        },
+        {
+          "app": "Reminders",
+          "title": "Sharma & Co marked paid",
+          "body": "INV-1038 removed from the list",
+          "icon": "check",
+          "color": "#2DA44E"
+        }
+      ],
+      "vo": "Your team only steps in when someone still hasn't paid."
+    },
+    {
+      "type": "statement",
+      "text": "Nobody has to remember.\n*Nothing slips.*",
+      "vo": "Nobody has to remember. Nothing slips."
+    },
+    {
+      "type": "cta",
+      "text": "DM *AUDIT*",
+      "sub": "I'll look at your most repetitive process for free.",
+      "vo": "DM me AUDIT, and I'll look at your most repetitive process for free."
+    }
+  ],
+  "caption": "Still chasing payments by hand?\n\nMost teams check a sheet every morning, then email, call or WhatsApp each customer. One by one.\n\nHere's how it can work instead: the invoice goes overdue, a polite reminder goes out, and if it's still unpaid, your team gets an alert.\n\nNobody has to remember. Nothing slips.\n\nDM AUDIT and I'll look at your most repetitive process for free.",
+  "hashtags": [
+    "#businessautomation",
+    "#smallbusinessindia",
+    "#accounts",
+    "#smeindia",
+    "#workflowautomation",
+    "#n8n"
+  ]
+}

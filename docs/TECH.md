@@ -17,7 +17,7 @@ flowchart TB
     DISP[Dispatcher]
     LEARN[Learn: scoreboard, bench, 70/30]
   end
-  subgraph reel-engine
+  subgraph engine
     COMP[Composer: storyboard to composition]
     PRIM[Primitive registry + themes.ts]
   end
@@ -37,15 +37,18 @@ flowchart TB
 ```
 
 ## Repos
-| Repo | Owns |
+One repo (ADR 7).
+
+| Folder | Owns |
 |---|---|
-| `reel-engine` | Motion library (primitives), `themes.ts`, Composer, renderer, gate, watcher |
-| `agent-studio` | Schemas, recipes, novelty, QA, approval page, dispatch, learn, channel config, docs |
+| `engine/` | Motion library (primitives), `themes.ts`, Composer, renderer, gate, watcher |
+| root | Schemas, recipes, novelty, QA, approval page, dispatch, learn, channel config, docs |
+| `~/Dev/projects/reel-engine` | Old live engine (v1). Read-only; retired at task B4b |
 
 ## Stack
 | Layer | Choice |
 |---|---|
-| Rendering | Remotion 4, React 19, TypeScript (existing reel-engine) |
+| Rendering | Remotion 4, React 19, TypeScript (`engine/`, copied from reel-engine v1) |
 | agent-studio language | TBD (owner: Navin) |
 | Media checks | ffprobe |
 | Automation | n8n (feeds, YouTube upload, approval webhook) |
@@ -66,7 +69,7 @@ flowchart TB
 | channel | Navin | All steps |
 
 ## Themes and role tokens
-Role tokens (every theme defines all): `bg, surface, ink, muted, rule, accent, flow, ok, alert, shadow`.
+Role tokens (every theme defines all): `bg, surface, ink, muted, rule, accent, onAccent, flow, ok, alert, shadow`. `onAccent` is text on the highlighter (ADR 8).
 
 | Theme | bg | surface | ink | accent | Default for |
 |---|---|---|---|---|---|
@@ -75,7 +78,7 @@ Role tokens (every theme defines all): `bg, surface, ink, muted, rule, accent, f
 | mono | #E4E3DF | #F4F4F2 | #161616 | #C6F432 | C2, C3 |
 | studio | #FFFFFF | #F6F6F6 | #0B0B0B | #2B4BFF | C1 alternate, C3 |
 
-Rules (enforced by the gate): WCAG AA contrast (ink on bg, ink on surface, ink on accent); max 3 colours per frame; no hex outside `themes.ts` (grep check); new themes need Navin's OK once. Brand fixed everywhere: Inter Tight + JetBrains Mono, signal-lime highlighter, 3px strokes, hard offset shadows, ink-wipe end card, authorship line.
+Rules (enforced by the gate, `npm run contrast`): WCAG AA contrast (ink on bg, ink on surface, onAccent on accent, muted on bg and surface); max 3 colours per frame; no hex outside `themes.ts` (grep check); new themes need Navin's OK once. Brand fixed everywhere: Inter Tight + JetBrains Mono, signal-lime highlighter, 3px strokes, hard offset shadows, ink-wipe end card, authorship line.
 
 ## Novelty rules (Recipe redraws until all pass)
 | Check | Rule |

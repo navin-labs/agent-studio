@@ -1,0 +1,144 @@
+{
+  "format": "reel",
+  "id": "po-status-chase",
+  "title": "How PO follow-ups can run themselves",
+  "pillar": "Spot the copy-paste",
+  "roleFamily": "Purchase orders",
+  "scenes": [
+    {
+      "type": "hook",
+      "text": "Still *chasing POs* on WhatsApp?",
+      "vo": "Still chasing POs on WhatsApp?"
+    },
+    {
+      "type": "chat",
+      "kicker": "The daily chase",
+      "title": "Where is my PO?",
+      "contact": "Sharma Steel",
+      "status": "online",
+      "messages": [
+        {
+          "from": "them",
+          "text": "Hi, PO-1187 was due yesterday. Any update?",
+          "time": "10:12"
+        },
+        {
+          "from": "me",
+          "text": "Checking with the transporter now.",
+          "time": "10:40"
+        },
+        {
+          "from": "them",
+          "text": "Please hurry, our line is waiting.",
+          "time": "11:05"
+        }
+      ],
+      "vo": "Buyers message vendors one by one, asking for dispatch dates."
+    },
+    {
+      "type": "steps",
+      "kicker": "Then they update",
+      "strike": true,
+      "steps": [
+        {
+          "label": "Call the transporter",
+          "icon": "phone"
+        },
+        {
+          "label": "Note the date",
+          "icon": "keyboard"
+        },
+        {
+          "label": "Email the boss",
+          "icon": "mail"
+        },
+        {
+          "label": "Update the sheet",
+          "icon": "sheet"
+        }
+      ],
+      "vo": "Every answer gets typed into a sheet, and the sheet gets emailed around."
+    },
+    {
+      "type": "myth",
+      "myth": "Automating this needs new software.",
+      "reality": "It works with your Excel and email.",
+      "vo": "Most people think this needs new software. Actually, it works with your Excel and email."
+    },
+    {
+      "type": "flow",
+      "kicker": "How it can work",
+      "nodes": [
+        {
+          "label": "PO sent to vendor",
+          "sub": "Trigger",
+          "icon": "send"
+        },
+        {
+          "label": "Follow-up sent on its own",
+          "sub": "Automatic",
+          "icon": "repeat"
+        },
+        {
+          "label": "No reply in 2 days",
+          "sub": "Check",
+          "icon": "hourglass"
+        },
+        {
+          "label": "Buyer gets an alert",
+          "sub": "Only when needed",
+          "icon": "bell"
+        }
+      ],
+      "vo": "Here's how it can work. Follow-ups go out on their own. Your buyer steps in when a vendor goes quiet."
+    },
+    {
+      "type": "notify",
+      "kicker": "What the buyer sees",
+      "items": [
+        {
+          "app": "PO Tracker",
+          "title": "Sharma Steel confirmed dispatch",
+          "body": "PO-1187, arriving Friday",
+          "icon": "check",
+          "color": "#2DA44E"
+        },
+        {
+          "app": "PO Tracker",
+          "title": "No reply: Verma Metals",
+          "body": "PO-1190, follow-up sent twice",
+          "icon": "alert",
+          "color": "#E5484D"
+        },
+        {
+          "app": "PO Tracker",
+          "title": "Invoice received: Mehta Traders",
+          "body": "PO-1185 ready to receive",
+          "icon": "file",
+          "color": "#2F80ED"
+        }
+      ],
+      "vo": "Everything lands in one place. Nothing lives in WhatsApp chats."
+    },
+    {
+      "type": "statement",
+      "text": "One sheet.\n*Zero chasing.*",
+      "vo": "One sheet. Zero chasing."
+    },
+    {
+      "type": "cta",
+      "text": "DM *AUDIT*",
+      "sub": "I'll look at your most repetitive process for free.",
+      "vo": "DM me AUDIT, and I'll look at your most repetitive process for free."
+    }
+  ],
+  "caption": "Still chasing POs on WhatsApp?\n\nBuyers message vendors one by one for dispatch dates, then type every answer into a sheet.\n\nHere's how it can work instead: follow-ups go out on their own, and the buyer steps in only when a vendor goes quiet.\n\nOne sheet. Zero chasing.\n\nDM AUDIT and I'll look at your most repetitive process for free.",
+  "hashtags": [
+    "#businessautomation",
+    "#smallbusinessindia",
+    "#smeindia",
+    "#operations",
+    "#workflowautomation",
+    "#n8n"
+  ]
+}

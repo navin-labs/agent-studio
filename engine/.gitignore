@@ -1,0 +1,9 @@
+node_modules/
+out/
+.env
+public/vo/
+*.old
+*.status.txt
+voice/*.wav
+voice/*.m4a
+.venv-voice/

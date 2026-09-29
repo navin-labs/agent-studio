@@ -1,0 +1,85 @@
+{
+  "format": "story",
+  "id": "story-order-emails",
+  "template": "pile-to-flow",
+  "title": "The order inbox that types itself",
+  "pillar": "How automation works",
+  "roleFamily": "Email operations",
+  "world": {
+    "item": {
+      "title": "ORDER",
+      "id": "PO-",
+      "start": 2201,
+      "pill": "NEW"
+    },
+    "counter": {
+      "label": "TO TYPE",
+      "icon": "mail"
+    },
+    "nodes": [
+      {
+        "icon": "inbox",
+        "label": "Read the email",
+        "sub": "orders@ inbox"
+      },
+      {
+        "icon": "search",
+        "label": "Pull details",
+        "sub": "Item, qty, address"
+      },
+      {
+        "icon": "sheet",
+        "label": "Add to sheet",
+        "sub": "Orders.xlsx"
+      },
+      {
+        "icon": "send",
+        "label": "Confirm order",
+        "sub": "Reply in 1 minute"
+      }
+    ],
+    "message": {
+      "app": "EMAIL",
+      "text": "Hi Gupta ji, order PO-2214 is confirmed. Dispatch on 24 Sep."
+    },
+    "done": "DONE"
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "text": "Someone *typed* all of these.",
+      "vo": "All of these were *typed* by hand."
+    },
+    {
+      "type": "beat",
+      "vo": "Each order email gets read, copied into a sheet, then *confirmed.* One by one."
+    },
+    {
+      "type": "beat",
+      "vo": "Here's the *fix.* Four steps, no copy and paste."
+    },
+    {
+      "type": "beat",
+      "vo": "It *reads* the email, *pulls* the item and quantity, and *adds* a row to your sheet."
+    },
+    {
+      "type": "beat",
+      "vo": "Then it sends the *confirmation.* Your team only checks the odd ones."
+    },
+    {
+      "type": "cta",
+      "vo": "Follow for one automation every day.",
+      "text": "*Follow*",
+      "sub": "One business automation, every day."
+    }
+  ],
+  "caption": "Order emails should not need a person to retype them.\n\nA small automation can read each order email, pull the item and quantity, add a row to your sheet and send the confirmation.\n\nExample data.\n\nFollow for one business automation every day. Send this to whoever handles your orders.",
+  "hashtags": [
+    "#automation",
+    "#n8n",
+    "#smallbusinessindia",
+    "#orderprocessing",
+    "#operations"
+  ],
+  "hookPattern": "pile"
+}

@@ -1,0 +1,86 @@
+{
+  "format": "story",
+  "id": "story-invoice-chase",
+  "template": "pile-to-flow",
+  "title": "The invoice pile that chases itself",
+  "pillar": "How automation works",
+  "roleFamily": "Accounts",
+  "world": {
+    "item": {
+      "title": "INVOICE",
+      "id": "INV-",
+      "start": 1038,
+      "pill": "DUE",
+      "amount": true
+    },
+    "counter": {
+      "label": "UNPAID",
+      "icon": "receipt"
+    },
+    "nodes": [
+      {
+        "icon": "sheet",
+        "label": "Read the sheet",
+        "sub": "Receivables.xlsx"
+      },
+      {
+        "icon": "hourglass",
+        "label": "Overdue?",
+        "sub": "Due date passed"
+      },
+      {
+        "icon": "whatsapp",
+        "label": "Send reminder",
+        "sub": "WhatsApp + email"
+      },
+      {
+        "icon": "check",
+        "label": "Mark as paid",
+        "sub": "When money lands"
+      }
+    ],
+    "message": {
+      "app": "WHATSAPP",
+      "text": "Hi Mehta ji, a gentle reminder: INV-1042 was due on 12 Sep."
+    },
+    "done": "PAID"
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "text": "Your money is *stuck* here.",
+      "vo": "This pile is your *stuck* money."
+    },
+    {
+      "type": "beat",
+      "vo": "Every one of these is an *unpaid invoice,* and someone chases each one *by hand.*"
+    },
+    {
+      "type": "beat",
+      "vo": "Here's the *fix.* Four steps, running on their own."
+    },
+    {
+      "type": "beat",
+      "vo": "It reads your *sheet,* spots what's *overdue,* and sends a polite *WhatsApp reminder.*"
+    },
+    {
+      "type": "beat",
+      "vo": "When the money lands, it marks the invoice *paid.* Nobody chases it again."
+    },
+    {
+      "type": "cta",
+      "vo": "Want this running for your business? DM me AUDIT.",
+      "text": "DM *AUDIT*",
+      "sub": "I'll show you what to automate first."
+    }
+  ],
+  "caption": "Unpaid invoices don't need a person chasing them every morning.\n\nA small automation can read your receivables sheet, send a polite WhatsApp reminder when something is overdue, and mark it paid when the money lands.\n\nExample data.\n\nWant to see what this would look like for your business? DM AUDIT.",
+  "hashtags": [
+    "#automation",
+    "#n8n",
+    "#smallbusinessindia",
+    "#accountsreceivable",
+    "#processimprovement"
+  ],
+  "hookPattern": "pile"
+}

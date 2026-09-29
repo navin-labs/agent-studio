@@ -5,15 +5,15 @@ Why: one task per Claude Code session, each with a clear stop condition. Check a
 ## Phase 0: docs + scaffold (agent-studio)
 - [x] **0.1 Docs and scaffold.** Done when: every file in the scaffold exists and open questions are logged.
 
-## Phase A: themes + primitives + Composer (reel-engine)
+## Phase A: themes + primitives + Composer (`engine/`)
 Phase done when: the same storyboard renders correctly in all 4 themes, and 3 storyboards with different openings render with voice.
 
-- [ ] **A1 themes.ts + contrast test.** Done when: 4 themes define all 10 role tokens and the contrast script passes WCAG AA for each.
-  > Read CLAUDE.md, docs/TECH.md "Themes". In reel-engine, create src/themes.ts with role tokens and 4 themes, plus a contrast check script.
+- [x] **A1 themes.ts + contrast test.** Done when: 4 themes define all 11 role tokens and `npm run contrast` passes WCAG AA for each.
+  > Read CLAUDE.md, docs/TECH.md "Themes". In engine/, create src/themes.ts with role tokens and 4 themes, plus a contrast check script.
   > Keep existing renders working. No hex outside themes.ts in new code.
   > Stop when the contrast script passes for all 4 themes.
 - [ ] **A2 Refactor to role tokens.** Done when: grep finds no hex outside themes.ts and existing stories still render.
-  > Read CLAUDE.md. In reel-engine, replace every hex colour in src/ with role tokens from themes.ts.
+  > Read CLAUDE.md. In engine/, replace every hex colour in src/ with role tokens from themes.ts.
   > Add the grep check to the gate. Re-render story-order-emails to confirm nothing changed.
   > Stop when the grep check passes and the render matches.
 - [ ] **A3 Primitive interface + registry.** Done when: about 12 primitives are registered, each with schema, cue points, suited channels, test storyboard, contact sheet.
@@ -48,6 +48,10 @@ Phase done when: a dry-run week for C1 goes from feed to approved queue with zer
   > Read CLAUDE.md, schemas/ledger.schema.json. Generate the weekly page per channel with approve and approve-all.
   > Webhook URL from env name only. Never read .env.
   > Stop when a test approval writes one ledger entry.
+- [ ] **B4b Switch-over.** Done when: the watcher and Forge use `engine/`, and the old reel-engine is retired.
+  > Read CLAUDE.md. Point the watcher (launchd) and Forge's content path at agent-studio/engine.
+  > Render one story from the new path. Old reel-engine stays as a read-only backup.
+  > Stop when a Forge story renders from engine/.
 - [ ] **B5 Dispatcher.** Done when: only "approved" ledger entries reach the n8n YouTube call or the Forge IG queue (dry run).
   > Read CLAUDE.md, agents/dispatch/RULES.md. Build ledger to n8n (YouTube) and Forge queue (Instagram).
   > Dry-run mode by default. Nothing publishes.
@@ -61,7 +65,7 @@ Phase done when: a dry-run week for C1 goes from feed to approved queue with zer
   > Inputs and outputs as in plan section 8.
   > Stop when the dry-run week passes.
 
-## Phase C: 8 new primitives (reel-engine), 2 or 3 per session
+## Phase C: 8 new primitives (`engine/`), 2 or 3 per session
 - [ ] **C1 Primitives batch 1.** Done when: each new primitive has schema, cues, channels, test storyboard, contact sheet and renders in 4 themes.
   > Read CLAUDE.md, the Learn missing-primitive hint. Build 2 or 3 primitives from the plan section 5 list.
   > Role tokens only. One test storyboard each.

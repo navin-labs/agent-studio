@@ -32,7 +32,7 @@ flowchart LR
 ## Tech stack
 | Part | Tool |
 |---|---|
-| Renderer + motion library | `reel-engine` (Remotion, React, TypeScript) |
+| Renderer + motion library | `engine/` (Remotion, React, TypeScript) |
 | Orchestrator, novelty, QA, dispatch, learn | `agent-studio` (this repo), language TBD (owner: Navin) |
 | Writer | Forge (Muse tokens) |
 | Feeds, YouTube upload, approval webhook | n8n |
@@ -43,7 +43,7 @@ flowchart LR
 | Phase | Scope | State |
 |---|---|---|
 | Docs + scaffold | This repo's plan and contracts | Done |
-| A | Themes, primitives, Composer (reel-engine) | Not started |
+| A | Themes, primitives, Composer (`engine/`) | In progress (A1 done) |
 | B | agent-studio core: recipes, novelty, QA, approval, dispatch, learn | Not started |
 | C | 8 new primitives | Not started |
 | D | Launch C2, then C3 (gated) | Not started |

@@ -11,7 +11,8 @@ Read other docs only when the task needs them.
 
 ## Scope
 - One session = one BUILD_PLAN task. Stop when its "done when" passes.
-- `reel-engine` is a separate repo. Touch it only when the task says so.
+- All work happens in this repo. The engine lives in `engine/`.
+- `~/Dev/projects/reel-engine` is the old live engine (v1). Never modify it; it keeps posting until Forge and the watcher switch to `engine/` (end of Phase B).
 
 ## Token rules
 - Don't paste whole files into chat.
