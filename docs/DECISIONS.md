@@ -1,0 +1,12 @@
+# DECISIONS (ADR log)
+
+Why: record each big choice once, with the reason, so no session re-argues it.
+
+| # | Date | Decision | Why | Rejected |
+|---|---|---|---|---|
+| 1 | 2026-09-30 | Vocabulary, not templates | About 30 primitives x 4 themes x orderings x rhythms gives an effectively endless pool that grows | Fixed templates (repetitive, easy to spot) |
+| 2 | 2026-09-30 | Code picks the shape, AI writes the words | Uniqueness is computed and guaranteed; no per-video code, so no daily breakage | AI generating animation or structure per video |
+| 3 | 2026-09-30 | Forge is the writer | Runs on Muse tokens (about 1B); keeps the $20 Claude plan for building only | 7 Claude agents (v1), too many tokens |
+| 4 | 2026-09-30 | Files, not a database | Simple, diffable, readable by Forge, n8n and code alike | A DB server to run and back up |
+| 5 | 2026-09-30 | Weekly approval | One batch page per channel, about 5 minutes; avoids approval fatigue | Per-post approval messages |
+| 6 | 2026-09-30 | 4 themes on role tokens | Same clip renders in any theme; channels look distinct; contrast is checked by code | One look for every channel; hex colours in components |

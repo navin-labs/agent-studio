@@ -1,0 +1,18 @@
+{
+  "id": "c1-automation",
+  "role": "Leads: automation clients",
+  "audience": "Indian SMB owners, ops managers",
+  "kpi": {"metric": "DMs + profile visits per reach", "target": "TBD (owner: Navin)"},
+  "cta": [
+    {"text": "DM AUDIT", "share": "1 in 3 (plan) vs 1 in 5 (Forge skill): see LOG open question 4"},
+    {"text": "Follow", "share": "2 in 3"}
+  ],
+  "content_mix": ["manual pain to how it can run itself"],
+  "themes": ["paper", "studio"],
+  "cadence": {"posts_per_week": 7},
+  "publishers": [
+    {"platform": "instagram", "handle": "@theautomationguy.navin", "via": "forge-queue"},
+    {"platform": "youtube-shorts", "handle": "TBD (owner: Navin)", "via": "n8n"}
+  ],
+  "launch_gate": "First channel"
+}

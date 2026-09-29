@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "storyboard",
+  "description": "Recipe plus words. Written by Writer (Forge). Rendered by the Composer.",
+  "type": "object",
+  "required": ["id", "recipe_id", "channel", "theme", "scenes", "caption", "meta"],
+  "properties": {
+    "id": {"type": "string"},
+    "recipe_id": {"type": "string"},
+    "channel": {"enum": ["c1-automation", "c2-reach", "c3-studio"]},
+    "theme": {"enum": ["paper", "ink", "mono", "studio"]},
+    "hook_pattern": {"enum": ["pile", "should-not", "question", "number", "confession", "myth", "before-after"]},
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["primitive", "params"],
+        "properties": {
+          "primitive": {"type": "string"},
+          "params": {"type": "object", "description": "Per-primitive; text limits come from the primitive's own schema"},
+          "vo": {"type": "string"},
+          "transition": {"type": "string"}
+        }
+      }
+    },
+    "caption": {"type": "string"},
+    "hashtags": {"type": "array", "items": {"type": "string"}, "minItems": 3, "maxItems": 5},
+    "meta": {
+      "type": "object",
+      "required": ["source", "idea_id"],
+      "properties": {"source": {"type": "string", "format": "uri"}, "idea_id": {"type": "string"}}
+    }
+  }
+}

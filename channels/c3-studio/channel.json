@@ -1,0 +1,16 @@
+{
+  "id": "c3-studio",
+  "role": "Leads: design and motion clients",
+  "audience": "Founders, marketers, designers, agencies wanting explainer or motion videos",
+  "kpi": {"metric": "inbound enquiries", "target": "TBD (owner: Navin)"},
+  "cta": [{"text": "DM MOTION", "share": "all"}],
+  "content_mix": ["engine's best pieces", "breakdown posts (how a shot was built)", "before/after restyles"],
+  "themes": ["paper", "ink", "mono", "studio"],
+  "cadence": {"posts_per_week": 7},
+  "publishers": [
+    {"platform": "instagram", "handle": "TBD (owner: Navin)", "via": "forge-queue"},
+    {"platform": "behance", "handle": "TBD (owner: Navin)", "via": "later"},
+    {"platform": "linkedin", "handle": "TBD (owner: Navin)", "via": "later"}
+  ],
+  "launch_gate": "20 approved videos to choose showcase pieces from"
+}

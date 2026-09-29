@@ -1,0 +1,21 @@
+# Recipe: contract
+
+Why: uniqueness is guaranteed by code, not by asking an AI to be creative.
+
+| | |
+|---|---|
+| Runs | Code, weekly per channel |
+| Input | `channel.json`, past fingerprints, bench list, 70/30 split from Learn |
+| Output | `recipes/<channel>/<week>.json`, 7 recipes (schemas/recipe.schema.json) + fingerprints |
+| Tokens | 0 |
+
+## Must
+- Pick theme, opening primitive, primitive sequence, transitions, rhythm, hook pattern.
+- Random but seeded, so runs are repeatable.
+- Redraw until all 7 novelty rules pass (docs/TECH.md).
+- Use only primitives suited to the channel and not benched.
+- 70% proven, 30% experiments.
+
+## Never
+- Call an AI.
+- Reuse a recipe fingerprint on two channels in the same week.

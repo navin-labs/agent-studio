@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "channel",
+  "description": "Per-channel config: role, KPI, CTA, themes, cadence, publisher.",
+  "type": "object",
+  "required": ["id", "role", "audience", "kpi", "cta", "themes", "cadence", "publishers"],
+  "properties": {
+    "id": {"enum": ["c1-automation", "c2-reach", "c3-studio"]},
+    "role": {"type": "string"},
+    "audience": {"type": "string"},
+    "kpi": {"type": "object", "properties": {"metric": {"type": "string"}, "target": {"type": "string"}}},
+    "cta": {"type": "array", "items": {"type": "object", "properties": {"text": {"type": "string"}, "share": {"type": "string"}}}},
+    "content_mix": {"type": "array", "items": {"type": "string"}},
+    "themes": {"type": "array", "items": {"enum": ["paper", "ink", "mono", "studio"]}},
+    "cadence": {"type": "object", "properties": {"posts_per_week": {"type": "integer"}}},
+    "publishers": {"type": "array", "items": {"type": "object", "properties": {"platform": {"type": "string"}, "handle": {"type": "string"}, "via": {"type": "string"}}}},
+    "launch_gate": {"type": "string"}
+  }
+}

@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+state/*
+!state/.gitkeep
+node_modules/
+out/
+.DS_Store

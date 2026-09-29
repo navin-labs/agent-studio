@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ledger",
+  "description": "One entry per video. Dispatch only acts on status approved.",
+  "type": "object",
+  "required": ["storyboard_id", "channel", "status", "updated_at"],
+  "properties": {
+    "storyboard_id": {"type": "string"},
+    "channel": {"enum": ["c1-automation", "c2-reach", "c3-studio"]},
+    "status": {"enum": ["rendered", "qa-failed", "pending-approval", "approved", "rejected", "dispatched", "published"]},
+    "approved_by": {"type": "string"},
+    "approved_at": {"type": "string", "format": "date-time"},
+    "targets": {"type": "array", "items": {"enum": ["instagram", "youtube"]}},
+    "scheduled_for": {"type": "string", "format": "date-time"},
+    "post_urls": {"type": "array", "items": {"type": "string", "format": "uri"}},
+    "updated_at": {"type": "string", "format": "date-time"}
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "qa",
+  "description": "Result of Render + QA for one storyboard.",
+  "type": "object",
+  "required": ["storyboard_id", "pass", "checks"],
+  "properties": {
+    "storyboard_id": {"type": "string"},
+    "pass": {"type": "boolean"},
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "pass"],
+        "properties": {
+          "name": {"enum": ["schema", "text-limits", "audio", "format", "duration", "safe-zones", "fingerprint", "naming"]},
+          "pass": {"type": "boolean"},
+          "error": {"type": "string", "description": "Exact error sent back to Forge"}
+        }
+      }
+    },
+    "video_path": {"type": "string"},
+    "contact_sheet_path": {"type": "string"},
+    "text_boxes": {"type": "array", "items": {"type": "object"}}
+  }
+}
