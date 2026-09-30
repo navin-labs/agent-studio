@@ -185,6 +185,13 @@ Open questions: n8n workflow shows as not active (Navin to publish it); receiver
 ## 2026-10-01, session 15b: n8n approval relay live
 Did: first publish failed ("URL parameter must be a string": n8n's expression sandbox has no URLSearchParams). Forward node now uses a fixed URL + "send query parameters" as JSON; re-imported (same id) and republished by Navin.
 Verified end to end through n8n (localhost:5678/webhook/agent-studio-approve -> host.docker.internal:5680 -> ledger.ts): tampered link -> 403 "approval signature does not match"; correctly signed link for an unknown video -> 200 "storyboard not found"; ledger and fingerprint files stay empty.
-Commit: pending "approve commit"
+Commit: fd17b0a fix(n8n): forward approval query as parameters, verified end to end
 Next: B4b switch-over after Forge is repointed.
 Open questions: receiver LaunchAgent (Navin's OK); Forge output folder change (Navin).
+
+## 2026-10-01, session 15c: receiver installed
+Did: `node studio/approve-server.ts --install` (Navin's OK): LaunchAgent com.theautomationguy.approve, RunAtLoad + KeepAlive, log state/approve.log. Re-verified through n8n: signed link -> 200 via the installed receiver; ledger still empty.
+Commit: pending "approve commit"
+Next: B4b switch-over after Forge is repointed.
+Open questions: Forge output folder change (Navin).
+

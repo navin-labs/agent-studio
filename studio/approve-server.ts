@@ -3,8 +3,11 @@
 // Listens on 127.0.0.1 only. The secret stays in agent-studio/.env (APPROVAL_SECRET); n8n never holds it.
 //
 // node studio/approve-server.ts            (APPROVE_PORT, default 5680)
+// node studio/approve-server.ts --install  run it at login via launchd (log: state/approve.log)
+import {spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
+import os from 'node:os';
 import path from 'node:path';
 import {applyApproval} from './ledger.ts';
 
@@ -24,7 +27,34 @@ export const handle = (url: string, secret: string, opts?: Parameters<typeof app
   }
 };
 
-if (import.meta.main) {
+const install = () => {
+  const label = 'com.theautomationguy.approve';
+  const root = path.join(import.meta.dirname, '..');
+  const plist = path.join(os.homedir(), 'Library/LaunchAgents', `${label}.plist`);
+  const log = path.join(root, 'state', 'approve.log');
+  fs.mkdirSync(path.dirname(log), {recursive: true});
+  fs.writeFileSync(
+    plist,
+    `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>${label}</string>
+  <key>ProgramArguments</key><array><string>${esc(process.execPath)}</string><string>${esc(path.join(root, 'studio/approve-server.ts'))}</string></array>
+  <key>WorkingDirectory</key><string>${esc(root)}</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>${esc(log)}</string>
+  <key>StandardErrorPath</key><string>${esc(log)}</string>
+</dict></plist>
+`,
+  );
+  spawnSync('launchctl', ['unload', plist]);
+  const r = spawnSync('launchctl', ['load', '-w', plist], {encoding: 'utf8'});
+  console.log(r.status === 0 ? `installed ${label} (${plist}); log: ${log}` : `launchctl failed: ${r.stderr}`);
+};
+
+if (import.meta.main && process.argv.includes('--install')) install();
+else if (import.meta.main) {
   const envFile = path.join(import.meta.dirname, '..', '.env');
   if (fs.existsSync(envFile)) process.loadEnvFile(envFile);
   const secret = process.env.APPROVAL_SECRET ?? '';
