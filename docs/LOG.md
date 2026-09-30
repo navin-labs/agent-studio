@@ -178,6 +178,13 @@ Open questions: where n8n runs (local Execute Command vs cloud queue) and adding
 Did: n8n runs in Docker (~/Dev/tools/n8n, 2.31.4, 127.0.0.1:5678) and cannot see this repo, so `studio/approve-server.ts` receives approvals on the Mac (127.0.0.1:5680, GET only, never logs the signed query) and hands them to ledger.ts. `n8n/approval-webhook.json` (Webhook -> HTTP Request to host.docker.internal:5680 -> Respond) imported into n8n inactive via the n8n CLI (id agStudioApprove1); no file under ~/Dev/tools/n8n changed, no credential used. Approval links may be https or http on localhost. Created agent-studio/.env (0600, gitignored) with APPROVAL_WEBHOOK_URL and a generated 48-char APPROVAL_SECRET (value never displayed). Receiver tests added to approval.test.ts.
 Verified: container -> Mac hop (host.docker.internal) from n8n_main and n8n_worker; receiver live: health 200, bad signature 403, POST 405. B4b prep: the 7 live Forge stories in engine/content/stories are byte-identical to reel-engine's; latest Forge story rendered from engine/ matches the old render (1080x1920, 30 fps, 37.419 s, audio); watcher first run marks existing files done (no re-render, no Drive duplicates).
 Decisions: the watcher switch waits for Forge's output folder to move (the watcher writes .status.txt beside each story; a bridge would write into reel-engine).
-Commit: pending "approve commit"
+Commit: 1b65c98 feat(studio): approve receiver for the dockerised n8n, approval webhook workflow
 Next: finish B4b once Forge is repointed; end-to-end test through n8n once the workflow is published.
 Open questions: n8n workflow shows as not active (Navin to publish it); receiver as a LaunchAgent (needs Navin's OK); Forge output folder change (Navin).
+
+## 2026-10-01, session 15b: n8n approval relay live
+Did: first publish failed ("URL parameter must be a string": n8n's expression sandbox has no URLSearchParams). Forward node now uses a fixed URL + "send query parameters" as JSON; re-imported (same id) and republished by Navin.
+Verified end to end through n8n (localhost:5678/webhook/agent-studio-approve -> host.docker.internal:5680 -> ledger.ts): tampered link -> 403 "approval signature does not match"; correctly signed link for an unknown video -> 200 "storyboard not found"; ledger and fingerprint files stay empty.
+Commit: pending "approve commit"
+Next: B4b switch-over after Forge is repointed.
+Open questions: receiver LaunchAgent (Navin's OK); Forge output folder change (Navin).
