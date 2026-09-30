@@ -91,6 +91,14 @@ Rules (enforced by `npm run gate:themes`, which `make.mjs` runs before every ren
 | Hook pattern | Not 3 in a row; caption opener doesn't repeat the previous 2 posts |
 | Cross-channel | Same recipe fingerprint never on two channels in the same week |
 
+## Primitives (`engine/src/primitives/`)
+| Part | Where |
+|---|---|
+| Spec: family, channels, min/max seconds, cues, text limits, example (test storyboard) | `specs.ts` (pure data, readable from Node) |
+| Validator for params | `validateParams(id, params)` in `specs.ts` |
+| Component: one full-frame shot, `{p, dur, cues}`, draws only in the stage band y 280 to 1080 | `<id>.tsx`, registered in `index.ts` |
+| Contact sheet (8 frames) and preview video | `Preview.tsx`; `npm run primitives [-- --all-themes]` |
+
 ## QA checks (deterministic)
 Schema and text limits, audio stream present, 1080x1920 @ 30fps, duration 20 to 45s, safe zones from text boxes measured at compose time, fingerprint distance, file naming. Output: qa JSON + contact sheet PNG.
 

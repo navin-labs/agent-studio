@@ -10,7 +10,8 @@
     "vo": "node scripts/make.mjs --vo-only",
     "watch": "node scripts/watch.mjs",
     "watch:install": "node scripts/watch.mjs --install",
-    "gate:themes": "node scripts/theme-gate.ts"
+    "gate:themes": "node scripts/theme-gate.ts",
+    "primitives": "node scripts/primitives.mjs"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.527",

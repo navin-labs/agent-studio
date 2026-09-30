@@ -115,6 +115,7 @@ This updates the code but keeps your `.env`, your scripts and your renders.
 |---|---|
 | `npm run make -- <file>.json` | Renders a story into `out/<id>/` |
 | `npm run gate:themes` | Contrast check for all themes + no raw colours outside `src/themes.ts` |
+| `npm run primitives -- --all-themes` | Validate every primitive's example and render its contact sheet to `out/primitives/` |
 | `npm run make -- <file>.json --check` | Quality gate only, no render |
 | `npm run make -- <file>.json --no-vo` | Silent preview (no voice credit) |
 | `npm run make -- <file>.json --vo-only` | Generates voice clips only |

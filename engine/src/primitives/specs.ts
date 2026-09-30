@@ -1,0 +1,177 @@
+// Primitive specs: the contract for every motion primitive. Pure data, no React, so Node scripts
+// (make.mjs, agent-studio QA) can read text limits and durations.
+// A primitive is one full-frame shot. The Composer (A4) sequences shots and adds captions and transitions.
+// Shots draw only inside STAGE (y 280 to 1080) so captions (y 1120+) and the IG header never collide.
+import icons from '../ui/icon-names.json' with {type: 'json'};
+
+export type Channel = 'c1-automation' | 'c2-reach' | 'c3-studio';
+export type Family = 'kinetic-type' | 'camera' | 'transition' | 'world' | 'data' | 'texture';
+
+export type Field =
+  | {kind: 'text'; max: number; optional?: boolean} // max characters, *accent* markers not counted
+  | {kind: 'icon'}
+  | {kind: 'int'; min: number; max: number}
+  | {kind: 'bool'}
+  | {kind: 'enum'; of: string[]}
+  | {kind: 'object'; fields: Record<string, Field>}
+  | {kind: 'list'; min: number; max: number; of: Field};
+
+export type Spec = {
+  family: Family;
+  about: string;
+  channels: Channel[];
+  seconds: [number, number]; // min, max shot length
+  cues: string; // what the *accent* cue frames drive, in order
+  params: Record<string, Field>;
+  example: Record<string, unknown>; // the primitive's test storyboard
+};
+
+const text = (max: number, optional = false): Field => ({kind: 'text', max, optional});
+const ALL: Channel[] = ['c1-automation', 'c2-reach', 'c3-studio'];
+const item: Field = {kind: 'object', fields: {title: text(9), id: text(5), pill: text(6), amount: {kind: 'bool'}}};
+const node: Field = {kind: 'object', fields: {icon: {kind: 'icon'}, label: text(16), sub: text(22)}};
+const exItem = {title: 'ORDER', id: 'PO-', pill: 'NEW', amount: false};
+const exNodes = [
+  {icon: 'inbox', label: 'Read the email', sub: 'orders@ inbox'},
+  {icon: 'search', label: 'Pull details', sub: 'Item, qty, address'},
+  {icon: 'sheet', label: 'Add to sheet', sub: 'Orders.xlsx'},
+  {icon: 'send', label: 'Confirm order', sub: 'Reply in 1 minute'},
+];
+
+export const SPECS: Record<string, Spec> = {
+  'word-stack-slam': {
+    family: 'kinetic-type',
+    about: 'Headline words slam up one by one; *accent* words get the highlighter.',
+    channels: ALL,
+    seconds: [1.5, 4],
+    cues: 'optional: frame the first highlighter lands (default: right after its word)',
+    params: {text: text(40)},
+    example: {text: 'Someone typed *all* of these.'},
+  },
+  'highlighter-swipe': {
+    family: 'kinetic-type',
+    about: 'A statement sits on screen; the highlighter swipes each *accent* word on its cue.',
+    channels: ALL,
+    seconds: [2, 5],
+    cues: 'one per *accent* word, in order (default: spread evenly)',
+    params: {text: text(60)},
+    example: {text: "Here's the *fix*: let the sheet *update itself*."},
+  },
+  'pile-drop': {
+    family: 'world',
+    about: 'Paper cards rain onto a desk and pile up; the camera shakes when it gets buried.',
+    channels: ['c1-automation', 'c3-studio'],
+    seconds: [2, 6],
+    cues: 'optional: frame the pile is buried (shake)',
+    params: {item, count: {kind: 'int', min: 4, max: 28}, start: {kind: 'int', min: 1, max: 99999}},
+    example: {item: exItem, count: 22, start: 2201},
+  },
+  'counter-drop': {
+    family: 'data',
+    about: 'A status card whose number ticks from one value to another.',
+    channels: ALL,
+    seconds: [1.5, 4],
+    cues: 'optional: frame the count starts',
+    params: {label: text(10), icon: {kind: 'icon'}, from: {kind: 'int', min: 0, max: 999}, to: {kind: 'int', min: 0, max: 999}, tone: {kind: 'enum', of: ['alert', 'ok']}},
+    example: {label: 'TO TYPE', icon: 'mail', from: 28, to: 0, tone: 'ok'},
+  },
+  'flow-build': {
+    family: 'world',
+    about: 'Automation steps pop in one by one, links draw between them, a cursor clicks each.',
+    channels: ['c1-automation', 'c3-studio'],
+    seconds: [2, 5],
+    cues: 'one per step: the frame it appears',
+    params: {nodes: {kind: 'list', min: 2, max: 4, of: node}},
+    example: {nodes: exNodes},
+  },
+  'flow-run': {
+    family: 'world',
+    about: 'A built automation runs: each step lights on its cue, data travels the links, the last step stamps done.',
+    channels: ['c1-automation', 'c3-studio'],
+    seconds: [3, 8],
+    cues: 'one per step: the frame it lights up',
+    params: {nodes: {kind: 'list', min: 2, max: 4, of: node}, done: text(8)},
+    example: {nodes: exNodes, done: 'DONE'},
+  },
+  conveyor: {
+    family: 'world',
+    about: 'Cards stream from a pile along a curve into one step, with motion blur.',
+    channels: ALL,
+    seconds: [2, 6],
+    cues: 'optional: frame the stream starts',
+    params: {item, node, count: {kind: 'int', min: 3, max: 20}},
+    example: {item: exItem, node: exNodes[0], count: 12},
+  },
+  'chat-pop': {
+    family: 'world',
+    about: 'A chat bubble pops in with the app name, the message and read ticks.',
+    channels: ['c1-automation', 'c3-studio'],
+    seconds: [1.5, 5],
+    cues: 'optional: frame the bubble pops',
+    params: {app: text(12), text: text(90)},
+    example: {app: 'EMAIL', text: 'Hi Gupta ji, order PO-2214 is confirmed. Dispatch on 24 Sep.'},
+  },
+  'stamp-hit': {
+    family: 'texture',
+    about: 'Done badges stamp in with a ring burst, one per cue.',
+    channels: ['c1-automation', 'c3-studio'],
+    seconds: [1, 4],
+    cues: 'one per stamp (default: spread evenly)',
+    params: {label: text(8), count: {kind: 'int', min: 1, max: 6}},
+    example: {label: 'PAID', count: 4},
+  },
+  'end-card': {
+    family: 'kinetic-type',
+    about: 'Brand end card: logo, CTA with highlighted *accent*, promise line, authorship line.',
+    channels: ALL,
+    seconds: [2, 4],
+    cues: 'none',
+    params: {text: text(20), sub: text(60, true)},
+    example: {text: '*Follow*', sub: 'One business automation, every day.'},
+  },
+};
+
+// ---- validation: returns human-readable errors, empty when params fit the spec ----
+const len = (s: string) => s.replace(/\*/g, '').length;
+
+const check = (f: Field, v: unknown, at: string, errs: string[]): void => {
+  if (v === undefined || v === null) {
+    if (!(f.kind === 'text' && f.optional)) errs.push(`${at}: missing`);
+    return;
+  }
+  switch (f.kind) {
+    case 'text':
+      if (typeof v !== 'string' || !v.trim()) errs.push(`${at}: must be non-empty text`);
+      else if (len(v) > f.max) errs.push(`${at}: max ${f.max} characters, got ${len(v)}: "${v}"`);
+      return;
+    case 'icon':
+      if (typeof v !== 'string' || !(v.toLowerCase() in icons)) errs.push(`${at}: unknown icon "${v}"`);
+      return;
+    case 'int':
+      if (!Number.isInteger(v) || (v as number) < f.min || (v as number) > f.max) errs.push(`${at}: must be a whole number ${f.min} to ${f.max}`);
+      return;
+    case 'bool':
+      if (typeof v !== 'boolean') errs.push(`${at}: must be true or false`);
+      return;
+    case 'enum':
+      if (!f.of.includes(v as string)) errs.push(`${at}: must be one of ${f.of.join(', ')}`);
+      return;
+    case 'object':
+      if (typeof v !== 'object' || Array.isArray(v)) return void errs.push(`${at}: must be an object`);
+      for (const [k, sub] of Object.entries(f.fields)) check(sub, (v as Record<string, unknown>)[k], `${at}.${k}`, errs);
+      for (const k of Object.keys(v)) if (!(k in f.fields)) errs.push(`${at}.${k}: unknown field`);
+      return;
+    case 'list':
+      if (!Array.isArray(v)) return void errs.push(`${at}: must be a list`);
+      if (v.length < f.min || v.length > f.max) errs.push(`${at}: needs ${f.min} to ${f.max} items, got ${v.length}`);
+      v.forEach((x, i) => check(f.of, x, `${at}[${i}]`, errs));
+  }
+};
+
+export const validateParams = (id: string, params: unknown): string[] => {
+  const spec = SPECS[id];
+  if (!spec) return [`unknown primitive "${id}" (use one of: ${Object.keys(SPECS).join(', ')})`];
+  const errs: string[] = [];
+  check({kind: 'object', fields: spec.params}, params, id, errs);
+  return errs;
+};

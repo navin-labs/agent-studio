@@ -36,10 +36,19 @@ Open questions: 2, 3, 4, 5, 7 to 13, 15 to 18 from session 1 still open. Q18 lea
 Did: Story + Captions read colours from a theme (React context, `useTheme()`); scripts pick it with `"theme"` (default paper). Removed reel and carousel formats, their UI cards, the unused Mascot and the old dark palette (ADR 9). `theme.ts` now holds no colours. `scripts/contrast.ts` became `scripts/theme-gate.ts` (`npm run gate:themes`): contrast + raw-colour scan of src/. `make.mjs` runs the theme gate before rendering, rejects unknown themes and non-story formats; watcher watches content/stories only. Added `scripts/stills.mjs` (8 frames x 3 stories) for visual regression.
 Verified: paper renders 21/24 frames byte-identical to before; the 3 that differ are the cursor drop shadow (#000 to shadow token #111). All 7 real stories pass `--check`. Bad theme and reel format are rejected (exit 1). Full MP4 render: 1080x1920, 30 fps, audio stream, 31.4 s. Story renders in ink, mono and studio.
 Decisions: ADR 9. Text on the highlighter uses onAccent in Story and Captions.
-Commit: pending "approve commit"
+Commit: e3cd4ab feat(engine): stories on role tokens, theme gate, remove reel and carousel formats, pushed to origin/main
 Next: A3 primitive interface + registry.
 Open questions:
 19. Brand mark `public/brand/mark.png` is light grey. It vanishes on the ink theme's end card (which is light, because the ink wipe uses the ink token). Need a dark variant or a tinted mark.
 20. ink theme: black card shadows are invisible on the near-black background (approved colours, flagged for a look).
 21. No TypeScript compiler in engine/ (types are never checked; esbuild only strips them). Add `typescript` as a dev dependency?
 Still open from session 1: 2, 3, 4, 5, 7, 8, 10 to 13, 15 to 18. Q9 resolved: only one template (`pile-to-flow`) exists.
+
+## 2026-09-30, session 4: A3 primitive interface + registry
+Did: `engine/src/primitives/`: `specs.ts` (10 specs + `validateParams`), `atoms.tsx` (Shot, timing helpers, brand cards copied from Story.tsx), 10 shots (word-stack-slam, highlighter-swipe, pile-drop, counter-drop, flow-build, flow-run, conveyor, chat-pop, stamp-hit, end-card), `index.ts` registry, `Preview.tsx` (Primitive video + ContactSheet). `npm run primitives` validates every example, then renders contact sheets to `out/primitives/`.
+Verified: 40/40 contact sheets (10 x 4 themes) rendered and inspected; fixed 4 visual bugs found by looking (blank sheets, flow-run links before nodes, pile too small then off-frame, tiny stamps). Validator rejects over-long text, missing fields, unknown icons/fields/primitives. flow-run MP4: 1080x1920, audio, 5.5 s. Story regression 24/24 identical. Theme gate passes.
+Decisions: ADR 10. Transitions (whip-pan, ink-wipe) move to A4 with the Composer (total 12). Story.tsx stays untouched until A4 rebuilds pile-to-flow from primitives.
+Lesson: a Remotion `<Still>` has 1 frame, so `<Freeze>` children scheduled later render nothing; the contact sheet is a full-length Composition rendered at frame 0.
+Commit: pending "approve commit"
+Next: A4 Composer.
+Open questions: 19 to 21 still open (logo on ink end card, ink shadows, TypeScript).

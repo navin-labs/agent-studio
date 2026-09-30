@@ -16,12 +16,13 @@ Phase done when: the same storyboard renders correctly in all 4 themes, and 3 st
   > Read CLAUDE.md. In engine/, replace every hex colour in src/ with role tokens from themes.ts.
   > Add the grep check to the gate. Re-render story-order-emails to confirm nothing changed.
   > Stop when the grep check passes and the render matches.
-- [ ] **A3 Primitive interface + registry.** Done when: about 12 primitives are registered, each with schema, cue points, suited channels, test storyboard, contact sheet.
+- [x] **A3 Primitive interface + registry.** Done when: about 12 primitives are registered, each with schema, cue points, suited channels, test storyboard, contact sheet. (10 shots; whip-pan and ink-wipe transitions land in A4. Check: `npm run primitives -- --all-themes`.)
   > Read CLAUDE.md, docs/TECH.md. Define the primitive interface (params, text limits, min/max seconds, cues, channels) and a registry.
   > Break the `pile-to-flow` story (engine/src/story/Story.tsx, the only template left) into about 12 primitives. One test storyboard per primitive.
   > Stop when all primitives render their test storyboard.
 - [ ] **A4 Composer.** Done when: a storyboard (list of primitives + transitions + cues) renders to one composition.
-  > Read CLAUDE.md, schemas/storyboard.schema.json. Build the Composer: storyboard to composition, accent cues, transitions.
+  > Read CLAUDE.md, schemas/storyboard.schema.json, engine/src/primitives/specs.ts. Build the Composer: storyboard to composition, accent cues, captions, transitions (whip-pan, ink-wipe).
+  > Rebuild pile-to-flow as a storyboard from primitives, then delete story/Story.tsx and the copied atoms.
   > Keep old formats rendering until the Composer reproduces them.
   > Stop when one storyboard renders in all 4 themes.
 - [ ] **A5 Text box measurement.** Done when: each render writes measured text boxes to a JSON file QA can read.
