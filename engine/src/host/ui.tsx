@@ -4,13 +4,13 @@ import React from 'react';
 import {interpolate, useCurrentFrame} from 'remotion';
 import {Sfx} from '../lib/frame';
 import {clamp, lerp, prog, springFrom} from '../primitives/atoms';
-import {TYPE} from '../theme';
+import {SIDE, TYPE} from '../theme';
 import {alpha, useTheme} from '../themes';
 import {Icon} from '../ui/Icon';
 import {Host, HostStage, type Mood} from './Host';
 
 export type Mode = 'manual' | 'auto';
-export const WIN = {x: 60, y: 290, w: 960, h: 660, bar: 70}; // the window sits above the host and the captions
+export const WIN = {x: SIDE, y: 290, w: 1080 - 2 * SIDE, h: 660, bar: 70}; // the window sits above the host and the captions
 
 export const Window: React.FC<{title: string; icon: string; mode: Mode; children: React.ReactNode}> = ({title, icon, mode, children}) => {
   const th = useTheme();

@@ -2,7 +2,7 @@ import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {Sfx} from '../lib/frame';
 import {parseAccent} from '../lib/text';
-import {TYPE} from '../theme';
+import {SIDE, TYPE} from '../theme';
 import {useTheme} from '../themes';
 import {Host, HostStage, type Mood} from '../host/Host';
 import {Highlight, LINEAR, type PrimitiveProps, prog, springFrom} from './atoms';
@@ -16,7 +16,7 @@ const HostLine: React.FC<PrimitiveProps<{text: string}> & {mood: Mood; size: num
   const hit = cues[0] ?? 8 + Math.max(0, accentIdx) * 3;
   return (
     <HostStage dur={dur}>
-      <div data-tb="headline" style={{position: 'absolute', top: 300, left: 70, right: 70, height: 480, display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 26, fontFamily: TYPE.display, fontSize: size, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.02, color: th.ink}}>
+      <div data-tb="headline" style={{position: 'absolute', top: 300, left: SIDE + 20, right: SIDE + 20, /* +20: headroom for the push-in zoom */ height: 480, display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 26, fontFamily: TYPE.display, fontSize: size, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.02, color: th.ink}}>
         {words.map((w, i) => {
           const s = springFrom(f, 1 + i * 3, {damping: 13, stiffness: 190});
           return (
@@ -36,4 +36,4 @@ const HostLine: React.FC<PrimitiveProps<{text: string}> & {mood: Mood; size: num
 export const HostHook: React.FC<PrimitiveProps<{text: string}>> = (props) => <HostLine {...props} mood="pain" size={118} />;
 
 // Recipe scene 7a: the payoff takeaway, host hopping.
-export const HostPayoff: React.FC<PrimitiveProps<{text: string}>> = (props) => <HostLine {...props} mood="happy" size={104} />;
+export const HostPayoff: React.FC<PrimitiveProps<{text: string}>> = (props) => <HostLine {...props} mood="happy" size={96} />;

@@ -129,6 +129,14 @@ Did: VT323 self-hosted (approved) and loaded in fonts.ts; committed session 8. R
 Voice comparison: same 3 lines in 6 speakers (out/voices/*.mp3). shubh 3.5 words/s; aditya, rohan, priya, kavya, shreya 2.6 to 2.8 words/s (the same script would run about 52 to 56 s).
 Decisions: storyboards estimate vo at VOICE_WPS 3.0 words/s (lib/timing.ts) instead of 2.4; the old rate rejected lines that measure well inside the shot. Story format keeps 2.4 (frames unchanged). Measured voice still overrides the estimate.
 Verified: npm run check; 3 composed boards + stress board 0 text errors; story regression 24/24 identical.
-Commit: pending "approve commit"
+Commit: 93e6d48 feat(engine): 8-shot C1 host video with Sarvam voice, storyboard speech rate 3.0 words/s
 Next: A6.6 per-format QA (host 40 to 60 s after voice; the 20 to 45 s warning on host boards goes away).
 Open questions: which Sarvam speaker is Chiku's voice (Navin picks later from out/voices/; re-voice only, shubh until then).
+
+## 2026-10-01, session 10: A6.6 per-format QA
+Did: Length limits per format (storyboard.ts LENGTH, boardFormat, lengthIssue): host 40 to 60 s, composed 20 to 45 s; estimate warns, a voiced render out of range fails (make.mjs); asserted in primitives.mjs. Text QA checks every platform profile (textcheck.ts SAFE_ZONES: instagram, youtube; self-test extended). YouTube's right 120 px button column failed 13 texts on the host board: added SIDE = 120 (theme.ts) and moved the UI window, karaoke, big type, CTA and end-card sub inside it; big type and CTA get +20 px for the push-in zoom; flow-run's done pill rises straight up instead of drifting right. Stress board now also holds host-hook, word-stack-slam, highlighter-swipe, host-payoff and host-cta at max length. It caught: payoff at 56 chars ran above the safe area (payoff type 104 -> 96 px); CTA overflowed the screen (now wraps, font fits the longest word, max 12 chars "DM " + keyword); CTA brand line was covered by the card, then by the host (brand now follows the card in flow; host moved to y 1400).
+Verified: npm run check; 85 contact sheets; host board voiced 43.8 s, 3 composed boards and stress board 0 text errors on both platforms; story regression 24/24.
+Decisions: every board is checked against all platform profiles (one cut posts everywhere). Text-vs-text and text-vs-host overlap is not measured (only caption overlap); the stress board plus a still review covers it for now.
+Commit: pending "approve commit"
+Next: Phase A done. B1 schemas final.
+Open questions: Chiku's Sarvam voice (re-voice later).

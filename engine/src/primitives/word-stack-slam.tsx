@@ -1,7 +1,7 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {parseAccent} from '../lib/text';
-import {TYPE} from '../theme';
+import {SIDE, TYPE} from '../theme';
 import {useTheme} from '../themes';
 import {Highlight, LINEAR, type PrimitiveProps, prog, Shot, springFrom, STAGE} from './atoms';
 
@@ -13,7 +13,7 @@ export const WordStackSlam: React.FC<PrimitiveProps<{text: string}>> = ({p, dur,
   const firstAccent = words.findIndex((w) => w.accent);
   return (
     <Shot dur={dur}>
-      <div data-tb="headline" style={{position: 'absolute', top: STAGE.top, bottom: 1920 - STAGE.bottom, left: 80, right: 80, display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 28, fontFamily: TYPE.display, fontSize: 136, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.02, color: th.ink}}>
+      <div data-tb="headline" style={{position: 'absolute', top: STAGE.top, bottom: 1920 - STAGE.bottom, left: SIDE + 20, right: SIDE + 20, /* +20: headroom for the push-in zoom */ display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 28, fontFamily: TYPE.display, fontSize: 136, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.02, color: th.ink}}>
         {words.map((w, i) => {
           const s = springFrom(f, 1 + i * 3, {damping: 14, stiffness: 180});
           const at = i === firstAccent && cues[0] !== undefined ? cues[0] : 8 + i * 3;

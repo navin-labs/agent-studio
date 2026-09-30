@@ -50,7 +50,8 @@ export const FlowRun: React.FC<PrimitiveProps<{nodes: Node[]; done: string}>> = 
         return (
           <div key={k} style={{position: 'absolute', left: 0, top: 0, zIndex: 30}}>
             <div style={{position: 'absolute', left: L.x - NODE_W / 2 + 60 - 50 * (1 + t), top: L.y - 50 * (1 + t), width: 100 * (1 + t), height: 100 * (1 + t), borderRadius: '50%', border: `${6 * (1 - t)}px solid ${th.ok}`, opacity: 1 - t}} />
-            <DonePill label={p.done} style={{position: 'absolute', left: L.x + NODE_W / 2 - 40 + 60 * t, top: L.y - 60 - 140 * t + k * 30, opacity: interpolate(t, [0, 0.15, 0.7, 1], [0, 1, 1, 0]), transform: `scale(${0.7 + 0.3 * Math.min(1, t * 4)})`}} />
+            <DonePill label={p.done} style={{position: 'absolute', left: L.x + NODE_W / 2 - 160, // rises straight up: drifting right ran under the Shorts buttons
+ top: L.y - 60 - 140 * t + k * 30, opacity: interpolate(t, [0, 0.15, 0.7, 1], [0, 1, 1, 0]), transform: `scale(${0.7 + 0.3 * Math.min(1, t * 4)})`}} />
           </div>
         );
       })}

@@ -5,7 +5,7 @@ import React, {useContext} from 'react';
 import {AbsoluteFill, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {chunkWords, parseAccent, splitWords} from '../lib/text';
 import {LEAD} from '../lib/timing';
-import {TYPE} from '../theme';
+import {SIDE, TYPE} from '../theme';
 import {alpha, useTheme} from '../themes';
 import {blinkAt, mouthFromAmplitude, mouthFromWords} from './acting';
 import {type Acting, Bahi, Chiku, DitherDefs, Stage, Tikku} from './mascots';
@@ -86,7 +86,7 @@ export const KaraokeCaptions: React.FC<{vo: string; starts: number[]}> = ({vo, s
   const pop = interpolate(f - starts[chunk.startIdx], [0, 4], [0.92, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const accent = parseAccent(vo).map((w) => w.accent);
   return (
-    <div data-tb="caption" style={{position: 'absolute', top: KARAOKE_TOP, left: 80, right: 80, height: 150, display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 16, fontFamily: TYPE.title, fontSize: 60, fontWeight: 800, lineHeight: 1.12, letterSpacing: '-0.02em', color: th.ink, transform: `scale(${pop})`}}>
+    <div data-tb="caption" style={{position: 'absolute', top: KARAOKE_TOP, left: SIDE, right: SIDE, height: 150, display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 16, fontFamily: TYPE.title, fontSize: 60, fontWeight: 800, lineHeight: 1.12, letterSpacing: '-0.02em', color: th.ink, transform: `scale(${pop})`}}>
       {chunk.words.map((w, j) => {
         const i = chunk.startIdx + j;
         return (

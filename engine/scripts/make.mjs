@@ -15,7 +15,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
-import {probeFrames, validateStoryboard} from '../src/composer/storyboard.ts';
+import {lengthIssue, probeFrames, validateStoryboard} from '../src/composer/storyboard.ts';
 import {checkTextBoxes} from '../src/composer/textcheck.ts';
 import {THEMES} from '../src/themes.ts';
 
@@ -445,7 +445,11 @@ const renderReel = async (script) => {
   issues.forEach((i) => console.log((i.level === 'error' ? c.red : c.yellow)(`  ${i.level}: scene ${i.scene + 1} (${i.primitive}) "${i.text}": ${i.problem}`)));
   const errs = issues.filter((i) => i.level === 'error').length;
   console.log((errs ? c.red : c.green)(`  text boxes: ${frames.length} frames measured, ${errs} error(s) -> text-boxes.json`));
-  return errs === 0;
+  // length: an error only when every vo line was measured; an estimate is never final
+  const long = lengthIssue(script, composition.durationInFrames / composition.fps);
+  const voiced = script.scenes.every((s, i) => !s.vo || durations[i] != null);
+  if (long) console.log((voiced ? c.red : c.yellow)(`  ${voiced ? 'error' : 'warn'}: ${long}${voiced ? '' : ' (estimated, no voice)'}`));
+  return errs === 0 && !(long && voiced);
 };
 
 // ---------- main ----------

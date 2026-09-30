@@ -201,7 +201,7 @@ export const SPECS: Record<string, Spec> = {
     cues: 'none',
     captions: false,
     closer: true,
-    params: {text: text(20), sub: text(60, true)},
+    params: {text: text(12), sub: text(60, true)}, // "DM " + keyword: wraps to 2 lines at most
     example: {text: 'DM *AUDIT*', sub: "I'll look at your most repetitive process for free."},
   },
   'end-card': {

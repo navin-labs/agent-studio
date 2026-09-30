@@ -73,6 +73,14 @@ export const probeFrames = (sb: Storyboard, frames: number[], starts: number[]) 
 export const captionsOn = (sc: StoryboardScene, sb?: Storyboard) =>
   sc.captions ?? (SPECS[sc.primitive]?.captions !== false && (sb?.captionStyle === 'karaoke' || SPECS[sc.primitive]?.family !== 'kinetic-type'));
 
+// Target length per format, in seconds. Host videos are judged on the measured voice; the estimate only warns.
+export const LENGTH = {host: [40, 60], composed: [20, 45]} as const;
+export const boardFormat = (sb: Storyboard): keyof typeof LENGTH => (sb.host ? 'host' : 'composed');
+export const lengthIssue = (sb: Storyboard, secs: number) => {
+  const [lo, hi] = LENGTH[boardFormat(sb)];
+  return secs < lo || secs > hi ? `${boardFormat(sb)} video is ${secs.toFixed(1)}s, needs ${lo} to ${hi}s` : null;
+};
+
 // Engine-level checks. Channel rules (CTA mix, hook patterns) live in the channel RULEBOOK and agent-studio QA.
 export const validateStoryboard = (sb: Storyboard): {errors: string[]; warnings: string[]} => {
   const errors: string[] = [];
@@ -96,6 +104,7 @@ export const validateStoryboard = (sb: Storyboard): {errors: string[]; warnings:
   if (!SPECS[sc.at(-1)?.primitive ?? '']?.closer) errors.push(`last scene must be a closing card (${closers.join(' or ')})`);
   if (errors.length) return {errors, warnings};
   const secs = sceneFrames(sb).reduce((a, b) => a + b, 0) / FPS;
-  if (secs < 20 || secs > 45) warnings.push(`estimated length ${secs.toFixed(1)}s, QA expects 20 to 45s`);
+  const long = lengthIssue(sb, secs);
+  if (long) warnings.push(`estimated: ${long}`);
   return {errors, warnings};
 };

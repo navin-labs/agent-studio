@@ -9,6 +9,8 @@ export const REEL = {w: 1080, h: 1920};
 
 // Caption band
 export const ZONES = {captionTop: 1296, captionHeight: 190};
+// Side margin for text: YouTube Shorts' button column covers the right 120 px; mirrored left so layouts stay centred.
+export const SIDE = 120;
 
 export const TYPE = {
   display: "'Inter Tight', 'Inter', sans-serif", // 900, -4% tracking, 128-160px

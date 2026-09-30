@@ -6,6 +6,7 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import {blinkAt, mouthFromAmplitude, mouthFromWords} from '../src/host/acting.ts';
+import {lengthIssue} from '../src/composer/storyboard.ts';
 import {PIXEL, pixelWipePath} from '../src/lib/pixels.ts';
 import {cuesOr} from '../src/lib/timing.ts';
 import {SPECS, validateParams} from '../src/primitives/specs.ts';
@@ -19,6 +20,7 @@ const ids = opt('--only') ? [opt('--only')] : Object.keys(SPECS);
 // the validator must reject a broken example, or this whole check means nothing
 assert.ok(validateParams('chat-pop', {app: 'X'.repeat(13), text: 'hi'}).length === 1, 'validator broken');
 // cue fill: given cues kept, missing ones always land after the last given cue, in order
+assert.ok(!lengthIssue({host: 'chiku'}, 43.8) && lengthIssue({host: 'chiku'}, 38) && lengthIssue({}, 50) && !lengthIssue({}, 24), 'length limits per format');
 assert.deepEqual(cuesOr([], 2, 0, 100), [25, 75]);
 assert.deepEqual(cuesOr([90], 4, 6, 100), [90, 97, 98, 99]); // late single cue: the rest follow it, never before
 for (const c of [cuesOr([90], 4, 6, 100), cuesOr([10, 20, 30], 4, 10, 80), cuesOr([50, 60], 2, 0, 10)]) assert.ok(c.every((v, i) => !i || v >= c[i - 1]), `cues out of order: ${c}`);
