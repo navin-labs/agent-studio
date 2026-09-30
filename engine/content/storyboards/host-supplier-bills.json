@@ -9,28 +9,105 @@
     {
       "primitive": "host-hook",
       "params": {
-        "text": "Still entering *supplier bills* by hand?"
+        "text": "Still typing *supplier bills* by hand?"
       },
-      "vo": "Still entering *supplier bills* by hand?"
+      "vo": "Still typing *supplier bills* into your books by hand? Let me show you something."
     },
     {
-      "primitive": "pile-drop",
+      "primitive": "ui-inbox",
       "transition": "whip-pan",
       "params": {
-        "item": {
-          "title": "BILL",
-          "id": "SB-",
-          "pill": "ENTER",
-          "amount": true
-        },
-        "count": 20,
-        "start": 4401
+        "title": "BILLS@ INBOX",
+        "mode": "manual",
+        "rows": [
+          {
+            "from": "Mehta Traders",
+            "subject": "Bill SB-4403, 4 cartons"
+          },
+          {
+            "from": "Kapoor Foods",
+            "subject": "Invoice INV-1042 attached"
+          },
+          {
+            "from": "Shree Packaging",
+            "subject": "Revised bill for 12 Sep"
+          },
+          {
+            "from": "Gupta Steel",
+            "subject": "Bill SB-4410, 4,20,000 rupees"
+          }
+        ]
       },
-      "vo": "Every bill gets opened, read and typed in. One by *one.*"
+      "vo": "Every morning the bills pile up. *Mehta*, *Kapoor*, *Shree*, *Gupta*. Someone opens each one and reads it line by line."
+    },
+    {
+      "primitive": "ui-sheet",
+      "transition": "whip-pan",
+      "params": {
+        "file": "PURCHASE.XLSX",
+        "mode": "manual",
+        "columns": [
+          "BILL",
+          "PARTY",
+          "AMOUNT"
+        ],
+        "rows": [
+          [
+            "SB-4403",
+            "Mehta",
+            "38,500"
+          ],
+          [
+            "SB-4404",
+            "Kapoor",
+            "1,12,000"
+          ],
+          [
+            "SB-4405",
+            "Shree",
+            "9,800"
+          ]
+        ]
+      },
+      "vo": "They type it again. *Bill number*, *party*, *amount*. One cell at a time. One typo, and the totals are off."
+    },
+    {
+      "primitive": "ui-diff",
+      "transition": "pixel-wipe",
+      "params": {
+        "file": "BILL-ENTRY PROCESS",
+        "lines": [
+          {
+            "op": "del",
+            "text": "Open every bill email"
+          },
+          {
+            "op": "del",
+            "text": "Type party, GSTIN, amount"
+          },
+          {
+            "op": "del",
+            "text": "Check totals by hand"
+          },
+          {
+            "op": "add",
+            "text": "Bill read on arrival"
+          },
+          {
+            "op": "add",
+            "text": "Entry added to register"
+          },
+          {
+            "op": "same",
+            "text": "You check the odd ones"
+          }
+        ]
+      },
+      "vo": "*Opening*, *typing* and *checking*? Gone. Bills get *read* and *entered* on their own. You check the *odd* ones."
     },
     {
       "primitive": "flow-run",
-      "transition": "pixel-wipe",
+      "transition": "whip-pan",
       "params": {
         "done": "ENTERED",
         "nodes": [
@@ -56,15 +133,38 @@
           }
         ]
       },
-      "vo": "It *reads* the bill, *pulls* the fields, and *adds* the entry. You only check the odd ones."
+      "vo": "Here is the flow. It *reads* the bill, *pulls* the GSTIN and amount, *adds* the entry, and *flags* anything odd."
+    },
+    {
+      "primitive": "ui-chat",
+      "transition": "whip-pan",
+      "params": {
+        "contact": "MEHTA TRADERS",
+        "mode": "auto",
+        "messages": [
+          {
+            "from": "them",
+            "text": "Did you get bill SB-4403?"
+          },
+          {
+            "from": "me",
+            "text": "Yes, entered today. Paying on 20 Oct."
+          },
+          {
+            "from": "them",
+            "text": "Great, thank you!"
+          }
+        ]
+      },
+      "vo": "Mehta Traders *asks* about a bill. The *reply* goes out on its own. *Done*, no one typed a thing."
     },
     {
       "primitive": "host-payoff",
-      "transition": "whip-pan",
+      "transition": "pixel-wipe",
       "params": {
         "text": "Bills enter *themselves.* You check the odd ones."
       },
-      "vo": "Bills enter *themselves.* You only check the odd ones."
+      "vo": "Bills enter *themselves*. Your team only checks the odd ones. That is the whole idea."
     },
     {
       "primitive": "host-cta",
@@ -72,7 +172,7 @@
         "text": "DM *AUDIT*",
         "sub": "I'll look at your most repetitive process for free."
       },
-      "vo": "Want this for your bills? DM me AUDIT."
+      "vo": "Want this for your own bills? Just DM me AUDIT."
     }
   ],
   "caption": "Supplier bills do not need a person typing every line.\n\nA small automation can read each bill, pull the GSTIN, amount and date, and add the entry. Your team only checks the odd ones.\n\nExample data.\n\nDM AUDIT and I'll look at your most repetitive process. Send this to whoever enters your bills.",

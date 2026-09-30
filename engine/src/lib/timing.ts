@@ -4,13 +4,15 @@ import {splitWords} from './text.ts';
 export const FPS = 30;
 export const LEAD = 4; // frames of silence before VO starts in each scene
 export const TAIL_AUDIO = 0.35; // seconds after measured VO ends
+// ponytail: one rate for every provider; Sarvam bulbul:v3 at pace 1.1 measured 3.6 words/s, so 3.0 leaves headroom. Per-provider rates if a slower voice is chosen.
+export const VOICE_WPS = 3.0;
 export const TAIL_EST = 0.4; // seconds after estimated VO ends
 
-// ~155 words per minute plus pauses for punctuation.
-export const estimateSeconds = (vo: string) => {
+// ~155 words per minute plus pauses for punctuation (story format). Storyboards pass VOICE_WPS.
+export const estimateSeconds = (vo: string, wps = 2.4) => {
   const words = splitWords(vo);
   const pauses = (vo.match(/[,.!?;:]/g) || []).length;
-  return words.length / 2.4 + pauses * 0.1;
+  return words.length / wps + pauses * 0.1;
 };
 
 // Minimum frames a scene needs so its animation finishes and holds for a beat.

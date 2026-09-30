@@ -1,7 +1,7 @@
 // Storyboard: the Composer's input. A list of primitive shots, each with the vo line shown as captions (and voiced when VOICE=on).
 // Pure data + timing + validation, no React, so make.mjs and agent-studio QA can use it.
 import {parseAccent, wordStarts} from '../lib/text.ts';
-import {estimateSeconds, FPS, LEAD, TAIL_AUDIO, TAIL_EST} from '../lib/timing.ts';
+import {estimateSeconds, FPS, LEAD, TAIL_AUDIO, TAIL_EST, VOICE_WPS} from '../lib/timing.ts';
 import {SPECS, validateParams} from '../primitives/specs.ts';
 import {THEMES, type ThemeName} from '../themes.ts';
 
@@ -37,7 +37,7 @@ export type Storyboard = {
 
 export type Timing = {durations?: (number | null)[]; audio?: (string | null)[]};
 
-const voSecs = (sc: StoryboardScene, i: number, t?: Timing) => t?.durations?.[i] ?? (sc.vo ? estimateSeconds(sc.vo) : 0);
+const voSecs = (sc: StoryboardScene, i: number, t?: Timing) => t?.durations?.[i] ?? (sc.vo ? estimateSeconds(sc.vo, VOICE_WPS) : 0);
 
 // Frames per scene: long enough for the vo, within the primitive's min/max. Measured voice is never cut.
 export const sceneFrames = (sb: Storyboard, t?: Timing): number[] =>
@@ -90,7 +90,7 @@ export const validateStoryboard = (sb: Storyboard): {errors: string[]; warnings:
     if (s.transition !== undefined && !TRANSITIONS.includes(s.transition)) errors.push(`${w}: transition must be one of ${TRANSITIONS.join(', ')}`);
     if (i === 0 && s.transition && s.transition !== 'cut') errors.push(`${w}: the first scene cannot have a transition`);
     if (s.vo !== undefined && (typeof s.vo !== 'string' || !s.vo.trim())) errors.push(`${w}: vo must be non-empty text or left out`);
-    if (s.vo && estimateSeconds(s.vo) + TAIL_EST > spec.seconds[1]) errors.push(`${w}: vo needs about ${estimateSeconds(s.vo).toFixed(1)}s but ${s.primitive} lasts at most ${spec.seconds[1]}s; shorten it`);
+    if (s.vo && estimateSeconds(s.vo, VOICE_WPS) + TAIL_EST > spec.seconds[1]) errors.push(`${w}: vo needs about ${estimateSeconds(s.vo, VOICE_WPS).toFixed(1)}s but ${s.primitive} lasts at most ${spec.seconds[1]}s; shorten it`);
   });
   const closers = Object.keys(SPECS).filter((k) => SPECS[k].closer);
   if (!SPECS[sc.at(-1)?.primitive ?? '']?.closer) errors.push(`last scene must be a closing card (${closers.join(' or ')})`);

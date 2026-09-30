@@ -120,6 +120,15 @@ Open questions: 21 (add `typescript` as a dev dependency so `tsc --noEmit` catch
 Did: Added dev dependencies typescript 7.0.2 and @types/react 19.1.17 (approved), `engine/tsconfig.json` (strict, noEmit), `npm run typecheck` and `npm run check` (tsc + theme gate + textcheck); CLAUDE.md now requires `npm run check` before a commit. First typecheck found 37 errors: dead reel scene cases left in lib/timing.ts (removed) and unguarded nulls from getPointAtLength (primitives skip a degenerate point; legacy Story.tsx asserts non-null, frames unchanged). Verified tsc catches the missing-import bug that crashed ui-diff in session 7.
 A6.4: `pixel-wipe` transition (lib/pixels.ts, asserted), `host-payoff` (shared HostLine with host-hook, happy hop), `host-cta` closing card (CTA, offer line, brand line in TYPE.pixel, host waving), spec `closer` flag (last scene must be end-card or host-cta). Test board now: hook, pile (whip), flow-run (pixel-wipe), payoff (whip), CTA; re-voiced (only new lines generated): 17.5 s, 0 text errors.
 Verified: npm run check passes; 85 contact sheets (17 primitives x 5 themes); 12 scripts gated; story regression 24/24; 3 composed boards + stress board 0 text errors.
-Commit: pending "approve commit"
+Commit: 60a2cc7 feat(engine): TypeScript checks, pixel-wipe transition, host payoff and CTA card, VT323 brand line
 Next: A6.5 C1 host recipe: 7 scenes, 40 to 60 s measured with voice, Sarvam best voice.
 Open questions: none new. VT323 approved by Navin, self-hosted (public/fonts/vt323-latin-400-normal.woff2, 18 KB, OFL-VT323.txt).
+
+## 2026-10-01, session 9: A6.5 C1 host recipe + real voice
+Did: VT323 self-hosted (approved) and loaded in fonts.ts; committed session 8. Rewrote host-supplier-bills as the full 8-shot C1 recipe: hook (host-hook), pain A (ui-inbox manual), pain B (ui-sheet manual), turn (ui-diff, pixel-wipe), demo A (flow-run), demo B (ui-chat auto), payoff (host-payoff, pixel-wipe), CTA (host-cta). 135 spoken words. Voiced with Sarvam bulbul:v3 / shubh: 43.8 s measured, 0 text errors.
+Voice comparison: same 3 lines in 6 speakers (out/voices/*.mp3). shubh 3.5 words/s; aditya, rohan, priya, kavya, shreya 2.6 to 2.8 words/s (the same script would run about 52 to 56 s).
+Decisions: storyboards estimate vo at VOICE_WPS 3.0 words/s (lib/timing.ts) instead of 2.4; the old rate rejected lines that measure well inside the shot. Story format keeps 2.4 (frames unchanged). Measured voice still overrides the estimate.
+Verified: npm run check; 3 composed boards + stress board 0 text errors; story regression 24/24 identical.
+Commit: pending "approve commit"
+Next: A6.6 per-format QA (host 40 to 60 s after voice; the 20 to 45 s warning on host boards goes away).
+Open questions: which Sarvam speaker is Chiku's voice (Navin picks later from out/voices/; re-voice only, shubh until then).

@@ -38,7 +38,7 @@ A6 Host format (pixel-narrator, ADR 13 to 15): one of several formats; spec = Na
   > Build the 4 windows as primitives (host visible beside them, tilting toward the active panel). Spring entrances staggered 80 to 120 ms.
   > Stop when all render in night theme and pass `npm run primitives`.
 - [x] **A6.4 Pixel-wipe, payoff card, logo line.** Done when: pixel-dissolve transition, payoff line primitive, DM AUDIT card and VT323 brand line render (VT323 self-hosted in public/fonts).
-- [ ] **A6.5 C1 host recipe + real voice.** Done when: a 40 to 60 s (measured with voice), 7-scene C1 storyboard (hook, pain A, pain B, turn, demo A, demo B, payoff + CTA) renders voiced with Sarvam's best voice and passes all gates. Needs engine/.env with the Sarvam key (Navin copies it; Claude never reads it).
+- [x] **A6.5 C1 host recipe + real voice.** Done when: a 40 to 60 s (measured with voice), 7-scene C1 storyboard (hook, pain A, pain B, turn, demo A, demo B, payoff + CTA) renders voiced with Sarvam's best voice and passes all gates. Needs engine/.env with the Sarvam key (Navin copies it; Claude never reads it). Built with speaker shubh (43.8 s); final voice picked later, re-voice only.
 - [ ] **A6.6 Per-format QA.** Done when: duration limits are per format (host 40 to 60 s measured after voice, composed 20 to 45 s) and text QA has platform safe-zone profiles (Instagram, YouTube Shorts).
 
 ## Phase B: agent-studio core
