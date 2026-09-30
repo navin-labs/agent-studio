@@ -207,7 +207,6 @@ export const Stage: React.FC<{f?: number; glowY?: number}> = ({f = 0, glowY = 95
         return <rect key={i} x={x} y={y} width={s} height={s} fill={th.ink} opacity={0.15 + 0.5 * random(`so${i}`)} />;
       })}
       <rect width={1080} height={1920} fill="url(#stage-glow)" />
-      <ellipse cx={540} cy={1275} rx={240} ry={34} fill={alpha(th.shadow, 0.6)} />
     </svg>
   );
 };

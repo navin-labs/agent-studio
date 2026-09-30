@@ -3,7 +3,7 @@
 // Self-test: node src/composer/textcheck.ts
 
 export type Rect = {x: number; y: number; w: number; h: number};
-export type TextBox = Rect & {scene: number; primitive: string; role: string; text: string; box?: Rect};
+export type TextBox = Rect & {scene: number; primitive: string; role: string; text: string; box?: Rect; cut?: boolean};
 export type FrameBoxes = {frame: number; boxes: TextBox[]};
 export type Issue = {level: 'error' | 'warning'; frame: number; scene: number; primitive: string; text: string; problem: string};
 
@@ -18,7 +18,7 @@ export const checkTextBoxes = (frames: FrameBoxes[]): Issue[] => {
   const seen = new Set<string>();
   const issues: Issue[] = [];
   const add = (i: Issue) => {
-    const key = `${i.scene}|${i.problem}|${i.text}`; // one report per problem per scene, not per frame
+    const key = `${i.scene}|${i.problem.replace(/ \(.*$/, '')}|${i.text}`; // one report per problem kind per scene, not per frame or pixel
     if (!seen.has(key)) seen.add(key), issues.push(i);
   };
   for (const {frame, boxes} of frames)
@@ -26,6 +26,7 @@ export const checkTextBoxes = (frames: FrameBoxes[]): Issue[] => {
       const at = {frame, scene: b.scene, primitive: b.primitive, text: b.text};
       if (!inside(b, SAFE)) add({...at, level: 'error', problem: `outside the safe area (x ${Math.round(b.x)}..${Math.round(b.x + b.w)}, y ${Math.round(b.y)}..${Math.round(b.y + b.h)})`});
       if (b.box && !inside(b, b.box)) add({...at, level: 'error', problem: 'text overflows its card'});
+      if (b.cut) add({...at, level: 'error', problem: 'text is cut off by its window'});
       for (const o of boxes.slice(k + 1))
         if (o.scene === b.scene && o.role !== b.role && (o.role === 'caption' || b.role === 'caption') && overlaps(b, o))
           add({...at, level: 'warning', problem: `caption overlaps "${(b.role === 'caption' ? o : b).text}"`});
@@ -43,6 +44,7 @@ if (import.meta.main) {
   assert.equal(checkTextBoxes([{frame: 0, boxes: [t({x: 101, box: {x: 100, y: 400, w: 200, h: 50}})]}]).length, 0, '1px anti-alias slack passes');
   const cap = t({role: 'caption', y: 420});
   assert.equal(checkTextBoxes([{frame: 0, boxes: [t({}), cap]}])[0].level, 'warning', 'caption over shot text warns');
-  assert.equal(checkTextBoxes([0, 1, 2].map((frame) => ({frame, boxes: [t({y: 200})]}))).length, 1, 'same problem is reported once per scene');
+  assert.equal(checkTextBoxes([0, 1, 2].map((frame) => ({frame, boxes: [t({y: 200 - frame})]}))).length, 1, 'same problem is reported once per scene, even as it moves');
+  assert.match(checkTextBoxes([{frame: 0, boxes: [t({cut: true})]}])[0].problem, /cut off/, 'clipped text fails');
   console.log('textcheck ok');
 }

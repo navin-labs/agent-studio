@@ -6,7 +6,7 @@ import {AbsoluteFill, interpolate, spring, staticFile, useCurrentFrame, useVideo
 import {chunkWords, parseAccent, splitWords} from '../lib/text';
 import {LEAD} from '../lib/timing';
 import {TYPE} from '../theme';
-import {useTheme} from '../themes';
+import {alpha, useTheme} from '../themes';
 import {blinkAt, mouthFromAmplitude, mouthFromWords} from './acting';
 import {type Acting, Bahi, Chiku, DitherDefs, Stage, Tikku} from './mascots';
 
@@ -34,6 +34,7 @@ const MouthFromAudio: React.FC<{src: string; children: (m: number) => React.Reac
 const Body: React.FC<HostPose & {mouth: number}> = ({x = 540, y = 1250, scale = 1, look = 0, mood = 'idle', moodAt = 0, mouth}) => {
   const f = useCurrentFrame();
   const {fps} = useVideoConfig();
+  const th = useTheme();
   const Mascot = HOSTS[useContext(HostCtx)];
   const bob = Math.sin((f / fps) * Math.PI * 1.1) * 8; // slow idle breathing
   const lean = spring({frame: f, fps, config: {damping: 16, stiffness: 90}}) * look * 7; // tilt toward the active panel
@@ -44,6 +45,7 @@ const Body: React.FC<HostPose & {mouth: number}> = ({x = 540, y = 1250, scale = 
   return (
     <svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
       <DitherDefs />
+      <ellipse cx={x} cy={y + 20 * scale} rx={240 * scale * (1 - Math.abs(hop) / 200)} ry={34 * scale} fill={alpha(th.shadow, 0.6)} /> {/* floor shadow shrinks as the host hops */}
       {/* the mascot is drawn with its feet at (540, 1250); move and scale it from there */}
       <g transform={`translate(${x - 540 * scale} ${y + bob + hop - 1250 * scale}) scale(${scale})`}>
         <Mascot {...acting} />

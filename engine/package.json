@@ -11,7 +11,8 @@
     "watch": "node scripts/watch.mjs",
     "watch:install": "node scripts/watch.mjs --install",
     "gate:themes": "node scripts/theme-gate.ts",
-    "primitives": "node scripts/primitives.mjs"
+    "primitives": "node scripts/primitives.mjs",
+    "stress": "node scripts/make.mjs test/stress-ui.json"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.527",

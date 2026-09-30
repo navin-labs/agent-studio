@@ -1,0 +1,169 @@
+{
+ "format": "storyboard",
+ "id": "stress-ui",
+ "theme": "night",
+ "host": "chiku",
+ "captionStyle": "karaoke",
+ "scenes": [
+  {
+   "primitive": "ui-inbox",
+   "params": {
+    "title": "BILLS@ SHARMAINDUS",
+    "mode": "manual",
+    "rows": [
+     {
+      "from": "Shree Balaji Traders",
+      "subject": "Revised bill SB-44031 for 12 Sep 2"
+     },
+     {
+      "from": "Shree Balaji Traders",
+      "subject": "Revised bill SB-44031 for 12 Sep 2"
+     },
+     {
+      "from": "Shree Balaji Traders",
+      "subject": "Revised bill SB-44031 for 12 Sep 2"
+     },
+     {
+      "from": "Shree Balaji Traders",
+      "subject": "Revised bill SB-44031 for 12 Sep 2"
+     },
+     {
+      "from": "Shree Balaji Traders",
+      "subject": "Revised bill SB-44031 for 12 Sep 2"
+     },
+     {
+      "from": "Shree Balaji Traders",
+      "subject": "Revised bill SB-44031 for 12 Sep 2"
+     }
+    ]
+   },
+   "vo": "Six supplier emails, every one opened by *hand.*"
+  },
+  {
+   "primitive": "ui-sheet",
+   "params": {
+    "file": "PURCHASE_REG_OCT.XLS",
+    "mode": "manual",
+    "columns": [
+     "BILL NO",
+     "PARTY NAME",
+     "GSTIN NO",
+     "AMOUNT RS"
+    ],
+    "rows": [
+     [
+      "SB-44031-AB",
+      "Shree Balaji",
+      "27AAPFU0939",
+      "4,20,00,000"
+     ],
+     [
+      "SB-44031-AB",
+      "Shree Balaji",
+      "27AAPFU0939",
+      "4,20,00,000"
+     ],
+     [
+      "SB-44031-AB",
+      "Shree Balaji",
+      "27AAPFU0939",
+      "4,20,00,000"
+     ],
+     [
+      "SB-44031-AB",
+      "Shree Balaji",
+      "27AAPFU0939",
+      "4,20,00,000"
+     ],
+     [
+      "SB-44031-AB",
+      "Shree Balaji",
+      "27AAPFU0939",
+      "4,20,00,000"
+     ]
+    ]
+   },
+   "vo": "Then every field gets *typed* into the register."
+  },
+  {
+   "primitive": "ui-chat",
+   "params": {
+    "contact": "SHREE BALAJI TRADE",
+    "mode": "auto",
+    "messages": [
+     {
+      "from": "them",
+      "text": "Hello ji, did you receive our revised bill for 12 September?"
+     },
+     {
+      "from": "me",
+      "text": "Yes ji, the bill is entered and payment is due on 20 Sep."
+     },
+     {
+      "from": "them",
+      "text": "Thank you so much, we will send the next bill on 1 October."
+     },
+     {
+      "from": "me",
+      "text": "Noted. Your next bill will be picked up automatically, ji."
+     }
+    ]
+   },
+   "vo": "The replies go out on *their own.*"
+  },
+  {
+   "primitive": "ui-diff",
+   "params": {
+    "file": "BILL ENTRY PROCESS V2",
+    "lines": [
+     {
+      "op": "del",
+      "text": "Open every supplier bill email"
+     },
+     {
+      "op": "del",
+      "text": "Type party, GSTIN and the amount"
+     },
+     {
+      "op": "del",
+      "text": "Check every total twice by hand"
+     },
+     {
+      "op": "del",
+      "text": "Reply to each supplier yourself"
+     },
+     {
+      "op": "add",
+      "text": "Bills are read when they arrive"
+     },
+     {
+      "op": "add",
+      "text": "Entries added to the register"
+     },
+     {
+      "op": "add",
+      "text": "Suppliers get replies instantly"
+     },
+     {
+      "op": "same",
+      "text": "You only check the odd ones out"
+     }
+    ]
+   },
+   "vo": "Four manual steps become *three* automatic ones."
+  },
+  {
+   "primitive": "end-card",
+   "params": {
+    "text": "DM *AUDIT*",
+    "sub": "I'll look at your most repetitive process for free."
+   }
+  }
+ ],
+ "caption": "Stress test: every UI field at its maximum length.\n\nExample data.",
+ "hashtags": [
+  "#automation",
+  "#n8n",
+  "#smallbusinessindia"
+ ]
+}

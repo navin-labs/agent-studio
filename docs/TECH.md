@@ -119,7 +119,7 @@ Host layer (`engine/src/host/`): `mascots.tsx` (characters drawn in SVG with a 7
 ## QA checks (deterministic)
 Schema and text limits, audio stream present, 1080x1920 @ 30fps, duration 20 to 45s, safe zones from text boxes measured at compose time, fingerprint distance, file naming. Output: qa JSON + contact sheet PNG.
 
-Text boxes (built in A5): while a storyboard renders, `TextProbe` (Composer.tsx) measures every visible text block on settled frames (every 5th, fonts loaded, transitions skipped) and emits it as a Remotion `<Artifact>`. `make.mjs` writes `out/<id>/text-boxes.json` and runs `textcheck.ts`: error if text leaves the IG safe area (x 60..1020, y 250..1500) or its card; warning if a caption overlaps shot text. The render fails if any sampled frame did not report.
+Text boxes (built in A5): while a storyboard renders, `TextProbe` (Composer.tsx) measures every visible text block on settled frames (every 5th, fonts loaded, transitions skipped) and emits it as a Remotion `<Artifact>`. `make.mjs` writes `out/<id>/text-boxes.json` and runs `textcheck.ts`: error if text leaves the IG safe area (x 60..1020, y 250..1500) or its card; warning if a caption overlaps shot text. The render fails if any sampled frame did not report. Only visible text counts: boxes are trimmed to clipping ancestors; trimmed text is an error ("cut off by its window") unless it sits in a `data-tb-scroll` area (chat history). Stress fixture `engine/test/stress-ui.json` (every UI field at max length) must render with 0 errors: `npm run stress`.
 
 ## Security
 | Rule | Enforced by |

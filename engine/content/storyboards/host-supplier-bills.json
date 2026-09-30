@@ -7,7 +7,7 @@
   "hookPattern": "question",
   "scenes": [
     {"primitive": "host-hook", "params": {"text": "Still entering *supplier bills* by hand?"}, "vo": "Still entering *supplier bills* by hand?"},
-    {"primitive": "pile-drop", "transition": "whip-pan", "params": {"item": {"title": "BILL", "id": "SB-", "pill": "ENTER", "amount": true}, "count": 20, "start": 4401}, "vo": "Every bill gets opened, read and typed into Tally. One by *one.*"},
+    {"primitive": "pile-drop", "transition": "whip-pan", "params": {"item": {"title": "BILL", "id": "SB-", "pill": "ENTER", "amount": true}, "count": 20, "start": 4401}, "vo": "Every bill gets opened, read and typed in. One by *one.*"},
     {"primitive": "flow-run", "transition": "ink-wipe", "params": {"done": "ENTERED", "nodes": [
       {"icon": "mail", "label": "Read the bill", "sub": "bills@ inbox"},
       {"icon": "search", "label": "Pull the fields", "sub": "GSTIN, amount, date"},

@@ -58,7 +58,7 @@ Did: `engine/src/composer/storyboard.ts` (type, sceneFrames, sceneCues, validate
 Verified: 3 MP4s 24 to 29 s, 1080x1920, 30 fps, audio. order-emails renders in all 4 themes. Voice path: sfx off + placeholder clips -> audio stream present, measured durations stretch scenes. Gate rejects 7 broken storyboards with clear errors. Story regression 24/24. Theme gate and primitives check pass.
 Decisions: ADR 11.
 Known: flow-run re-pops its steps when it follows flow-build (9-frame blip); conveyor card numbers start at 1001 (no `start` param).
-Commit: pending "approve commit"
+Commit: 059fca1 (combined A4 to A6.2 commit), pushed to origin/main
 Next: A5 text box measurement. New request from Navin (reel style: mascot host, voiced, captions, music, UI demos) needs decisions first, see open questions 22 to 26.
 Open questions:
 22. Voice: switch from silent to always-voiced (answers Q2). Which API: ElevenLabs, OpenAI TTS or Sarvam (all three already wired in make.mjs)? Navin puts the key in engine/.env.
@@ -74,7 +74,7 @@ Did: `TextProbe` in Composer.tsx measures every visible text block (TreeWalker +
 Verified: 3 boards: 176/150/154 frames measured, 0 errors. A 16-char label "MMMMMMMMMMMMMMMM" (passes the char limit) fails the render with "text overflows its card", exit 1. No stray artifact files. Tightest real margin: "Message customer" has 2 px inside its card. All checks pass; story regression 24/24.
 Decisions: ADR 12.
 Lesson: Remotion always echoes a bundle's console output (defaultOnLog uses the message's own level); use `<Artifact>` + `onArtifact` to pass data out of a render.
-Commit: pending "approve commit" (A4 and A5 share files, so one commit)
+Commit: 059fca1 (combined A4 to A6.2 commit), pushed to origin/main
 Next: A6 host format (plan first; ask before @remotion/three, three, @remotion/media-utils).
 Open questions: 19 to 21, 26 open; A6 needs 3 original 3D mascot models (owner: Navin).
 
@@ -82,7 +82,7 @@ Open questions: 19 to 21, 26 open; A6 needs 3 original 3D mascot models (owner: 
 Did: Navin's master prompt (pixel-narrator reel) adopted as the host-format style, different per channel and platform. Added `night` theme (#0B0B10 stage, lime primary, flow blue secondary, paper text) and a `warn` token (amber, pain only) to every theme; `CHARACTER` and `MASK` constants in themes.ts. `engine/src/host/mascots.tsx`: 3 C1 host concepts drawn fully in code (SVG parts + 7-step pixel dither + lime/blue rim glow): BAHI (ledger capsule, pencil), TIKKU (stamp-handle cube head, screen face), CHAKRI (flow-arrow body, narrator headset). Each takes mouth / blink / tilt. `Stage` (starfield, warm glow). `MascotConcept` still in Root. Renders: engine/out/host/concept-*.png.
 Verified: theme gate passes (night AA on all text pairs; mask values moved into themes.ts rather than an exception). Fixed first-draft defects found by looking: hard dither steps, invisible Tikku mouth, detached arms, mic across the eye. Acting test (mouth 0.8, blink 1, tilt -6) renders.
 Decisions: the master prompt's "one self-contained composition per topic" is adapted into the engine's storyboard recipe + reusable primitives (ADR 2: no per-video code). Mascots drawn in code settles Q23: no @remotion/three, no model files. Self-host VT323 instead of adding @remotion/google-fonts.
-Commit: pending "approve commit" (A4 + A5 + this step)
+Commit: 059fca1 (combined A4 to A6.2 commit), pushed to origin/main
 Next: Navin picks C1's host; then host layer (idle bob, blink, lip-sync, tilt toward panel), karaoke captions, UI window primitives (inbox, sheet, chat, diff) with cursor, pixel-wipe transition, CTA card + pixel logo line, the 7-scene recipe.
 Open questions:
 27. Length: master prompt says 60 to 75 s; plan QA says 20 to 45 s; Forge skill 25 to 35 s. Which for the host format, per platform?
@@ -96,7 +96,7 @@ Did: Navin locked requirements: the host format is one format among several, bra
 Verified: host board renders, 124 frames measured, 0 text errors; placeholder voice clip opens Chiku's mouth (audio path); word-timed mouth when silent. Found and fixed by looking: pain beat shut Chiku's eyes (read as sleepy, now a head shake), karaoke leaked onto the end card. Acting asserts, theme gate (5 themes), 55 contact sheets, 11 scripts gated, story regression 24/24, all boards 0 text errors.
 Lesson: files the browser bundle imports cannot hold Node-only code (top-level await self-tests broke the bundle); keep those asserts in scripts/.
 Decisions: ADR 13, 14, 15. Q23, Q27 to Q29 answered by the master prompt for the host format (60 to 75 s, DM AUDIT, karaoke); other formats keep plan values until A6.6.
-Commit: pending "approve commit" (A4 + A5 + A6.1 + A6.2)
+Commit: 059fca1 feat(engine): Composer, text box QA, night theme, Chiku host with lip-sync and karaoke, pushed to origin/main (covers sessions 5 and 6)
 Next: A6.3 UI window primitives.
 Open questions: 19 (story format logo, legacy only) and 20 (ink shadows) open; 26 music bed; 30 C2/C3 hosts (C2: original stopwatch character, later); 31 YouTube safe zones (A6.6); Sarvam key into engine/.env before A6.5.
 
@@ -105,3 +105,13 @@ Did: Rendered host-supplier-bills with real Sarvam voice (`TTS_PROVIDER=sarvam V
 Verified: MP4 14.3 s with voice; text boxes 83/83 frames, 0 errors. Stills rendered with the same voice timing show Chiku's mouth open mid-word and shut between words, karaoke tracking the measured voice, pain shake on the accent.
 Finding: Sarvam reads about 3.6 words/s (s03: 17 words in 4.7 s) versus the 2.4 words/s estimate, so voiced videos run about 30 percent shorter than their silent estimate. A6.5 must size the 60 to 75 s recipe on measured voice (or set SARVAM_PACE in engine/.env, Navin's call) and compare Sarvam speakers for "best voice".
 Note: Remotion printed a media-parser licence notice; Remotion is free for individuals and companies of up to 3 people (confirm Navin's case, owner: Navin).
+Decision (Navin, 2026-10-01): host-format videos run 40 to 60 s with real voice (replaces 60 to 75 s). Since Sarvam reads ~3.6 words/s, a 40 to 60 s script needs about 145 to 215 spoken words across the 7 scenes.
+Fix: test board said "typed into Tally" (a real product); honesty rules forbid real brands, changed to "the accounts software".
+
+## 2026-10-01, session 7: A6.3 UI window primitives
+Did: `engine/src/host/ui.tsx` (Window, Cursor, Tag, UiShot: night stage + window + Chiku bottom-right leaning in, groan when manual, hop when auto). Primitives ui-inbox, ui-sheet, ui-chat, ui-diff (manual = amber + cursor, auto = lime), specs with fictional Indian SME examples. Floor shadow moved from Stage into Host (it followed centre screen). Rows and type scale to fill each window. `engine/test/stress-ui.json` + `npm run stress`.
+Found and fixed: `ui-diff` used WIN without importing it (crashed the render; a type checker would catch this, see Q21); the stress test showed chat history rising out of the window, and the probe counted clipped text as visible, so measurement now trims to clipping ancestors and flags trimmed text as "cut off" unless in a `data-tb-scroll` area; duplicate reports of one moving problem (dedupe key now ignores pixel values); the brand fix lengthened a vo line past pile-drop's 6 s max (the gate caught it; shortened).
+Verified: stress board 0 errors; over-wide subject fails with "cut off by its window"; textcheck self-test; theme gate; 75 contact sheets (15 primitives x 5 themes); 12 scripts gated; story regression 24/24; 4 boards 0 text errors; host board re-voiced (only the changed line regenerated).
+Commit: pending "approve commit"
+Next: A6.4 pixel-wipe, payoff card, VT323 logo line.
+Open questions: 21 (add `typescript` as a dev dependency so `tsc --noEmit` catches missing imports before render; needs Navin's OK).

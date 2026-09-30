@@ -93,11 +93,22 @@ const measure = (): TextBox[] => {
       groups.set(key, g);
     }
     for (const [el, g] of groups) {
-      const x = Math.min(...g.rects.map((q) => q.left));
-      const y = Math.min(...g.rects.map((q) => q.top));
-      const w = Math.max(...g.rects.map((q) => q.right)) - x;
-      const h = Math.max(...g.rects.map((q) => q.bottom)) - y;
-      if (x + w <= 0 || y + h <= 0 || x >= 1080 || y >= 1920) continue; // fully off-frame: not visible
+      let l = Math.min(...g.rects.map((q) => q.left));
+      let t = Math.min(...g.rects.map((q) => q.top));
+      let r = Math.max(...g.rects.map((q) => q.right));
+      let b = Math.max(...g.rects.map((q) => q.bottom));
+      // only what is actually visible counts: trim to every clipping ancestor (overflow hidden), then to the frame.
+      // Trimmed text is 'cut' (an error) unless it sits in a scroll area where sliding out of view is intended.
+      const full = r - l + (b - t);
+      for (let a = el.parentElement; a && a !== root.parentElement; a = a.parentElement) {
+        if (getComputedStyle(a).overflow === 'visible') continue;
+        const c = a.getBoundingClientRect();
+        [l, t, r, b] = [Math.max(l, c.left), Math.max(t, c.top), Math.min(r, c.right), Math.min(b, c.bottom)];
+      }
+      const cut = r > l && b > t && full - (r - l + (b - t)) > 2 && !el.closest('[data-tb-scroll]');
+      [l, t, r, b] = [Math.max(l, 0), Math.max(t, 0), Math.min(r, 1080), Math.min(b, 1920)];
+      if (r - l < 1 || b - t < 1) continue; // fully clipped or off-frame: not visible
+      const [x, y, w, h] = [l, t, r - l, b - t];
       const c = el.closest('[data-box]')?.getBoundingClientRect();
       out.push({
         scene: Number(root.dataset.scene),
@@ -106,6 +117,7 @@ const measure = (): TextBox[] => {
         text: g.parts.join(' ').slice(0, 60),
         x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h),
         ...(c ? {box: {x: Math.round(c.left), y: Math.round(c.top), w: Math.round(c.width), h: Math.round(c.height)}} : {}),
+        ...(cut ? {cut: true} : {}),
       });
     }
   });

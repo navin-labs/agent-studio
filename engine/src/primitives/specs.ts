@@ -28,6 +28,7 @@ export type Spec = {
 };
 
 const text = (max: number, optional = false): Field => ({kind: 'text', max, optional});
+const mode: Field = {kind: 'enum', of: ['manual', 'auto']};
 const ALL: Channel[] = ['c1-automation', 'c2-reach', 'c3-studio'];
 const item: Field = {kind: 'object', fields: {title: text(9), id: text(5), pill: text(6), amount: {kind: 'bool'}}};
 const node: Field = {kind: 'object', fields: {icon: {kind: 'icon'}, label: text(16), sub: text(22)}};
@@ -129,6 +130,58 @@ export const SPECS: Record<string, Spec> = {
     cues: 'optional: frame the accent lands and the host reacts (default: right after its word)',
     params: {text: text(40)},
     example: {text: 'Still entering *supplier bills* by hand?'},
+  },
+  'ui-inbox': {
+    family: 'world',
+    about: 'Host format: an inbox. manual = cursor opens each email (amber); auto = each is read on its own (lime).',
+    channels: ['c1-automation', 'c3-studio'],
+    seconds: [3, 8],
+    cues: 'one per email: the frame it is opened / read',
+    params: {title: text(18), mode, rows: {kind: 'list', min: 3, max: 6, of: {kind: 'object', fields: {from: text(20), subject: text(34)}}}},
+    example: {title: 'BILLS@ INBOX', mode: 'manual', rows: [
+      {from: 'Mehta Traders', subject: 'Bill SB-4403, 4 cartons'},
+      {from: 'Kapoor Foods', subject: 'Invoice INV-1042 attached'},
+      {from: 'Shree Packaging', subject: 'Revised bill for 12 Sep'},
+      {from: 'Gupta Steel', subject: 'Bill SB-4410, 4,20,000 rupees'},
+    ]},
+  },
+  'ui-sheet': {
+    family: 'world',
+    about: 'Host format: a sheet filling up. manual = cursor types cell by cell (amber); auto = rows land whole (lime).',
+    channels: ['c1-automation', 'c3-studio'],
+    seconds: [3, 8],
+    cues: 'one per row: the frame it starts filling',
+    params: {file: text(20), mode, columns: {kind: 'list', min: 2, max: 4, of: text(10)}, rows: {kind: 'list', min: 2, max: 5, of: {kind: 'list', min: 2, max: 4, of: text(12)}}},
+    example: {file: 'PURCHASE.XLSX', mode: 'manual', columns: ['BILL', 'PARTY', 'AMOUNT'], rows: [['SB-4403', 'Mehta', '38,500'], ['SB-4404', 'Kapoor', '1,12,000'], ['SB-4405', 'Shree', '9,800']]},
+  },
+  'ui-chat': {
+    family: 'world',
+    about: 'Host format: a chat thread. Messages pop in on cues. manual = cursor hits Send (amber); auto = yours tagged AUTO (lime).',
+    channels: ['c1-automation', 'c3-studio'],
+    seconds: [3, 8],
+    cues: 'one per message: the frame it appears',
+    params: {contact: text(18), mode, messages: {kind: 'list', min: 2, max: 4, of: {kind: 'object', fields: {from: {kind: 'enum', of: ['me', 'them']}, text: text(60)}}}},
+    example: {contact: 'MEHTA TRADERS', mode: 'auto', messages: [
+      {from: 'them', text: 'Did you get bill SB-4403?'},
+      {from: 'me', text: 'Yes, entered today. Payment on 20 Sep.'},
+      {from: 'them', text: 'Great, thank you!'},
+    ]},
+  },
+  'ui-diff': {
+    family: 'world',
+    about: 'Host format: before vs after. Removed manual steps strike through in amber, added automatic steps glow lime.',
+    channels: ['c1-automation', 'c3-studio'],
+    seconds: [3, 8],
+    cues: 'one per line: the frame it appears',
+    params: {file: text(22), lines: {kind: 'list', min: 3, max: 8, of: {kind: 'object', fields: {op: {kind: 'enum', of: ['add', 'del', 'same']}, text: text(32)}}}},
+    example: {file: 'BILL-ENTRY PROCESS', lines: [
+      {op: 'del', text: 'Open every bill email'},
+      {op: 'del', text: 'Type party, GSTIN, amount'},
+      {op: 'del', text: 'Check totals by hand'},
+      {op: 'add', text: 'Bill read on arrival'},
+      {op: 'add', text: 'Entry added to register'},
+      {op: 'same', text: 'You check the odd ones'},
+    ]},
   },
   'end-card': {
     family: 'kinetic-type',

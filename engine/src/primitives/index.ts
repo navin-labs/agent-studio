@@ -9,6 +9,10 @@ import {FlowBuild} from './flow-build';
 import {FlowRun} from './flow-run';
 import {HighlighterSwipe} from './highlighter-swipe';
 import {HostHook} from './host-hook';
+import {UiChat} from './ui-chat';
+import {UiDiff} from './ui-diff';
+import {UiInbox} from './ui-inbox';
+import {UiSheet} from './ui-sheet';
 import {PileDrop} from './pile-drop';
 import {SPECS} from './specs';
 import {StampHit} from './stamp-hit';
@@ -25,5 +29,9 @@ export const PRIMITIVES: Record<keyof typeof SPECS, React.FC<PrimitiveProps<any>
   'chat-pop': ChatPop,
   'stamp-hit': StampHit,
   'host-hook': HostHook,
+  'ui-inbox': UiInbox,
+  'ui-sheet': UiSheet,
+  'ui-chat': UiChat,
+  'ui-diff': UiDiff,
   'end-card': EndCard,
 };
