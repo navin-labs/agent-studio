@@ -1,0 +1,34 @@
+[
+  {
+    "id": "test-host-supplier-bills",
+    "channel": "c1-automation",
+    "week": "2026-W40",
+    "slot": 4,
+    "theme": "night",
+    "opening": "host-hook",
+    "primitives": [
+      "host-hook",
+      "ui-inbox",
+      "ui-sheet",
+      "ui-diff",
+      "flow-run",
+      "ui-chat",
+      "host-payoff",
+      "host-cta"
+    ],
+    "transitions": [
+      "cut",
+      "whip-pan",
+      "whip-pan",
+      "pixel-wipe",
+      "whip-pan",
+      "whip-pan",
+      "pixel-wipe",
+      "cut"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "question",
+    "fingerprint": "ae349202f6ce",
+    "experiment": false
+  }
+]

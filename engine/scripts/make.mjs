@@ -428,8 +428,12 @@ const renderReel = async (script) => {
   console.log('');
   const coverFrame = Math.max(0, (composition.props.frames?.[0] ?? 30) - 6);
   await renderStill({composition, serveUrl: url, output: path.join(outDir, 'cover.png'), frame: coverFrame, inputProps, browserExecutable});
+  if (script.format === 'storyboard') {
+    const sheet = await selectComposition({serveUrl: url, id: 'BoardSheet', inputProps, browserExecutable});
+    await renderStill({composition: sheet, serveUrl: url, output: path.join(outDir, 'contact.png'), frame: 0, inputProps, browserExecutable});
+  }
   writeCaption(script, outDir);
-  console.log(c.green(`  -> ${path.relative(ROOT, outDir)}/reel.mp4, cover.png, caption.txt`));
+  console.log(c.green(`  -> ${path.relative(ROOT, outDir)}/reel.mp4, cover.png, ${script.format === 'storyboard' ? 'contact.png, ' : ''}caption.txt`));
   if (script.format !== 'storyboard') return true;
   // text boxes: measured in the browser at render time, then checked (safe area, card overflow, caption overlap)
   const frames = [...measured].sort((a, b) => a[0] - b[0]).map(([frame, boxes]) => ({frame, boxes}));

@@ -1,6 +1,7 @@
 import React from 'react';
 import {CalculateMetadataFunction, Composition, Still} from 'remotion';
 import exampleStory from '../content/stories/story-invoice-chase.json';
+import {BOARD_SHEET, BoardSheet, boardSheetHeight} from './composer/BoardSheet';
 import {Composer, type ComposerProps} from './composer/Composer';
 import {sceneFrames, type Storyboard} from './composer/storyboard';
 import exampleBoard from '../content/storyboards/order-emails.json';
@@ -42,6 +43,20 @@ export const Root: React.FC = () => (
       calculateMetadata={({props}) => {
         const frames = sceneFrames(props.script, props.timing);
         return {durationInFrames: frames.reduce((a, b) => a + b, 0), props: {...props, frames}};
+      }}
+    />
+    {/* full length (not a Still) so Freeze can reach any frame; make.mjs renders frame 0 */}
+    <Composition
+      id="BoardSheet"
+      component={BoardSheet}
+      width={BOARD_SHEET.w}
+      height={1100}
+      fps={FPS}
+      durationInFrames={300}
+      defaultProps={{script: exampleBoard as unknown as Storyboard} satisfies ComposerProps}
+      calculateMetadata={({props}) => {
+        const frames = sceneFrames(props.script, props.timing);
+        return {durationInFrames: frames.reduce((a, b) => a + b, 0), height: boardSheetHeight(props.script.scenes.length), props: {...props, frames}};
       }}
     />
     <Composition

@@ -33,7 +33,7 @@ export type Storyboard = {
   scenes: StoryboardScene[];
   caption?: string;
   hashtags?: string[];
-  meta?: {source?: string; idea_id?: string; recipe_id?: string};
+  meta?: {source?: string; idea_id?: string; recipe_id?: string; hero_metaphor?: string};
 };
 
 export type Timing = {durations?: (number | null)[]; audio?: (string | null)[]};

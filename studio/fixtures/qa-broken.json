@@ -1,0 +1,52 @@
+{
+  "format": "storyboard",
+  "id": "qa-broken-board",
+  "channel": "c1-automation",
+  "theme": "paper",
+  "hookPattern": "pile",
+  "sfx": false,
+  "scenes": [
+    {
+      "primitive": "word-stack-slam",
+      "params": {
+        "text": "Someone typed *all* of these."
+      }
+    },
+    {
+      "primitive": "flow-run",
+      "params": {
+        "nodes": [
+          {
+            "icon": "inbox",
+            "label": "Read the email",
+            "sub": "orders@ inbox"
+          },
+          {
+            "icon": "sheet",
+            "label": "Add to sheet",
+            "sub": "Orders.xlsx"
+          }
+        ],
+        "done": "DONE"
+      }
+    },
+    {
+      "primitive": "end-card",
+      "params": {
+        "text": "*Follow*",
+        "sub": "One business automation, every day."
+      }
+    }
+  ],
+  "caption": "QA fixture: built to fail. Example data.",
+  "hashtags": [
+    "#automation",
+    "#n8n",
+    "#qa"
+  ],
+  "meta": {
+    "source": "https://example.com/ideas/qa-broken",
+    "idea_id": "test-qa-broken",
+    "recipe_id": "test-host-supplier-bills"
+  }
+}

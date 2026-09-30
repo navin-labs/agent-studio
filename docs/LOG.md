@@ -7,7 +7,7 @@ Commit: 610f352 docs: scaffold agent-studio (plan docs, agent contracts, schema 
 Next: Phase A, task A1 (`themes.ts` + contrast test) in reel-engine, after the open questions below are answered.
 Open questions:
 1. `~/Downloads/MULTI_CHANNEL_PLAN.md` does not exist. Where is it, or is AGENT_STUDIO_PLAN section 1 and 7 the full source for channels and gates?
-2. Voice: plan QA requires an audio stream and "render with voice"; Forge skill says videos are silent and the voiceover is parked; reel-engine has Sarvam voice. Which is true?
+2. (Answered 2026-10-01: voice on via Sarvam; QA requires an audio stream.) Voice: plan QA requires an audio stream and "render with voice"; Forge skill says videos are silent and the voiceover is parked; reel-engine has Sarvam voice. Which is true?
 3. Instagram publishing: plan says Forge publishes from a queue; Forge skill says Navin posts from his phone and Forge never posts. Which?
 4. C1 CTA mix: plan says DM AUDIT 1 in 3; Forge skill says 1 in 5.
 5. C1 goal: plan says leads (DMs + profile visits); Forge skill says the goal is followers.
@@ -154,6 +154,14 @@ Open questions: Chiku's Sarvam voice; recipe "rhythm" vocabulary still TBD (owne
 Did: `studio/novelty.ts`: the 7 rules as pure functions over fingerprints (trigram topic similarity, structure distance over shots + ordered pairs, opening, hero metaphor, theme run, hook run + caption opener, cross-channel same ISO week), ISO week helpers. `studio/recipe.ts`: seeded generator (mulberry32 on sha256 of channel|week), two shapes (host 8 beats on night, composed 6 beats on the channel's other themes), channel + bench filters, 2 of 7 slots flagged experiments, redraws up to 3000 times then throws with the last rule errors. CLI writes recipes/<channel>/<week>.json using every other recipe file as history. Generated recipes/c1-automation/2026-W41.json (7 recipes, all schema-valid).
 Verified: `studio/recipe.test.ts` (in npm run check): 8 weeks x C1 + a stand-in C3 = 112 recipes, schema-valid, 0 rule breaks on an independent re-check; seeded repeatability; bench respected; impossible constraints throw; each of the 7 rules fires on a crafted violation and not on its boundary case. Mutation check: a generator that skips the rules fails the test.
 Decisions: ADR 17 (TypeScript on Node for agent-studio). Topic, hero metaphor and caption opener are enforced at QA time (only known after writing).
-Commit: pending "approve commit"
+Commit: 6956894 feat(studio): seeded recipe generator and the 7 novelty rules
 Next: B3 QA runner + contact sheet.
 Open questions: host format is capped at 2 per week by the opening rule (host-hook is its only opener); a second host opener primitive (Phase C) or an opening rule scoped per format would lift it. Navin to decide. Recipe "rhythm" vocabulary TBD. Chiku's voice.
+
+## 2026-10-01, session 13: B3 QA runner + contact sheet
+Did: `studio/qa.ts`: 8 checks (schema, text-limits, audio, format, duration, safe-zones, fingerprint, naming), pure `evaluate()` + `runQa()` that reads reel.mp4, text-boxes.json, contact.png, the recipe (recipes/ or --recipes) and state/fingerprints.jsonl (approved videos, written from B4); writes qa.json (validated against qa.schema.json); exit 1 on fail. `engine/scripts/probe.ts` reads container, size, fps, length and audio with @remotion/media-parser (already installed; no ffprobe). Fingerprint check = storyboard matches its recipe (shots, theme, hook, transitions) + all 7 novelty rules, including topic, hero metaphor and caption opener from the written storyboard (storyboard meta.hero_metaphor added, optional). Contact sheet: new BoardSheet composition (real Composer frozen at each scene's middle), rendered by make.mjs as contact.png.
+Fixtures: good = host-supplier-bills render + studio/fixtures/recipes/host-supplier-bills.json: all 8 pass. Broken = studio/fixtures/qa-broken.json (rendered): fails audio (no stream), duration (11.3 s), fingerprint (4 recipe differences), naming (file vs id). `studio/qa.test.ts` (in npm run check): good passes, 14 broken cases fail with their exact error strings.
+Decisions: naming convention = `<id>.json` + `out/<id>/{reel.mp4,contact.png}`. Open question 2 closed (voice on, audio required).
+Commit: pending "approve commit"
+Next: B4 approval page.
+Open questions: host 2-per-week cap (opening rule); recipe rhythm vocabulary; Chiku's voice; Remotion licence check (media-parser prints the notice too).

@@ -52,7 +52,7 @@ Phase done when: a dry-run week for C1 goes from feed to approved queue with zer
   > Read CLAUDE.md, docs/TECH.md "Novelty rules", agents/recipe/RULES.md.
   > Build the generator and the 7 checks. Seeded random so tests are repeatable.
   > Stop when the 8-week test passes.
-- [ ] **B3 QA runner + contact sheet.** Done when: QA passes a good render and fails a bad one with the exact error.
+- [x] **B3 QA runner + contact sheet.** Done when: QA passes a good render and fails a bad one with the exact error.
   > Read CLAUDE.md, agents/render-qa/RULES.md. Build QA: ffprobe, schema, text boxes, fingerprint, naming.
   > Write the contact sheet PNG. One good and one broken fixture.
   > Stop when both fixtures give the expected result.
