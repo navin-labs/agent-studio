@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import {buildPage} from './approval-page.ts';
+import {handle} from './approve-server.ts';
 import {applyApproval, approvalQuery, currentStatus, fingerprintFile, ledgerFile, type Paths, verifyApproval} from './ledger.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
@@ -71,6 +72,7 @@ assert.throws(() => applyApproval(link, 'short', {now, paths: p}), /shorter than
 assert.throws(() => applyApproval(link, secret, {now: now + 8 * 86400_000, paths: p}), /expired/);
 assert.throws(() => verifyApproval('channel=c1-automation&week=2026-W40&ids=a;rm -rf&by=navin&exp=1&sig=00', secret), /malformed/);
 assert.throws(() => buildPage('c1-automation', '2026-W40', {url: 'http://plain.example', secret, now}, p), /https/);
+assert.throws(() => buildPage('c1-automation', '2026-W40', {url: 'http://localhost.evil.example/x', secret, now}, p), /https/);
 
 // signed but not approvable: another channel's id, a week it is not in, a missing board
 const signed = (ids: string[], week = '2026-W40') => approvalQuery({channel: 'c1-automation', week, ids, by: 'navin', exp: now / 1000 + 3600}, secret);
@@ -82,6 +84,19 @@ setQa(false);
 assert.deepEqual(applyApproval(signed(['host-supplier-bills']), secret, {now, paths: p}).skipped, ['host-supplier-bills: QA has not passed']);
 assert.equal(lines(ledgerFile(p)).length, 0, 'nothing was written');
 assert.equal(currentStatus(p).size, 0);
+
+// the Mac receiver n8n forwards to: same checks, plain HTTP answers
+setQa(true);
+const at = {now, paths: p};
+assert.deepEqual(handle('/health', secret, at), {status: 200, body: 'ok'});
+assert.equal(handle('/other', secret, at).status, 404);
+assert.equal(handle(`/approve?${tweak('ids', 'x')}`, secret, at).status, 403);
+const ok = handle(`/approve?${signed(['host-supplier-bills'])}`, secret, at);
+assert.equal(ok.status, 200);
+assert.match(ok.body, /Approved 1/);
+assert.equal(lines(ledgerFile(p)).length, 1);
+assert.match(handle(`/approve?${signed(['host-supplier-bills'])}`, secret, at).body, /already approved/);
+assert.equal(lines(ledgerFile(p)).length, 1);
 
 fs.rmSync(tmp, {recursive: true});
 console.log('approval ok: a test approval writes one ledger entry; replay, tampering, expiry, failed QA and bad secrets write nothing');

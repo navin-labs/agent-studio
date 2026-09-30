@@ -15,7 +15,7 @@ const plain = (s = '') => s.replace(/\*/g, '');
 export type Row = {slot: number; date: string; recipeId: string; id?: string; state: 'approve' | 'approved' | 'failed' | 'missing'; note: string; hook?: string; caption?: string; sheet?: string; seconds?: string};
 
 export const buildPage = (channel: string, week: string, env: {url: string; secret: string; now?: number; by?: string}, p: Paths = PATHS) => {
-  if (!/^https:\/\//.test(env.url)) throw new Error('APPROVAL_WEBHOOK_URL must be an https URL');
+  if (!/^(https:\/\/|http:\/\/(localhost|127\.0\.0\.1)[:/])/.test(env.url)) throw new Error('APPROVAL_WEBHOOK_URL must be https, or http on localhost (the local n8n)');
   if (env.secret.length < 16) throw new Error('APPROVAL_SECRET must be at least 16 characters');
   const now = env.now ?? Date.now();
   const exp = Math.floor(now / 1000) + LINK_DAYS * 86400;
