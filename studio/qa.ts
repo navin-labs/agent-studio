@@ -9,6 +9,7 @@ import {lengthIssue, type Storyboard, validateStoryboard} from '../engine/src/co
 import type {TextBox} from '../engine/src/composer/textcheck.ts';
 import {type Probe, probeVideo} from '../engine/scripts/probe.ts';
 import {loadSchema, validate} from '../schemas/validate.ts';
+import {readFingerprints} from './ledger.ts';
 import {checkNovelty, type Fingerprint} from './novelty.ts';
 import {type Recipe, recipeDate, recipeHash} from './recipe.ts';
 
@@ -93,9 +94,6 @@ const allRecipes = (dir: string): Recipe[] => {
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir, {recursive: true, encoding: 'utf8'}).filter((f) => f.endsWith('.json')).flatMap((f) => readJson(path.join(dir, f)) as Recipe[]);
 };
-// Approved and published videos, one fingerprint per line (written at approval, B4).
-export const FINGERPRINTS = path.join(ROOT, 'state/fingerprints.jsonl');
-const readHistory = (): Fingerprint[] => (fs.existsSync(FINGERPRINTS) ? fs.readFileSync(FINGERPRINTS, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : []);
 
 export const runQa = async (boardPath: string, opts: {outDir?: string; date?: string; recipes?: string} = {}): Promise<QaResult> => {
   const doc = readJson(boardPath);
@@ -111,7 +109,7 @@ export const runQa = async (boardPath: string, opts: {outDir?: string; date?: st
     sheet: fs.existsSync(path.join(outDir, 'contact.png')),
     recipe,
     date: opts.date ?? (recipe ? recipeDate(recipe) : new Date().toISOString().slice(0, 10)),
-    history: readHistory(),
+    history: readFingerprints(), // approved videos, appended by ledger.ts on approval
   });
   const rel = (f: string) => path.relative(ROOT, f);
   const out = {...result, video_path: rel(result.video_path), contact_sheet_path: rel(result.contact_sheet_path)};

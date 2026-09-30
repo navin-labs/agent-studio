@@ -16,7 +16,7 @@ Open questions:
 8. Structure: Forge skill locks `pile-to-flow` with exactly 6 scenes; plan replaces templates with primitive recipes. Does the Forge skill get rewritten in the "Weekly Writer" update?
 9. "Break the 4 current templates": reel-engine content only uses `pile-to-flow`; formats are story, reel, carousel. Which 4 templates?
 10. Primitive list points to "section 1 of v1", which I don't have. Is the list in plan section 5 (28 names) complete?
-11. Approval: Forge skill uses "approve <id>" messages; plan uses a weekly HTML page + n8n webhook. Does the page replace the message?
+11. (Partly answered 2026-10-01: weekly page + signed links built in B4; whether Forge's "approve <id>" message stays as a second path is still open.) Approval: Forge skill uses "approve <id>" messages; plan uses a weekly HTML page + n8n webhook. Does the page replace the message?
 12. Metrics: Forge logs to Notion "Post Log"; plan says files, not DB. Where does Learn read metrics from, and who pulls them?
 13. Duration: QA gate 20 to 45s; Forge target 25 to 35s; brief says 15 to 60s performs best. Which range does the gate enforce?
 14. reel-engine is not a git repo. Init git there before Phase A so changes can be reviewed and rolled back?
@@ -162,6 +162,14 @@ Open questions: host format is capped at 2 per week by the opening rule (host-ho
 Did: `studio/qa.ts`: 8 checks (schema, text-limits, audio, format, duration, safe-zones, fingerprint, naming), pure `evaluate()` + `runQa()` that reads reel.mp4, text-boxes.json, contact.png, the recipe (recipes/ or --recipes) and state/fingerprints.jsonl (approved videos, written from B4); writes qa.json (validated against qa.schema.json); exit 1 on fail. `engine/scripts/probe.ts` reads container, size, fps, length and audio with @remotion/media-parser (already installed; no ffprobe). Fingerprint check = storyboard matches its recipe (shots, theme, hook, transitions) + all 7 novelty rules, including topic, hero metaphor and caption opener from the written storyboard (storyboard meta.hero_metaphor added, optional). Contact sheet: new BoardSheet composition (real Composer frozen at each scene's middle), rendered by make.mjs as contact.png.
 Fixtures: good = host-supplier-bills render + studio/fixtures/recipes/host-supplier-bills.json: all 8 pass. Broken = studio/fixtures/qa-broken.json (rendered): fails audio (no stream), duration (11.3 s), fingerprint (4 recipe differences), naming (file vs id). `studio/qa.test.ts` (in npm run check): good passes, 14 broken cases fail with their exact error strings.
 Decisions: naming convention = `<id>.json` + `out/<id>/{reel.mp4,contact.png}`. Open question 2 closed (voice on, audio required).
-Commit: pending "approve commit"
+Commit: 1eda0ab feat(studio): QA runner with exact errors, storyboard contact sheet, media-parser probe
 Next: B4 approval page.
 Open questions: host 2-per-week cap (opening rule); recipe rhythm vocabulary; Chiku's voice; Remotion licence check (media-parser prints the notice too).
+
+## 2026-10-01, session 14: B4 approval page
+Did: `studio/ledger.ts` (append-only state/ledger.jsonl, signed approvals: HMAC-SHA256 over channel|week|ids|by|exp, strict parsing, timing-safe compare, 7-day expiry; apply checks storyboard exists, channel, week, QA passed, not already approved; writes schema-checked entries + the video's fingerprint to state/fingerprints.jsonl, which QA now reads). `studio/approval-page.ts` (static weekly page per channel: contact sheet, hook, caption, QA errors; Approve per video and Approve all for QA-passed ones only; all Forge text HTML-escaped; https webhook URL required). `studio/approval.test.ts` in npm run check.
+Verified: test approval writes exactly one ledger entry (schema-valid) and one fingerprint; replay, tampered ids, wrong or short secret, expired link, malformed/injected ids, failed QA, wrong week, unknown board write nothing; a failed video has no link; markup in a caption is escaped. Preview page built from the real host render.
+Decisions: n8n is a relay only (secret stays on the Mac); state/ stays gitignored (ledger and pages with live links never committed).
+Commit: pending "approve commit"
+Next: B4b switch-over (watcher + Forge onto engine/, retire reel-engine).
+Open questions: where n8n runs (local Execute Command vs cloud queue) and adding the webhook workflow (Navin); APPROVAL_WEBHOOK_URL and APPROVAL_SECRET to be added to agent-studio/.env by Navin; Forge "approve <id>" message path (Q11).

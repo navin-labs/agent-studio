@@ -136,3 +136,13 @@ Length per format (`LENGTH` in storyboard.ts): host 40 to 60 s, composed 20 to 4
 | Claude never publishes; never force-pushes | CLAUDE.md; force push denied |
 | Forge writes only JSON into content folders; never edits engine code | Forge skill standing rules |
 | Ideas only from feeds with a source link | Writer rules; `meta.source` required by storyboard schema |
+
+## Approval (B4)
+| Part | Where |
+|---|---|
+| Weekly page | `node studio/approval-page.ts <channel> <week>` -> `state/approval/<channel>/<week>/index.html` + contact sheets. One card per recipe slot: contact sheet, hook, caption, QA result. Only QA-passed videos get an Approve link; "Approve all" covers exactly those |
+| Signed links | HMAC-SHA256 over channel, week, ids, approver, expiry (7 days). Env names: `APPROVAL_WEBHOOK_URL` (https), `APPROVAL_SECRET` (16+ chars), in agent-studio/.env |
+| Webhook relay (n8n) | Receives the GET, passes the query string unchanged to `node studio/ledger.ts apply '<query>'` on the Mac (or queues it for the Mac to run). n8n does not need the secret and cannot forge or widen an approval. Hosting of n8n: TBD (owner: Navin) |
+| Apply | `studio/ledger.ts`: verifies signature and expiry, then per id: storyboard found, same channel, in that week, QA passed, not already approved. Writes `state/ledger.jsonl` (append-only, latest line per video wins, schema-checked) and the video's fingerprint to `state/fingerprints.jsonl` (QA's novelty history) |
+| Test | `studio/approval.test.ts` in `npm run check`: one approval = one entry; replay, tampering, wrong secret, expiry, failed QA, wrong week write nothing |
+

@@ -56,7 +56,7 @@ Phase done when: a dry-run week for C1 goes from feed to approved queue with zer
   > Read CLAUDE.md, agents/render-qa/RULES.md. Build QA: ffprobe, schema, text boxes, fingerprint, naming.
   > Write the contact sheet PNG. One good and one broken fixture.
   > Stop when both fixtures give the expected result.
-- [ ] **B4 Approval page.** Done when: a static weekly HTML shows contact sheets and approve links that write the ledger via the n8n webhook.
+- [x] **B4 Approval page.** Done when: a static weekly HTML shows contact sheets and approve links that write the ledger via the n8n webhook.
   > Read CLAUDE.md, schemas/ledger.schema.json. Generate the weekly page per channel with approve and approve-all.
   > Webhook URL from env name only. Never read .env.
   > Stop when a test approval writes one ledger entry.
