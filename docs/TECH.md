@@ -49,7 +49,7 @@ One repo (ADR 7).
 | Layer | Choice |
 |---|---|
 | Rendering | Remotion 4, React 19, TypeScript (`engine/`, copied from reel-engine v1) |
-| agent-studio language | TBD (owner: Navin) |
+| agent-studio language | TypeScript on Node 26 (type stripping, no build step, no dependencies), `studio/` (ADR 17) |
 | Media checks | ffprobe |
 | Automation | n8n (feeds, YouTube upload, approval webhook) |
 | Writer | Forge (Muse tokens) |
@@ -90,6 +90,8 @@ Rules (enforced by `npm run gate:themes`, which `make.mjs` runs before every ren
 | Theme | Not 3 days in a row on the channel |
 | Hook pattern | Not 3 in a row; caption opener doesn't repeat the previous 2 posts |
 | Cross-channel | Same recipe fingerprint never on two channels in the same week |
+
+Code: `studio/novelty.ts` (the 7 rules, pure), `studio/recipe.ts` (seeded generator, `node studio/recipe.ts <channel> <week>` writes `recipes/<channel>/<week>.json`), test `studio/recipe.test.ts` (8 weeks x 2 channels, each rule fires on a crafted case; in `npm run check`). Recipe decides shape only, so it enforces structure, opening, theme, hook pattern and cross-channel; topic, hero metaphor and caption opener exist only after writing and are checked by QA with the same functions. Video shapes per format (host 8 beats, composed 6 beats) live in `FORMATS` in recipe.ts. Opening rule means a format with one opener (host: `host-hook`) runs at most 2 times a week.
 
 ## Primitives (`engine/src/primitives/`)
 | Part | Where |

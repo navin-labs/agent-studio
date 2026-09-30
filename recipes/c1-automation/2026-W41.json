@@ -1,0 +1,206 @@
+[
+  {
+    "id": "c1-2026-w41-1",
+    "channel": "c1-automation",
+    "week": "2026-W41",
+    "slot": 1,
+    "theme": "paper",
+    "opening": "highlighter-swipe",
+    "primitives": [
+      "highlighter-swipe",
+      "counter-drop",
+      "flow-build",
+      "conveyor",
+      "stamp-hit",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "cut",
+      "cut",
+      "whip-pan",
+      "cut",
+      "ink-wipe"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "should-not",
+    "fingerprint": "f645c97edfac",
+    "experiment": true
+  },
+  {
+    "id": "c1-2026-w41-2",
+    "channel": "c1-automation",
+    "week": "2026-W41",
+    "slot": 2,
+    "theme": "night",
+    "opening": "host-hook",
+    "primitives": [
+      "host-hook",
+      "pile-drop",
+      "ui-inbox",
+      "ui-diff",
+      "flow-build",
+      "ui-sheet",
+      "host-payoff",
+      "host-cta"
+    ],
+    "transitions": [
+      "cut",
+      "pixel-wipe",
+      "cut",
+      "whip-pan",
+      "whip-pan",
+      "pixel-wipe",
+      "whip-pan",
+      "pixel-wipe"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "question",
+    "fingerprint": "f42ed9bc7574",
+    "experiment": false
+  },
+  {
+    "id": "c1-2026-w41-3",
+    "channel": "c1-automation",
+    "week": "2026-W41",
+    "slot": 3,
+    "theme": "studio",
+    "opening": "counter-drop",
+    "primitives": [
+      "counter-drop",
+      "chat-pop",
+      "flow-build",
+      "flow-run",
+      "stamp-hit",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "ink-wipe",
+      "ink-wipe",
+      "whip-pan",
+      "cut",
+      "ink-wipe"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "number",
+    "fingerprint": "d094a6d807c8",
+    "experiment": true
+  },
+  {
+    "id": "c1-2026-w41-4",
+    "channel": "c1-automation",
+    "week": "2026-W41",
+    "slot": 4,
+    "theme": "night",
+    "opening": "host-hook",
+    "primitives": [
+      "host-hook",
+      "ui-chat",
+      "ui-inbox",
+      "word-stack-slam",
+      "conveyor",
+      "stamp-hit",
+      "host-payoff",
+      "host-cta"
+    ],
+    "transitions": [
+      "cut",
+      "cut",
+      "cut",
+      "whip-pan",
+      "cut",
+      "cut",
+      "whip-pan",
+      "pixel-wipe"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "pile",
+    "fingerprint": "4d5dc568ca71",
+    "experiment": false
+  },
+  {
+    "id": "c1-2026-w41-5",
+    "channel": "c1-automation",
+    "week": "2026-W41",
+    "slot": 5,
+    "theme": "studio",
+    "opening": "pile-drop",
+    "primitives": [
+      "pile-drop",
+      "conveyor",
+      "highlighter-swipe",
+      "flow-build",
+      "chat-pop",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "whip-pan",
+      "whip-pan",
+      "ink-wipe",
+      "whip-pan",
+      "ink-wipe"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "confession",
+    "fingerprint": "c9452c6e46bf",
+    "experiment": false
+  },
+  {
+    "id": "c1-2026-w41-6",
+    "channel": "c1-automation",
+    "week": "2026-W41",
+    "slot": 6,
+    "theme": "studio",
+    "opening": "chat-pop",
+    "primitives": [
+      "chat-pop",
+      "pile-drop",
+      "highlighter-swipe",
+      "conveyor",
+      "counter-drop",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "cut",
+      "cut",
+      "whip-pan",
+      "whip-pan",
+      "whip-pan"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "confession",
+    "fingerprint": "a33daa973401",
+    "experiment": false
+  },
+  {
+    "id": "c1-2026-w41-7",
+    "channel": "c1-automation",
+    "week": "2026-W41",
+    "slot": 7,
+    "theme": "paper",
+    "opening": "pile-drop",
+    "primitives": [
+      "pile-drop",
+      "chat-pop",
+      "highlighter-swipe",
+      "flow-build",
+      "stamp-hit",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "ink-wipe",
+      "whip-pan",
+      "whip-pan",
+      "ink-wipe",
+      "whip-pan"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "should-not",
+    "fingerprint": "2824e0ed1d4c",
+    "experiment": false
+  }
+]

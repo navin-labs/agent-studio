@@ -1,0 +1,206 @@
+[
+  {
+    "id": "c1-2026-w42-1",
+    "channel": "c1-automation",
+    "week": "2026-W42",
+    "slot": 1,
+    "theme": "paper",
+    "opening": "chat-pop",
+    "primitives": [
+      "chat-pop",
+      "word-stack-slam",
+      "highlighter-swipe",
+      "flow-run",
+      "stamp-hit",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "whip-pan",
+      "ink-wipe",
+      "ink-wipe",
+      "whip-pan",
+      "ink-wipe"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "pile",
+    "fingerprint": "34e04db88b20",
+    "experiment": false
+  },
+  {
+    "id": "c1-2026-w42-2",
+    "channel": "c1-automation",
+    "week": "2026-W42",
+    "slot": 2,
+    "theme": "studio",
+    "opening": "highlighter-swipe",
+    "primitives": [
+      "highlighter-swipe",
+      "counter-drop",
+      "word-stack-slam",
+      "flow-run",
+      "chat-pop",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "cut",
+      "cut",
+      "whip-pan",
+      "cut",
+      "ink-wipe"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "myth",
+    "fingerprint": "4b3b85db83b9",
+    "experiment": false
+  },
+  {
+    "id": "c1-2026-w42-3",
+    "channel": "c1-automation",
+    "week": "2026-W42",
+    "slot": 3,
+    "theme": "night",
+    "opening": "host-hook",
+    "primitives": [
+      "host-hook",
+      "counter-drop",
+      "ui-chat",
+      "ui-diff",
+      "conveyor",
+      "ui-inbox",
+      "host-payoff",
+      "host-cta"
+    ],
+    "transitions": [
+      "cut",
+      "cut",
+      "cut",
+      "pixel-wipe",
+      "pixel-wipe",
+      "pixel-wipe",
+      "cut",
+      "pixel-wipe"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "question",
+    "fingerprint": "2384e9fac6d9",
+    "experiment": false
+  },
+  {
+    "id": "c1-2026-w42-4",
+    "channel": "c1-automation",
+    "week": "2026-W42",
+    "slot": 4,
+    "theme": "paper",
+    "opening": "counter-drop",
+    "primitives": [
+      "counter-drop",
+      "pile-drop",
+      "word-stack-slam",
+      "conveyor",
+      "chat-pop",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "cut",
+      "cut",
+      "ink-wipe",
+      "ink-wipe",
+      "cut"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "pile",
+    "fingerprint": "32b1d2c4c1a1",
+    "experiment": true
+  },
+  {
+    "id": "c1-2026-w42-5",
+    "channel": "c1-automation",
+    "week": "2026-W42",
+    "slot": 5,
+    "theme": "night",
+    "opening": "host-hook",
+    "primitives": [
+      "host-hook",
+      "ui-sheet",
+      "counter-drop",
+      "highlighter-swipe",
+      "flow-run",
+      "stamp-hit",
+      "host-payoff",
+      "host-cta"
+    ],
+    "transitions": [
+      "cut",
+      "cut",
+      "pixel-wipe",
+      "pixel-wipe",
+      "pixel-wipe",
+      "cut",
+      "whip-pan",
+      "cut"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "confession",
+    "fingerprint": "a7c3d51794d5",
+    "experiment": false
+  },
+  {
+    "id": "c1-2026-w42-6",
+    "channel": "c1-automation",
+    "week": "2026-W42",
+    "slot": 6,
+    "theme": "studio",
+    "opening": "pile-drop",
+    "primitives": [
+      "pile-drop",
+      "conveyor",
+      "word-stack-slam",
+      "flow-build",
+      "counter-drop",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "cut",
+      "ink-wipe",
+      "ink-wipe",
+      "cut",
+      "cut"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "pile",
+    "fingerprint": "f478c6cf8b02",
+    "experiment": true
+  },
+  {
+    "id": "c1-2026-w42-7",
+    "channel": "c1-automation",
+    "week": "2026-W42",
+    "slot": 7,
+    "theme": "studio",
+    "opening": "chat-pop",
+    "primitives": [
+      "chat-pop",
+      "pile-drop",
+      "flow-build",
+      "flow-run",
+      "counter-drop",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "cut",
+      "ink-wipe",
+      "cut",
+      "ink-wipe",
+      "cut"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "before-after",
+    "fingerprint": "91643b545c8a",
+    "experiment": false
+  }
+]

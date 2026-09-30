@@ -146,6 +146,14 @@ Did: `schemas/validate.ts`: dependency-free validator for the JSON Schema subset
 Samples: channel = the real c1 channel.json; storyboard = the 4 real engine boards (schema + engine checks); 6 samples in schemas/samples/. Negative tests: 6 broken copies fail with the expected error. The validator caught a bad recipe id in my own sample.
 Verified: npm run check; all 4 boards pass make.mjs validation; story validation unchanged.
 Decisions: ADR 16.
-Commit: pending "approve commit"
+Commit: 896adc5 feat(schemas): final JSON schemas, dependency-free validator, engine enum sync
 Next: B2 recipe generator + novelty rules.
 Open questions: Chiku's Sarvam voice; recipe "rhythm" vocabulary still TBD (owner: Navin).
+
+## 2026-10-01, session 12: B2 recipe generator + novelty rules
+Did: `studio/novelty.ts`: the 7 rules as pure functions over fingerprints (trigram topic similarity, structure distance over shots + ordered pairs, opening, hero metaphor, theme run, hook run + caption opener, cross-channel same ISO week), ISO week helpers. `studio/recipe.ts`: seeded generator (mulberry32 on sha256 of channel|week), two shapes (host 8 beats on night, composed 6 beats on the channel's other themes), channel + bench filters, 2 of 7 slots flagged experiments, redraws up to 3000 times then throws with the last rule errors. CLI writes recipes/<channel>/<week>.json using every other recipe file as history. Generated recipes/c1-automation/2026-W41.json (7 recipes, all schema-valid).
+Verified: `studio/recipe.test.ts` (in npm run check): 8 weeks x C1 + a stand-in C3 = 112 recipes, schema-valid, 0 rule breaks on an independent re-check; seeded repeatability; bench respected; impossible constraints throw; each of the 7 rules fires on a crafted violation and not on its boundary case. Mutation check: a generator that skips the rules fails the test.
+Decisions: ADR 17 (TypeScript on Node for agent-studio). Topic, hero metaphor and caption opener are enforced at QA time (only known after writing).
+Commit: pending "approve commit"
+Next: B3 QA runner + contact sheet.
+Open questions: host format is capped at 2 per week by the opening rule (host-hook is its only opener); a second host opener primitive (Phase C) or an opening rule scoped per format would lift it. Navin to decide. Recipe "rhythm" vocabulary TBD. Chiku's voice.

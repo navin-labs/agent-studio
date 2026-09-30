@@ -48,7 +48,7 @@ Phase done when: a dry-run week for C1 goes from feed to approved queue with zer
   > Read CLAUDE.md, schemas/. Turn the drafts into final JSON Schemas with one valid sample each.
   > Add a validate command. No new dependency without asking.
   > Stop when every sample validates.
-- [ ] **B2 Recipe generator + novelty rules.** Done when: a unit test proves 8 weeks of recipes never break the 7 rules.
+- [x] **B2 Recipe generator + novelty rules.** Done when: a unit test proves 8 weeks of recipes never break the 7 rules.
   > Read CLAUDE.md, docs/TECH.md "Novelty rules", agents/recipe/RULES.md.
   > Build the generator and the 7 checks. Seeded random so tests are repeatable.
   > Stop when the 8-week test passes.
