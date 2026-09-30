@@ -15,7 +15,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
-import {lengthIssue, probeFrames, validateStoryboard} from '../src/composer/storyboard.ts';
+import {HOOK_PATTERNS, lengthIssue, probeFrames, validateStoryboard} from '../src/composer/storyboard.ts';
 import {checkTextBoxes} from '../src/composer/textcheck.ts';
 import {THEMES} from '../src/themes.ts';
 
@@ -176,7 +176,6 @@ const checkWorld = (doc, err) => {
 };
 
 // Hook patterns rotate: the algorithm tests every post cold, so a repeated opener repeats the same result.
-const HOOK_PATTERNS = ['pile', 'should-not', 'question', 'number', 'confession', 'myth', 'before-after'];
 const checkPattern = (doc, err) => {
   if (!HOOK_PATTERNS.includes(doc.hookPattern)) return err(`"hookPattern" must be one of: ${HOOK_PATTERNS.join(', ')}`);
   const dir = path.join(ROOT, 'content/stories');

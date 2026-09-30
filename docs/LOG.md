@@ -137,6 +137,15 @@ Open questions: which Sarvam speaker is Chiku's voice (Navin picks later from ou
 Did: Length limits per format (storyboard.ts LENGTH, boardFormat, lengthIssue): host 40 to 60 s, composed 20 to 45 s; estimate warns, a voiced render out of range fails (make.mjs); asserted in primitives.mjs. Text QA checks every platform profile (textcheck.ts SAFE_ZONES: instagram, youtube; self-test extended). YouTube's right 120 px button column failed 13 texts on the host board: added SIDE = 120 (theme.ts) and moved the UI window, karaoke, big type, CTA and end-card sub inside it; big type and CTA get +20 px for the push-in zoom; flow-run's done pill rises straight up instead of drifting right. Stress board now also holds host-hook, word-stack-slam, highlighter-swipe, host-payoff and host-cta at max length. It caught: payoff at 56 chars ran above the safe area (payoff type 104 -> 96 px); CTA overflowed the screen (now wraps, font fits the longest word, max 12 chars "DM " + keyword); CTA brand line was covered by the card, then by the host (brand now follows the card in flow; host moved to y 1400).
 Verified: npm run check; 85 contact sheets; host board voiced 43.8 s, 3 composed boards and stress board 0 text errors on both platforms; story regression 24/24.
 Decisions: every board is checked against all platform profiles (one cut posts everywhere). Text-vs-text and text-vs-host overlap is not measured (only caption overlap); the stress board plus a still review covers it for now.
-Commit: pending "approve commit"
+Commit: 9c412dc feat(engine): per-format length limits, Instagram and YouTube safe zones, max-length stress fixes
 Next: Phase A done. B1 schemas final.
 Open questions: Chiku's Sarvam voice (re-voice later).
+
+## 2026-10-01, session 11: B1 schemas final
+Did: `schemas/validate.ts`: dependency-free validator for the JSON Schema subset in use (unsupported keyword = throw), CLI `node schemas/validate.ts [<schema> <file...>]`, `npm run schemas`, part of `npm run check` (and tsc). Final schemas: additionalProperties false, ids, lengths, formats; ledger requires approved_by, approved_at and targets once status is approved/dispatched/published; qa requires an error text on a failed check; storyboard schema now matches what the engine renders (format, host, captionStyle, hookPattern, say, captions, meta.source/idea_id/recipe_id required). Enum sync asserted against the engine (themes, hosts, caption styles, transitions, primitives, hook patterns; channel and platform enums agree across schemas). HOOK_PATTERNS moved from make.mjs to storyboard.ts. channel.json platform youtube-shorts -> youtube. The 4 engine boards gained channel + meta.source/recipe_id (example.com links).
+Samples: channel = the real c1 channel.json; storyboard = the 4 real engine boards (schema + engine checks); 6 samples in schemas/samples/. Negative tests: 6 broken copies fail with the expected error. The validator caught a bad recipe id in my own sample.
+Verified: npm run check; all 4 boards pass make.mjs validation; story validation unchanged.
+Decisions: ADR 16.
+Commit: pending "approve commit"
+Next: B2 recipe generator + novelty rules.
+Open questions: Chiku's Sarvam voice; recipe "rhythm" vocabulary still TBD (owner: Navin).

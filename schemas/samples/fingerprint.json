@@ -1,0 +1,21 @@
+{
+  "id": "host-supplier-bills",
+  "channel": "c1-automation",
+  "date": "2026-10-01",
+  "topic_text": "supplier bills typed into the purchase register by hand",
+  "primitives": [
+    "host-hook",
+    "ui-inbox",
+    "ui-sheet",
+    "ui-diff",
+    "flow-run",
+    "ui-chat",
+    "host-payoff",
+    "host-cta"
+  ],
+  "opening": "host-hook",
+  "hero_metaphor": "bills entering themselves",
+  "theme": "night",
+  "hook_pattern": "question",
+  "caption_opener": "Supplier bills do not need a person typing every line."
+}

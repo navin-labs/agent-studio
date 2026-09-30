@@ -1,0 +1,33 @@
+{
+  "id": "c1-2026-w40-3",
+  "channel": "c1-automation",
+  "week": "2026-W40",
+  "slot": 3,
+  "theme": "night",
+  "opening": "host-hook",
+  "primitives": [
+    "host-hook",
+    "ui-inbox",
+    "ui-sheet",
+    "ui-diff",
+    "flow-run",
+    "ui-chat",
+    "host-payoff",
+    "host-cta"
+  ],
+  "transitions": [
+    "cut",
+    "whip-pan",
+    "whip-pan",
+    "pixel-wipe",
+    "whip-pan",
+    "whip-pan",
+    "pixel-wipe",
+    "cut"
+  ],
+  "rhythm": "TBD",
+  "hook_pattern": "question",
+  "hero_metaphor": "bills entering themselves",
+  "fingerprint": "night|host-hook|ui-diff|question",
+  "experiment": false
+}

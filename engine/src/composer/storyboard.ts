@@ -20,6 +20,7 @@ export type StoryboardScene = {
 
 export const HOST_NAMES = ['chiku', 'bahi', 'tikku'] as const;
 export const CAPTION_STYLES = ['keywords', 'karaoke'] as const;
+export const HOOK_PATTERNS = ['pile', 'should-not', 'question', 'number', 'confession', 'myth', 'before-after'] as const;
 
 export type Storyboard = {
   format: 'storyboard';

@@ -3,24 +3,77 @@
   "title": "qa",
   "description": "Result of Render + QA for one storyboard.",
   "type": "object",
-  "required": ["storyboard_id", "pass", "checks"],
+  "required": [
+    "storyboard_id",
+    "pass",
+    "checks"
+  ],
+  "additionalProperties": false,
   "properties": {
-    "storyboard_id": {"type": "string"},
-    "pass": {"type": "boolean"},
+    "storyboard_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "pass": {
+      "type": "boolean"
+    },
     "checks": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["name", "pass"],
+        "required": [
+          "name",
+          "pass"
+        ],
+        "additionalProperties": false,
+        "if": {
+          "properties": {
+            "pass": {
+              "const": false
+            }
+          }
+        },
+        "then": {
+          "required": [
+            "error"
+          ]
+        },
         "properties": {
-          "name": {"enum": ["schema", "text-limits", "audio", "format", "duration", "safe-zones", "fingerprint", "naming"]},
-          "pass": {"type": "boolean"},
-          "error": {"type": "string", "description": "Exact error sent back to Forge"}
+          "name": {
+            "enum": [
+              "schema",
+              "text-limits",
+              "audio",
+              "format",
+              "duration",
+              "safe-zones",
+              "fingerprint",
+              "naming"
+            ]
+          },
+          "pass": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact error sent back to Forge; required when pass is false"
+          }
         }
       }
     },
-    "video_path": {"type": "string"},
-    "contact_sheet_path": {"type": "string"},
-    "text_boxes": {"type": "array", "items": {"type": "object"}}
+    "video_path": {
+      "type": "string"
+    },
+    "contact_sheet_path": {
+      "type": "string"
+    },
+    "text_boxes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
   }
 }

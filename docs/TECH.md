@@ -108,7 +108,7 @@ Rules (enforced by `npm run gate:themes`, which `make.mjs` runs before every ren
 | Render | `npm run make -- content/storyboards/<id>.json` (watcher also watches `content/storyboards/`) |
 | Transitions | cut, whip-pan (motion blur), ink-wipe (from the bottom), pixel-wipe (120 px blocks in a fixed pseudo-random order, `lib/pixels.ts`) |
 | Closing | the last scene must be a closer (`end-card` or `host-cta`) |
-| Checks | `npm run check` = TypeScript (`tsc`, strict) + theme gate + text QA self-test; run before every commit |
+| Checks | `npm run check` = TypeScript (`tsc`, strict) + theme gate + text QA self-test + schema samples (`schemas/validate.ts`); run before every commit |
 
 ## Formats (ADR 13)
 | Format | Look | Built from |

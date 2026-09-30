@@ -34,7 +34,7 @@
       "via": "forge-queue"
     },
     {
-      "platform": "youtube-shorts",
+      "platform": "youtube",
       "handle": "TBD (owner: Navin)",
       "via": "n8n"
     }

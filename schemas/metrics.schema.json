@@ -3,20 +3,73 @@
   "title": "metrics",
   "description": "Post performance at 24h and 7d. Source and collector TBD (owner: Navin).",
   "type": "object",
-  "required": ["storyboard_id", "channel", "platform", "window", "reach"],
+  "required": [
+    "storyboard_id",
+    "channel",
+    "platform",
+    "window",
+    "reach"
+  ],
+  "additionalProperties": false,
   "properties": {
-    "storyboard_id": {"type": "string"},
-    "channel": {"enum": ["c1-automation", "c2-reach", "c3-studio"]},
-    "platform": {"enum": ["instagram", "youtube"]},
-    "window": {"enum": ["24h", "7d"]},
-    "reach": {"type": "integer", "minimum": 0},
-    "views": {"type": "integer", "minimum": 0},
-    "avg_watch_s": {"type": "number", "minimum": 0},
-    "sends": {"type": "integer", "minimum": 0},
-    "saves": {"type": "integer", "minimum": 0},
-    "follows": {"type": "integer", "minimum": 0},
-    "profile_visits": {"type": "integer", "minimum": 0},
-    "dms": {"type": "integer", "minimum": 0},
-    "enquiries": {"type": "integer", "minimum": 0}
+    "storyboard_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "channel": {
+      "enum": [
+        "c1-automation",
+        "c2-reach",
+        "c3-studio"
+      ]
+    },
+    "platform": {
+      "enum": [
+        "instagram",
+        "youtube"
+      ]
+    },
+    "window": {
+      "enum": [
+        "24h",
+        "7d"
+      ]
+    },
+    "reach": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "views": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "avg_watch_s": {
+      "type": "number",
+      "minimum": 0
+    },
+    "sends": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "saves": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "follows": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "profile_visits": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "dms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "enquiries": {
+      "type": "integer",
+      "minimum": 0
+    }
   }
 }

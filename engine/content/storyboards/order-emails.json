@@ -1,6 +1,7 @@
 {
   "format": "storyboard",
   "id": "order-emails",
+  "channel": "c1-automation",
   "theme": "paper",
   "hookPattern": "pile",
   "scenes": [
@@ -21,5 +22,5 @@
   ],
   "caption": "Order emails should not need a person to retype them.\n\nA small automation can read each order email, pull the item and quantity, add a row to your sheet and send the confirmation.\n\nExample data.\n\nFollow for one business automation every day. Send this to whoever handles your orders.",
   "hashtags": ["#automation", "#n8n", "#smallbusinessindia", "#orderprocessing", "#operations"],
-  "meta": {"idea_id": "test-order-emails"}
+  "meta": {"source": "https://example.com/ideas/order-emails", "idea_id": "test-order-emails", "recipe_id": "test-order-emails"}
 }

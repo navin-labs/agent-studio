@@ -14,7 +14,8 @@
     "primitives": "node scripts/primitives.mjs",
     "stress": "node scripts/make.mjs test/stress-ui.json",
     "typecheck": "tsc",
-    "check": "tsc && node scripts/theme-gate.ts > /dev/null && node src/composer/textcheck.ts"
+    "schemas": "node ../schemas/validate.ts",
+    "check": "tsc && node scripts/theme-gate.ts > /dev/null && node src/composer/textcheck.ts && node ../schemas/validate.ts > /dev/null"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.527",

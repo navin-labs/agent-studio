@@ -1,16 +1,54 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "idea",
-  "description": "One candidate topic from a real feed. Written by Feed (n8n).",
+  "description": "One candidate topic from a real feed. Written by Feed (n8n). No source link, no idea.",
   "type": "object",
-  "required": ["id", "channel", "title", "source_url", "source", "date"],
+  "required": [
+    "id",
+    "channel",
+    "title",
+    "source_url",
+    "source",
+    "date"
+  ],
+  "additionalProperties": false,
   "properties": {
-    "id": {"type": "string"},
-    "channel": {"enum": ["c1-automation", "c2-reach", "c3-studio"]},
-    "title": {"type": "string"},
-    "summary": {"type": "string"},
-    "source": {"enum": ["reddit", "google-trends", "youtube", "ig-question"]},
-    "source_url": {"type": "string", "format": "uri"},
-    "date": {"type": "string", "format": "date"}
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "maxLength": 80
+    },
+    "channel": {
+      "enum": [
+        "c1-automation",
+        "c2-reach",
+        "c3-studio"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "source": {
+      "enum": [
+        "reddit",
+        "google-trends",
+        "youtube",
+        "ig-question"
+      ]
+    },
+    "source_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    }
   }
 }

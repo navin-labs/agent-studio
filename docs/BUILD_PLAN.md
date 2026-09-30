@@ -44,7 +44,7 @@ A6 Host format (pixel-narrator, ADR 13 to 15): one of several formats; spec = Na
 ## Phase B: agent-studio core
 Phase done when: a dry-run week for C1 goes from feed to approved queue with zero hand edits except approval.
 
-- [ ] **B1 Schemas final.** Done when: all 8 schemas validate one sample file each.
+- [x] **B1 Schemas final.** Done when: all 8 schemas validate one sample file each.
   > Read CLAUDE.md, schemas/. Turn the drafts into final JSON Schemas with one valid sample each.
   > Add a validate command. No new dependency without asking.
   > Stop when every sample validates.

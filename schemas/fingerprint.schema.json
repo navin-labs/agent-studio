@@ -3,18 +3,111 @@
   "title": "fingerprint",
   "description": "What novelty rules compare against. One per published or approved video.",
   "type": "object",
-  "required": ["id", "channel", "date", "topic_text", "primitives", "opening", "theme", "hook_pattern"],
+  "required": [
+    "id",
+    "channel",
+    "date",
+    "topic_text",
+    "primitives",
+    "opening",
+    "theme",
+    "hook_pattern"
+  ],
+  "additionalProperties": false,
   "properties": {
-    "id": {"type": "string"},
-    "channel": {"enum": ["c1-automation", "c2-reach", "c3-studio"]},
-    "date": {"type": "string", "format": "date"},
-    "topic_text": {"type": "string"},
-    "primitives": {"type": "array", "items": {"type": "string"}},
-    "opening": {"type": "string"},
-    "hero_metaphor": {"type": "string"},
-    "theme": {"enum": ["paper", "ink", "mono", "studio", "night"]},
-    "hook_pattern": {"enum": ["pile", "should-not", "question", "number", "confession", "myth", "before-after"]},
-    "caption_opener": {"type": "string"},
-    "hash": {"type": "string"}
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "channel": {
+      "enum": [
+        "c1-automation",
+        "c2-reach",
+        "c3-studio"
+      ]
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "topic_text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "primitives": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "word-stack-slam",
+          "highlighter-swipe",
+          "pile-drop",
+          "counter-drop",
+          "flow-build",
+          "flow-run",
+          "conveyor",
+          "chat-pop",
+          "stamp-hit",
+          "host-hook",
+          "ui-inbox",
+          "ui-sheet",
+          "ui-chat",
+          "ui-diff",
+          "host-payoff",
+          "host-cta",
+          "end-card"
+        ]
+      },
+      "minItems": 1
+    },
+    "opening": {
+      "enum": [
+        "word-stack-slam",
+        "highlighter-swipe",
+        "pile-drop",
+        "counter-drop",
+        "flow-build",
+        "flow-run",
+        "conveyor",
+        "chat-pop",
+        "stamp-hit",
+        "host-hook",
+        "ui-inbox",
+        "ui-sheet",
+        "ui-chat",
+        "ui-diff",
+        "host-payoff",
+        "host-cta",
+        "end-card"
+      ]
+    },
+    "hero_metaphor": {
+      "type": "string"
+    },
+    "theme": {
+      "enum": [
+        "paper",
+        "ink",
+        "mono",
+        "studio",
+        "night"
+      ]
+    },
+    "hook_pattern": {
+      "enum": [
+        "pile",
+        "should-not",
+        "question",
+        "number",
+        "confession",
+        "myth",
+        "before-after"
+      ]
+    },
+    "caption_opener": {
+      "type": "string"
+    },
+    "hash": {
+      "type": "string"
+    }
   }
 }

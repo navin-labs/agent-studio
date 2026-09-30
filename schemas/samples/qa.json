@@ -1,0 +1,25 @@
+{
+  "storyboard_id": "host-supplier-bills",
+  "pass": false,
+  "checks": [
+    {
+      "name": "schema",
+      "pass": true
+    },
+    {
+      "name": "text-limits",
+      "pass": true
+    },
+    {
+      "name": "duration",
+      "pass": true
+    },
+    {
+      "name": "safe-zones",
+      "pass": false,
+      "error": "scene 2 (ui-inbox) \"BY HAND\": outside the youtube safe area (x 895..979, y 311..337)"
+    }
+  ],
+  "video_path": "engine/out/host-supplier-bills/reel.mp4",
+  "contact_sheet_path": "engine/out/host-supplier-bills/contact.png"
+}

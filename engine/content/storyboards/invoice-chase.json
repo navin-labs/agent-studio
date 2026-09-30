@@ -1,6 +1,7 @@
 {
   "format": "storyboard",
   "id": "invoice-chase",
+  "channel": "c1-automation",
   "theme": "ink",
   "hookPattern": "pile",
   "scenes": [
@@ -17,5 +18,5 @@
   ],
   "caption": "Unpaid invoices don't need a person chasing them every morning.\n\nA small automation can read your receivables sheet, send a polite WhatsApp reminder when something is overdue, and mark it paid when the money lands.\n\nExample data.\n\nWant to see what this would look like for your business? DM AUDIT. Send this to whoever chases payments.",
   "hashtags": ["#automation", "#n8n", "#smallbusinessindia", "#accountsreceivable", "#processimprovement"],
-  "meta": {"idea_id": "test-invoice-chase"}
+  "meta": {"source": "https://example.com/ideas/invoice-chase", "idea_id": "test-invoice-chase", "recipe_id": "test-invoice-chase"}
 }

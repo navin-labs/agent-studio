@@ -1,6 +1,7 @@
 {
   "format": "storyboard",
   "id": "dispatch-lr",
+  "channel": "c1-automation",
   "theme": "studio",
   "hookPattern": "question",
   "scenes": [
@@ -17,5 +18,5 @@
   ],
   "caption": "The truck left at 6 AM. The customer called at 11.\n\nA small automation can take one dispatch entry, update the sheet and send every customer their truck details.\n\nExample data.\n\nFollow for one business automation every day. Send this to whoever handles dispatch.",
   "hashtags": ["#automation", "#n8n", "#smallbusinessindia", "#logistics"],
-  "meta": {"idea_id": "test-dispatch-lr"}
+  "meta": {"source": "https://example.com/ideas/dispatch-lr", "idea_id": "test-dispatch-lr", "recipe_id": "test-dispatch-lr"}
 }

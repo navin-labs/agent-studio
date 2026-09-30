@@ -1,6 +1,7 @@
 {
   "format": "storyboard",
   "id": "host-supplier-bills",
+  "channel": "c1-automation",
   "theme": "night",
   "host": "chiku",
   "captionStyle": "karaoke",
@@ -183,6 +184,8 @@
     "#accountspayable"
   ],
   "meta": {
-    "idea_id": "test-host-supplier-bills"
+    "source": "https://example.com/ideas/host-supplier-bills",
+    "idea_id": "test-host-supplier-bills",
+    "recipe_id": "test-host-supplier-bills"
   }
 }

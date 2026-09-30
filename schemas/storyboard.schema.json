@@ -1,34 +1,174 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "storyboard",
-  "description": "Recipe plus words. Written by Writer (Forge). Rendered by the Composer.",
+  "description": "Recipe plus words. Written by Writer (Forge), rendered by the engine Composer. Field names follow the engine (camelCase).",
   "type": "object",
-  "required": ["id", "recipe_id", "channel", "theme", "scenes", "caption", "meta"],
+  "required": [
+    "format",
+    "id",
+    "channel",
+    "theme",
+    "hookPattern",
+    "scenes",
+    "caption",
+    "hashtags",
+    "meta"
+  ],
+  "additionalProperties": false,
   "properties": {
-    "id": {"type": "string"},
-    "recipe_id": {"type": "string"},
-    "channel": {"enum": ["c1-automation", "c2-reach", "c3-studio"]},
-    "theme": {"enum": ["paper", "ink", "mono", "studio", "night"]},
-    "hook_pattern": {"enum": ["pile", "should-not", "question", "number", "confession", "myth", "before-after"]},
+    "format": {
+      "const": "storyboard"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "maxLength": 80
+    },
+    "channel": {
+      "enum": [
+        "c1-automation",
+        "c2-reach",
+        "c3-studio"
+      ]
+    },
+    "theme": {
+      "enum": [
+        "paper",
+        "ink",
+        "mono",
+        "studio",
+        "night"
+      ]
+    },
+    "host": {
+      "enum": [
+        "chiku",
+        "bahi",
+        "tikku"
+      ],
+      "description": "Host format: the channel mascot"
+    },
+    "captionStyle": {
+      "enum": [
+        "keywords",
+        "karaoke"
+      ]
+    },
+    "hookPattern": {
+      "enum": [
+        "pile",
+        "should-not",
+        "question",
+        "number",
+        "confession",
+        "myth",
+        "before-after"
+      ]
+    },
+    "sfx": {
+      "type": "boolean"
+    },
     "scenes": {
       "type": "array",
+      "minItems": 3,
+      "maxItems": 12,
       "items": {
         "type": "object",
-        "required": ["primitive", "params"],
+        "required": [
+          "primitive",
+          "params"
+        ],
+        "additionalProperties": false,
         "properties": {
-          "primitive": {"type": "string"},
-          "params": {"type": "object", "description": "Per-primitive; text limits come from the primitive's own schema"},
-          "vo": {"type": "string"},
-          "transition": {"type": "string"}
+          "primitive": {
+            "enum": [
+              "word-stack-slam",
+              "highlighter-swipe",
+              "pile-drop",
+              "counter-drop",
+              "flow-build",
+              "flow-run",
+              "conveyor",
+              "chat-pop",
+              "stamp-hit",
+              "host-hook",
+              "ui-inbox",
+              "ui-sheet",
+              "ui-chat",
+              "ui-diff",
+              "host-payoff",
+              "host-cta",
+              "end-card"
+            ]
+          },
+          "params": {
+            "type": "object",
+            "description": "Per primitive; fields and text limits are checked by the engine (specs.ts validateParams)"
+          },
+          "vo": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Caption and voice line; *accent* runs become the shot's cue frames"
+          },
+          "say": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact TTS text when pronunciation needs fixing"
+          },
+          "transition": {
+            "enum": [
+              "cut",
+              "whip-pan",
+              "ink-wipe",
+              "pixel-wipe"
+            ]
+          },
+          "captions": {
+            "type": "boolean"
+          }
         }
       }
     },
-    "caption": {"type": "string"},
-    "hashtags": {"type": "array", "items": {"type": "string"}, "minItems": 3, "maxItems": 5},
+    "caption": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2200
+    },
+    "hashtags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^#[a-z0-9]+$"
+      },
+      "minItems": 3,
+      "maxItems": 5
+    },
+    "music": {
+      "type": "string"
+    },
     "meta": {
       "type": "object",
-      "required": ["source", "idea_id"],
-      "properties": {"source": {"type": "string", "format": "uri"}, "idea_id": {"type": "string"}}
+      "required": [
+        "source",
+        "idea_id",
+        "recipe_id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "format": "uri",
+          "description": "The feed link the idea came from"
+        },
+        "idea_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recipe_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     }
   }
 }
