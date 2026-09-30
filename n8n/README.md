@@ -13,3 +13,12 @@ Setup (Navin):
 4. Check: open a link from `node studio/approval-page.ts c1-automation <week>`; the receiver log shows `GET /approve -> 200`.
 
 Verified 2026-10-01 on n8n 2.31.4: tampered link -> 403, signed link -> 200 through the receiver.
+
+## youtube-upload.json
+Video job (POST `/webhook/agent-studio-youtube`, multipart: `job` JSON + `video` file, sent by `studio/dispatch.ts --live`)
+-> Ask the Mac (`http://host.docker.internal:5680/dispatch-check?id=`; yes only if the ledger says approved and QA still passes)
+-> Upload to YouTube: private, scheduled `publishAt`, category 28, region IN -> answers `{uploaded, youtube_id}`; otherwise 403 and nothing is uploaded.
+
+Setup (Navin): open the workflow, pick the existing YouTube credential in the upload node, Publish.
+Then `YOUTUBE_WEBHOOK_URL=http://localhost:5678/webhook/agent-studio-youtube` in agent-studio/.env. Live dispatch also needs `DISPATCH_LIVE=on`.
+

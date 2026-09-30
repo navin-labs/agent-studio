@@ -1,0 +1,178 @@
+{
+  "id": "agStudioYoutube1",
+  "name": "agent-studio: YouTube upload",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agent-studio-youtube",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Video job",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "agent-studio-youtube"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Ask the Mac receiver whether the dispatcher really approved this video; keep the uploaded file attached.\nconst item = $input.first();\nconst job = JSON.parse(item.json.body.job);\nlet approved = false;\ntry {\n  await this.helpers.httpRequest({ url: 'http://host.docker.internal:5680/dispatch-check', qs: { id: job.storyboard_id } });\n  approved = true;\n} catch (e) {\n  approved = false;\n}\nreturn [{ json: { ...job, approved, binaryKeys: Object.keys(item.binary ?? {}) }, binary: item.binary }];"
+      },
+      "name": "Ask the Mac",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "approved",
+              "leftValue": "={{ $json.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $json.title }}",
+        "regionCode": "IN",
+        "categoryId": "28",
+        "binaryProperty": "={{ $json.binaryKeys[0] }}",
+        "options": {
+          "description": "={{ $json.description }}",
+          "tags": "={{ $json.tags.join(',') }}",
+          "privacyStatus": "private",
+          "publishAt": "={{ $json.scheduled_for || undefined }}",
+          "selfDeclaredMadeForKids": false,
+          "notifySubscribers": true
+        }
+      },
+      "name": "Upload to YouTube (private, scheduled)",
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ uploaded: true, youtube_id: $json.id }) }}",
+        "options": {}
+      },
+      "name": "Uploaded",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ uploaded: false, reason: 'not approved for dispatch', binaryKeys: $json.binaryKeys }) }}",
+        "options": {
+          "responseCode": 403
+        }
+      },
+      "name": "Refused",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        100
+      ]
+    }
+  ],
+  "connections": {
+    "Video job": {
+      "main": [
+        [
+          {
+            "node": "Ask the Mac",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask the Mac": {
+      "main": [
+        [
+          {
+            "node": "Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved?": {
+      "main": [
+        [
+          {
+            "node": "Upload to YouTube (private, scheduled)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Refused",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to YouTube (private, scheduled)": {
+      "main": [
+        [
+          {
+            "node": "Uploaded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

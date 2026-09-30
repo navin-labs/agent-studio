@@ -1,5 +1,6 @@
 // Approve receiver on the Mac. n8n runs in Docker and cannot see this repo, so its approval webhook forwards the signed query
 // here (http://host.docker.internal:5680/approve?...). Everything is verified by ledger.ts; this only moves bytes.
+// /dispatch-check?id= lets n8n's YouTube workflow confirm a video is approved before it uploads (defence in depth).
 // Listens on 127.0.0.1 only. The secret stays in agent-studio/.env (APPROVAL_SECRET); n8n never holds it.
 //
 // node studio/approve-server.ts            (APPROVE_PORT, default 5680)
@@ -9,6 +10,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
+import {plan} from './dispatch.ts';
 import {applyApproval} from './ledger.ts';
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'})[c]!);
@@ -18,6 +20,12 @@ const page = (title: string, lines: string[]) =>
 export const handle = (url: string, secret: string, opts?: Parameters<typeof applyApproval>[2]): {status: number; body: string} => {
   const u = new URL(url, 'http://local');
   if (u.pathname === '/health') return {status: 200, body: 'ok'};
+  // n8n's YouTube workflow asks this before every upload: yes only if the dispatcher would send this video now
+  if (u.pathname === '/dispatch-check') {
+    const id = u.searchParams.get('id') ?? '';
+    const ok = plan(opts?.paths, opts?.now).youtube.some((j) => j.storyboard_id === id);
+    return {status: ok ? 200 : 403, body: ok ? 'approved' : 'not approved for dispatch'};
+  }
   if (u.pathname !== '/approve') return {status: 404, body: page('Not found', [])};
   try {
     const r = applyApproval(u.search.slice(1), secret, opts);
@@ -67,7 +75,7 @@ else if (import.meta.main) {
     .createServer((req, res) => {
       const {status, body} = req.method === 'GET' ? handle(req.url ?? '/', secret) : {status: 405, body: 'GET only'};
       console.log(`${new Date().toISOString()} ${req.method} ${(req.url ?? '').split('?')[0]} -> ${status}`); // never log the query (it carries the signature)
-      res.writeHead(status, {'content-type': status === 200 && body === 'ok' ? 'text/plain' : 'text/html; charset=utf-8', 'cache-control': 'no-store'});
+      res.writeHead(status, {'content-type': body.startsWith('<!doctype') ? 'text/html; charset=utf-8' : 'text/plain', 'cache-control': 'no-store'});
       res.end(body);
     })
     .listen(port, '127.0.0.1', () => console.log(`approve receiver on http://127.0.0.1:${port} (n8n: http://host.docker.internal:${port}/approve)`));

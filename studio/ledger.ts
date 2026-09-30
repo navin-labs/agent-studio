@@ -18,11 +18,11 @@ export const PATHS: Paths = {
   state: process.env.STUDIO_STATE ?? path.join(ROOT, 'state'),
   content: [path.join(ROOT, 'content'), path.join(ROOT, 'engine/content/storyboards')], // Writer output, then the engine's own boards
   out: path.join(ROOT, 'engine/out'),
-  recipes: path.join(ROOT, 'recipes'),
+  recipes: process.env.STUDIO_RECIPES ?? path.join(ROOT, 'recipes'),
   channels: path.join(ROOT, 'channels'),
 };
 
-export type LedgerEntry = {storyboard_id: string; channel: string; status: string; approved_by?: string; approved_at?: string; targets?: string[]; updated_at: string};
+export type LedgerEntry = {storyboard_id: string; channel: string; status: string; approved_by?: string; approved_at?: string; targets?: string[]; scheduled_for?: string; post_urls?: string[]; updated_at: string};
 const readLines = <T,>(f: string): T[] => (fs.existsSync(f) ? fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as T) : []);
 const append = (f: string, rows: unknown[]) => {
   fs.mkdirSync(path.dirname(f), {recursive: true});

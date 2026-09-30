@@ -191,7 +191,33 @@ Open questions: receiver LaunchAgent (Navin's OK); Forge output folder change (N
 
 ## 2026-10-01, session 15c: receiver installed
 Did: `node studio/approve-server.ts --install` (Navin's OK): LaunchAgent com.theautomationguy.approve, RunAtLoad + KeepAlive, log state/approve.log. Re-verified through n8n: signed link -> 200 via the installed receiver; ledger still empty.
-Commit: pending "approve commit"
+Commit: 8a9296a feat(studio): install the approve receiver as a LaunchAgent
 Next: B4b switch-over after Forge is repointed.
 Open questions: Forge output folder change (Navin).
+
+## 2026-10-01, session 16: B5 dispatcher
+Did: `studio/dispatch.ts`: plan (latest ledger line per video; only valid "approved" entries; re-checks QA, video file, recipe) and dispatch (YouTube job to the n8n webhook with the Drive path, then the Instagram queue folder, then a "dispatched" ledger line). Dry run by default; live needs --live and DISPATCH_LIVE=on. YouTube failure queues nothing and leaves the entry approved for a retry. `studio/dispatch.test.ts` in npm run check.
+Verified: 10 ledger states (approved, pending, rejected, qa-failed, rendered, revoked by a later line, hand-typed approval without approver, QA now failing, video missing, already dispatched): only the approved one reaches YouTube and the Instagram queue; dry run makes no call and writes nothing; YouTube 502 queues nothing; after a live run nothing is left to send. A sabotaged dispatcher that lets pending-approval through fails the test. Real dry run: 0 to send (ledger empty).
+Decisions: YouTube upload reads the video from Google Drive (n8n in Docker cannot see the Mac); posting time 19:00 IST for all channels for now.
+Commit: pending "approve commit"
+Next: B4b (waiting on Forge's folder), then B6 Learn.
+Open questions: n8n YouTube upload workflow (needs a YouTube credential in n8n; Navin); how Forge picks up the Instagram queue folder (Q3); posting time per channel; YOUTUBE_WEBHOOK_URL and DISPATCH_LIVE stay unset until then.
+
+## 2026-10-01, session 16b: dispatch wired to n8n, data-driven times, one IG queue
+Did (Navin's answers): YouTube upload workflow `n8n/youtube-upload.json` imported inactive (agStudioYoutube1): webhook -> Code node asks the Mac receiver `/dispatch-check?id=` (new endpoint: yes only for what the dispatcher would send now) -> upload private with publishAt, or 403. Dispatcher sends the job and the video file as multipart (no Drive dependency). Instagram: one queue folder for all channels; each post.json carries channel and handles. Posting times from data: state/learn/posting-times.json (written by Learn), 19:00 IST until then; past slots move to now + 15 min. Receiver restarted with the new endpoint.
+Verified: dispatch and approval tests (data times, past slot, dispatch-check yes/no for 6 states, video bytes in the multipart, post.json handles); dispatch-check reachable from the n8n container (403 for an unknown id).
+Commit: pending "approve commit"
+Verified through n8n after Navin published (credential attached): job for an unapproved video -> 403 "not approved for dispatch", receiver logged the check, nothing uploaded; the file arrives as binary "video", which the upload node reads.
+Next: a real upload test needs Navin's OK (one private video on the channel).
+Open questions: B4b Forge folder.
+
+## 2026-10-01, session 16c: real YouTube upload test (Navin: "test and fix")
+Did: hold mode (`dispatch.ts --hold`: private upload, no publish time), so a test can never go public; n8n upload node now omits publishAt when empty (patched on the exported live workflow so Navin's credential stayed attached; re-published by Navin). STUDIO_RECIPES env for sandboxes. Ran the real chain against a sandbox ledger (installed receiver swapped out for the run, then restored; real ledger untouched): signed approval -> dispatch --live --hold -> n8n -> Mac dispatch-check 200 -> YouTube upload.
+Result: n8n execution 56 success; YouTube video id Q8sNfIm_PMU (private, on Navin's channel; not deleted, Navin's call). Sandbox ledger got its "dispatched" line; Instagram queue folder had reel.mp4, caption.txt, post.json (channel + handle).
+Fixed from the test: the dispatcher ignored n8n's reply, so the video id was lost; it now requires {uploaded: true, youtube_id} and records the Shorts link in post_urls (any other 200 reply is a failure, nothing queued). Hold no longer writes a scheduled_for. Tests added for both.
+Verified: npm run check.
+Commit: pending "approve commit"
+Next: B4b (Forge folder), then B6 Learn (writes state/learn/posting-times.json from metrics).
+Confirmed by Navin: Q8sNfIm_PMU is private (he deletes it later).
+Open questions: publishAt path gets its first live check on the first real approved video; YOUTUBE_WEBHOOK_URL and DISPATCH_LIVE not yet in .env.
 

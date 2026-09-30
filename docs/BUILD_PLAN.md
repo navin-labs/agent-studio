@@ -64,7 +64,7 @@ Phase done when: a dry-run week for C1 goes from feed to approved queue with zer
   > Read CLAUDE.md. Point the watcher (launchd) and Forge's content path at agent-studio/engine.
   > Render one story from the new path. Old reel-engine stays as a read-only backup.
   > Stop when a Forge story renders from engine/.
-- [ ] **B5 Dispatcher.** Done when: only "approved" ledger entries reach the n8n YouTube call or the Forge IG queue (dry run).
+- [x] **B5 Dispatcher.** Done when: only "approved" ledger entries reach the n8n YouTube call or the Forge IG queue (dry run).
   > Read CLAUDE.md, agents/dispatch/RULES.md. Build ledger to n8n (YouTube) and Forge queue (Instagram).
   > Dry-run mode by default. Nothing publishes.
   > Stop when a test proves unapproved entries are never dispatched.
