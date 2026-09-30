@@ -19,7 +19,7 @@ flowchart LR
 | Uniqueness is enforced by code | 7 novelty rules (topic, structure, opening, metaphor, theme, hook, cross-channel) are computed, not requested from an AI |
 | 1 AI step | Only the words are written by an AI. Code picks the shape. Everything else is code or n8n |
 | Human-approved | Nothing publishes without a ledger entry marked "approved". One 5 minute review a week |
-| Vocabulary, not templates | About 20 tested motion primitives at launch, combined into recipes, rendered in 4 themes |
+| Vocabulary, not templates | Tested motion primitives combined into recipes, in several formats (composed, host) and 5 themes, one brand identity |
 | Sourced ideas | Topics come from real feeds with a source link. The writer can only pick from that list |
 
 ## Channels and roles
@@ -43,7 +43,7 @@ flowchart LR
 | Phase | Scope | State |
 |---|---|---|
 | Docs + scaffold | This repo's plan and contracts | Done |
-| A | Themes, primitives, Composer (`engine/`) | In progress (A1 done) |
+| A | Themes, primitives, Composer, text QA, host format (`engine/`) | A1 to A5 done; A6 host format in progress |
 | B | agent-studio core: recipes, novelty, QA, approval, dispatch, learn | Not started |
 | C | 8 new primitives | Not started |
 | D | Launch C2, then C3 (gated) | Not started |

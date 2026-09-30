@@ -99,8 +99,27 @@ Rules (enforced by `npm run gate:themes`, which `make.mjs` runs before every ren
 | Component: one full-frame shot, `{p, dur, cues}`, draws only in the stage band y 280 to 1080 | `<id>.tsx`, registered in `index.ts` |
 | Contact sheet (8 frames) and preview video | `Preview.tsx`; `npm run primitives [-- --all-themes]` |
 
+## Composer (`engine/src/composer/`)
+| Part | Where |
+|---|---|
+| Storyboard type, scene timing, cue frames, `validateStoryboard` (Node-readable) | `storyboard.ts` |
+| Composition: one Sequence per scene, captions from `vo`, cues from `*accent*` runs, transitions cut / whip-pan / ink-wipe, voice audio | `Composer.tsx` |
+| Scene length | vo estimate (or measured voice) within the primitive's min/max; measured voice is never cut |
+| Render | `npm run make -- content/storyboards/<id>.json` (watcher also watches `content/storyboards/`) |
+
+## Formats (ADR 13)
+| Format | Look | Built from |
+|---|---|---|
+| story | Paper & Signal, one continuous world (`pile-to-flow`) | `engine/src/story/Story.tsx` (legacy, live) |
+| composed | any theme, sequenced shots, keyword captions | primitives + Composer |
+| host | `night` theme, a channel mascot hosting, karaoke captions always on | host primitives + Composer (`"host"`, `"captionStyle": "karaoke"` in the storyboard) |
+
+Host layer (`engine/src/host/`): `mascots.tsx` (characters drawn in SVG with a 7-step pixel dither; inputs mouth, blink, tilt), `Host.tsx` (idle bob, blink every ~3 s, tilt toward the active panel, happy hop, pain shake; mouth from voice loudness via `@remotion/media-utils`, else pulsed on caption word timing; karaoke captions), `acting.ts` (pure maths, asserted in `npm run primitives`).
+
 ## QA checks (deterministic)
 Schema and text limits, audio stream present, 1080x1920 @ 30fps, duration 20 to 45s, safe zones from text boxes measured at compose time, fingerprint distance, file naming. Output: qa JSON + contact sheet PNG.
+
+Text boxes (built in A5): while a storyboard renders, `TextProbe` (Composer.tsx) measures every visible text block on settled frames (every 5th, fonts loaded, transitions skipped) and emits it as a Remotion `<Artifact>`. `make.mjs` writes `out/<id>/text-boxes.json` and runs `textcheck.ts`: error if text leaves the IG safe area (x 60..1020, y 250..1500) or its card; warning if a caption overlaps shot text. The render fails if any sampled frame did not report.
 
 ## Security
 | Rule | Enforced by |

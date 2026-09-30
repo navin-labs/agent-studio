@@ -8,6 +8,7 @@ import {EndCard} from './end-card';
 import {FlowBuild} from './flow-build';
 import {FlowRun} from './flow-run';
 import {HighlighterSwipe} from './highlighter-swipe';
+import {HostHook} from './host-hook';
 import {PileDrop} from './pile-drop';
 import {SPECS} from './specs';
 import {StampHit} from './stamp-hit';
@@ -23,5 +24,6 @@ export const PRIMITIVES: Record<keyof typeof SPECS, React.FC<PrimitiveProps<any>
   conveyor: Conveyor,
   'chat-pop': ChatPop,
   'stamp-hit': StampHit,
+  'host-hook': HostHook,
   'end-card': EndCard,
 };

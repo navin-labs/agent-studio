@@ -1,5 +1,5 @@
 import type {ReelProps, Scene} from '../types';
-import {splitWords} from './text';
+import {splitWords} from './text.ts';
 
 export const FPS = 30;
 export const LEAD = 4; // frames of silence before VO starts in each scene
@@ -63,3 +63,11 @@ export const computeFrames = (props: ReelProps): number[] =>
 
 // Frames the voice actually occupies inside a scene (used to time captions and word reveals).
 export const voSpanFrames = (props: ReelProps, i: number) => Math.max(8, Math.round(voSeconds(props, i) * FPS));
+
+// n cue frames: the given ones first, the missing ones spread evenly after the last given cue (or `from`) up to `to`
+export const cuesOr = (cues: number[], n: number, from: number, to: number) => {
+  const k = Math.min(cues.length, n);
+  const a = k ? Math.max(from, cues[k - 1] + 6) : from;
+  const b = Math.max(a, to);
+  return Array.from({length: n}, (_, i) => (i < k ? cues[i] : Math.round(a + ((b - a) * (i - k + 0.5)) / (n - k))));
+};

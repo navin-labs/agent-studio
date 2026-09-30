@@ -3,7 +3,9 @@
 import {Check} from 'lucide-react';
 import React from 'react';
 import {AbsoluteFill, Easing, interpolate, random, spring, useCurrentFrame} from 'remotion';
-import {FPS} from '../lib/timing';
+import {cuesOr, FPS} from '../lib/timing';
+
+export {cuesOr};
 import {FONT, TYPE} from '../theme';
 import {alpha, card, useTheme} from '../themes';
 import {Icon} from '../ui/Icon';
@@ -19,9 +21,6 @@ export const LINEAR = (t: number) => t;
 export const prog = (f: number, a: number, dur: number, e: (t: number) => number = EASE) => interpolate(f, [a, a + dur], [0, 1], {...clamp, easing: e});
 export const springFrom = (f: number, a: number, config = {}) => (f < a ? 0 : spring({frame: f - a, fps: FPS, config: {damping: 14, stiffness: 150, mass: 0.8, ...config}}));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-// n cue frames: the given ones, else spread evenly between `from` and `to`
-export const cuesOr = (cues: number[], n: number, from: number, to: number) =>
-  Array.from({length: n}, (_, i) => cues[i] ?? Math.round(from + ((to - from) * (i + 0.5)) / n));
 
 // ---- the shot: backdrop dot grid + a camera at `zoom` pushing by `push` (negative = pull back) around the stage centre ----
 export const STAGE = {top: 280, bottom: 1080, cy: 680};
@@ -65,6 +64,7 @@ export const ItemCard: React.FC<{item: Item; n: number; x: number; y: number; ro
   const th = useTheme();
   return (
     <div
+      data-tb-skip // decorative document prop: tiny text, flies in from off-screen
       style={{
         position: 'absolute',
         left: x - 75,
@@ -105,6 +105,7 @@ export const NodeCard: React.FC<{node: Node; x: number; y: number; appear: numbe
   const tint = green > 0.5 ? th.ok : th.flow;
   return (
     <div
+      data-box
       style={{
         ...card(th),
         position: 'absolute',
@@ -160,7 +161,7 @@ export const linkPath = (a: {x: number; y: number}, b: {x: number; y: number}) =
 export const DonePill: React.FC<{label: string; style?: React.CSSProperties}> = ({label, style}) => {
   const th = useTheme();
   return (
-    <div style={{background: th.ok, color: th.surface, border: `3px solid ${th.ink}`, borderRadius: 999, padding: '4px 14px', fontFamily: TYPE.data, fontWeight: 900, fontSize: 24, display: 'flex', alignItems: 'center', gap: 6, ...style}}>
+    <div data-box style={{background: th.ok, color: th.surface, border: `3px solid ${th.ink}`, borderRadius: 999, padding: '4px 14px', fontFamily: TYPE.data, fontWeight: 900, fontSize: 24, display: 'flex', alignItems: 'center', gap: 6, ...style}}>
       <Check size={22} strokeWidth={3.5} /> {label}
     </div>
   );
@@ -171,6 +172,7 @@ export const Bubble: React.FC<{app: string; text: string; p: number; style?: Rea
   const th = useTheme();
   return p <= 0 ? null : (
     <div
+      data-box
       style={{
         ...card(th),
         position: 'absolute',

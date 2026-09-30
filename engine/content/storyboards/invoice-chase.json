@@ -1,0 +1,21 @@
+{
+  "format": "storyboard",
+  "id": "invoice-chase",
+  "theme": "ink",
+  "hookPattern": "pile",
+  "scenes": [
+    {"primitive": "pile-drop", "params": {"item": {"title": "INVOICE", "id": "INV-", "pill": "DUE", "amount": true}, "count": 24, "start": 1038}, "vo": "This pile is your *stuck* money."},
+    {"primitive": "counter-drop", "params": {"label": "UNPAID", "icon": "receipt", "from": 0, "to": 24, "tone": "alert"}, "vo": "Each one is an *unpaid invoice.*"},
+    {"primitive": "highlighter-swipe", "transition": "whip-pan", "params": {"text": "Here's the *fix:* four steps, running on their own."}, "vo": "Here's the *fix.* Four steps, running on their own."},
+    {"primitive": "flow-run", "params": {"done": "PAID", "nodes": [
+      {"icon": "sheet", "label": "Read the sheet", "sub": "Receivables.xlsx"},
+      {"icon": "hourglass", "label": "Overdue?", "sub": "Due date passed"},
+      {"icon": "whatsapp", "label": "Send reminder", "sub": "WhatsApp + email"},
+      {"icon": "check", "label": "Mark as paid", "sub": "When money lands"}]}, "vo": "It reads your *sheet,* spots what's *overdue,* and sends a *WhatsApp reminder.*"},
+    {"primitive": "stamp-hit", "params": {"label": "PAID", "count": 4}, "vo": "When the money lands, it's marked *paid.*"},
+    {"primitive": "end-card", "params": {"text": "DM *AUDIT*", "sub": "I'll show you what to automate first."}, "vo": "Want this for your business? DM me AUDIT."}
+  ],
+  "caption": "Unpaid invoices don't need a person chasing them every morning.\n\nA small automation can read your receivables sheet, send a polite WhatsApp reminder when something is overdue, and mark it paid when the money lands.\n\nExample data.\n\nWant to see what this would look like for your business? DM AUDIT. Send this to whoever chases payments.",
+  "hashtags": ["#automation", "#n8n", "#smallbusinessindia", "#accountsreceivable", "#processimprovement"],
+  "meta": {"idea_id": "test-invoice-chase"}
+}

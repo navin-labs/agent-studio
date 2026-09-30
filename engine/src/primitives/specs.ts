@@ -24,6 +24,7 @@ export type Spec = {
   cues: string; // what the *accent* cue frames drive, in order
   params: Record<string, Field>;
   example: Record<string, unknown>; // the primitive's test storyboard
+  captions?: false; // never show vo captions over this shot (it carries its own text)
 };
 
 const text = (max: number, optional = false): Field => ({kind: 'text', max, optional});
@@ -120,12 +121,22 @@ export const SPECS: Record<string, Spec> = {
     params: {label: text(8), count: {kind: 'int', min: 1, max: 6}},
     example: {label: 'PAID', count: 4},
   },
+  'host-hook': {
+    family: 'kinetic-type',
+    about: 'Host format hook: the pain as huge type, accent word highlighted, the host reacting below.',
+    channels: ['c1-automation'],
+    seconds: [2, 5.5],
+    cues: 'optional: frame the accent lands and the host reacts (default: right after its word)',
+    params: {text: text(40)},
+    example: {text: 'Still entering *supplier bills* by hand?'},
+  },
   'end-card': {
     family: 'kinetic-type',
     about: 'Brand end card: logo, CTA with highlighted *accent*, promise line, authorship line.',
     channels: ALL,
     seconds: [2, 4],
     cues: 'none',
+    captions: false,
     params: {text: text(20), sub: text(60, true)},
     example: {text: '*Follow*', sub: 'One business automation, every day.'},
   },

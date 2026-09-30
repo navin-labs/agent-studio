@@ -1,0 +1,25 @@
+{
+  "format": "storyboard",
+  "id": "order-emails",
+  "theme": "paper",
+  "hookPattern": "pile",
+  "scenes": [
+    {"primitive": "word-stack-slam", "params": {"text": "Someone *typed* all of these."}, "vo": "All of these were *typed* by hand."},
+    {"primitive": "pile-drop", "params": {"item": {"title": "ORDER", "id": "PO-", "pill": "NEW", "amount": false}, "count": 22, "start": 2201}, "vo": "Each order email gets read, copied, then *confirmed.* One by one."},
+    {"primitive": "flow-build", "transition": "whip-pan", "params": {"nodes": [
+      {"icon": "inbox", "label": "Read the email", "sub": "orders@ inbox"},
+      {"icon": "search", "label": "Pull details", "sub": "Item, qty, address"},
+      {"icon": "sheet", "label": "Add to sheet", "sub": "Orders.xlsx"},
+      {"icon": "send", "label": "Confirm order", "sub": "Reply in 1 minute"}]}, "vo": "Here's the *fix.* Four steps, no copy and paste."},
+    {"primitive": "flow-run", "params": {"done": "DONE", "nodes": [
+      {"icon": "inbox", "label": "Read the email", "sub": "orders@ inbox"},
+      {"icon": "search", "label": "Pull details", "sub": "Item, qty, address"},
+      {"icon": "sheet", "label": "Add to sheet", "sub": "Orders.xlsx"},
+      {"icon": "send", "label": "Confirm order", "sub": "Reply in 1 minute"}]}, "vo": "It *reads* the email, *pulls* the item and quantity, and *adds* a row to your sheet."},
+    {"primitive": "chat-pop", "transition": "ink-wipe", "params": {"app": "EMAIL", "text": "Hi Gupta ji, order PO-2214 is confirmed. Dispatch on 24 Sep."}, "vo": "It sends the *confirmation.* Your team checks the odd ones."},
+    {"primitive": "end-card", "params": {"text": "*Follow*", "sub": "One business automation, every day."}, "vo": "Follow for one automation every day."}
+  ],
+  "caption": "Order emails should not need a person to retype them.\n\nA small automation can read each order email, pull the item and quantity, add a row to your sheet and send the confirmation.\n\nExample data.\n\nFollow for one business automation every day. Send this to whoever handles your orders.",
+  "hashtags": ["#automation", "#n8n", "#smallbusinessindia", "#orderprocessing", "#operations"],
+  "meta": {"idea_id": "test-order-emails"}
+}

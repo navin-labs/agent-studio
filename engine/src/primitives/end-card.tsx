@@ -3,7 +3,7 @@ import {AbsoluteFill, Easing, Img, staticFile, useCurrentFrame} from 'remotion';
 import {Sfx} from '../lib/frame';
 import {parseAccent} from '../lib/text';
 import {FONT, HANDLE, TYPE} from '../theme';
-import {useTheme} from '../themes';
+import {isLight, useTheme} from '../themes';
 import {LINEAR, type PrimitiveProps, prog, springFrom} from './atoms';
 
 // Brand end card, entered with an ink wipe from the bottom: logo, CTA with highlighted *accent*, promise line, authorship.
@@ -19,8 +19,8 @@ export const EndCard: React.FC<PrimitiveProps<{text: string; sub?: string}>> = (
   return (
     <AbsoluteFill style={{background: th.bg}}>
       <AbsoluteFill style={{clipPath: `inset(${(1 - wipe) * 100}% 0 0 0)`, background: th.ink}}>
-        <Img src={staticFile('brand/mark.png')} style={{position: 'absolute', left: 540 - 120, top: 470, width: 240, height: 240, opacity: logo, transform: `scale(${0.6 + 0.4 * logo}) rotate(${(1 - logo) * -120}deg)`}} />
-        <div style={{position: 'absolute', top: 780, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 30, fontFamily: TYPE.display, fontWeight: 900, fontSize: 150, letterSpacing: '-0.04em', color: th.bg, opacity: textP, transform: `translateY(${(1 - textP) * 40}px)`}}>
+        <Img src={staticFile('brand/mark.png')} style={{position: 'absolute', left: 540 - 120, top: 470, width: 240, height: 240, opacity: logo, transform: `scale(${0.6 + 0.4 * logo}) rotate(${(1 - logo) * -120}deg)`, filter: isLight(th.ink) ? 'invert(1)' : undefined}} /> {/* the mark is drawn for a dark card */}
+        <div data-tb="cta" style={{position: 'absolute', top: 780, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 30, fontFamily: TYPE.display, fontWeight: 900, fontSize: 150, letterSpacing: '-0.04em', color: th.bg, opacity: textP, transform: `translateY(${(1 - textP) * 40}px)`}}>
           {parseAccent(p.text).map((w, i) =>
             w.accent ? (
               <span key={i} style={{position: 'relative', display: 'inline-block', padding: '0 14px'}}>
@@ -33,9 +33,9 @@ export const EndCard: React.FC<PrimitiveProps<{text: string; sub?: string}>> = (
           )}
         </div>
         {p.sub ? (
-          <div style={{position: 'absolute', top: 1000, left: 110, right: 110, textAlign: 'center', fontFamily: FONT, fontSize: 44, fontWeight: 700, lineHeight: 1.25, color: th.bg, opacity: subP * 0.85, transform: `translateY(${(1 - subP) * 16}px)`}}>{p.sub}</div>
+          <div data-tb="sub" style={{position: 'absolute', top: 1000, left: 110, right: 110, textAlign: 'center', fontFamily: FONT, fontSize: 44, fontWeight: 700, lineHeight: 1.25, color: th.bg, opacity: subP * 0.85, transform: `translateY(${(1 - subP) * 16}px)`}}>{p.sub}</div>
         ) : null}
-        <div style={{position: 'absolute', top: 1160, left: 0, right: 0, textAlign: 'center', fontFamily: TYPE.data, fontSize: 28, fontWeight: 600, color: th.bg, opacity: byP * 0.75}}>Made by Navin Rana · {HANDLE}</div>
+        <div data-tb="byline" style={{position: 'absolute', top: 1160, left: 0, right: 0, textAlign: 'center', fontFamily: TYPE.data, fontSize: 28, fontWeight: 600, color: th.bg, opacity: byP * 0.75}}>Made by Navin Rana · {HANDLE}</div>
       </AbsoluteFill>
       <Sfx at={0} name="whoosh" volume={0.35} />
       <Sfx at={14} name="pop" />

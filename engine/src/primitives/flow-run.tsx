@@ -1,11 +1,11 @@
-import {evolvePath, getLength, getPointAtLength} from '@remotion/paths';
+import {getLength, getPointAtLength} from '@remotion/paths';
 import React from 'react';
 import {interpolate, useCurrentFrame} from 'remotion';
 import {Sfx} from '../lib/frame';
 import {useTheme} from '../themes';
-import {clamp, cuesOr, DonePill, linkPath, type Node, NODE_W, NodeCard, nodeLayout, type PrimitiveProps, prog, Shot, springFrom} from './atoms';
+import {clamp, cuesOr, DonePill, linkPath, type Node, NODE_W, NodeCard, nodeLayout, type PrimitiveProps, Shot} from './atoms';
 
-// A built automation runs: each step lights on its cue, data tokens travel the links,
+// A built automation runs (already on screen, so it follows flow-build without re-popping): each step lights on its cue, data tokens travel the links,
 // the last step turns ok and stamps `done` a few times.
 export const FlowRun: React.FC<PrimitiveProps<{nodes: Node[]; done: string}>> = ({p, dur, cues}) => {
   const th = useTheme();
@@ -35,14 +35,13 @@ export const FlowRun: React.FC<PrimitiveProps<{nodes: Node[]; done: string}>> = 
   return (
     <Shot dur={dur}>
       <svg style={{position: 'absolute', left: 0, top: 0, overflow: 'visible', zIndex: 1}} width={1} height={1}>
-        {links.map((d, k) => {
-          const ev = evolvePath(prog(f, k * 3 + 4, 10), d); // draws in right behind its steps
-          return <path key={k} d={d} stroke={k === links.length - 1 && lastLit > 0.5 ? th.ok : th.flow} strokeWidth={5} fill="none" strokeLinecap="round" strokeDasharray={ev.strokeDasharray} strokeDashoffset={ev.strokeDashoffset} />;
-        })}
+        {links.map((d, k) => (
+          <path key={k} d={d} stroke={k === links.length - 1 && lastLit > 0.5 ? th.ok : th.flow} strokeWidth={5} fill="none" strokeLinecap="round" />
+        ))}
         {tokens}
       </svg>
       {p.nodes.map((node, k) => (
-        <NodeCard key={k} node={node} x={pos[k].x} y={pos[k].y} appear={springFrom(f, k * 3, {damping: 14, stiffness: 200})} active={k < n - 1 ? on(at[k]) : 0} green={k === n - 1 ? lastLit : 0} z={2} />
+        <NodeCard key={k} node={node} x={pos[k].x} y={pos[k].y} appear={1} active={k < n - 1 ? on(at[k]) : 0} green={k === n - 1 ? lastLit : 0} z={2} />
       ))}
       {bursts.map((b, k) => {
         const t = (f - b) / 22;

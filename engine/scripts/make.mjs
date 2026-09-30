@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Usage:
 //   npm run make -- content/stories/my-story.json         render a story reel (silent unless VOICE=on in .env)
+//   npm run make -- content/storyboards/my-board.json     render a storyboard through the Composer (primitives)
 //   npm run make -- content/stories/*.json                several at once
 // Flags:
 //   --check      validate only, render nothing
@@ -14,6 +15,8 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
+import {probeFrames, validateStoryboard} from '../src/composer/storyboard.ts';
+import {checkTextBoxes} from '../src/composer/textcheck.ts';
 import {THEMES} from '../src/themes.ts';
 
 const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
@@ -86,6 +89,7 @@ const checkIcons = (obj, warn, where) => {
 };
 
 const validate = (doc) => {
+  if (doc.format === 'storyboard') return validateBoard(doc);
   const errors = [];
   const warnings = [];
   const err = (m) => errors.push(m);
@@ -94,7 +98,7 @@ const validate = (doc) => {
   for (const s of allStrings(doc)) {
     for (const [re, why] of BANNED) if (re.test(s)) err(`banned: ${why} -> "${s.slice(0, 80)}"`);
   }
-  if (doc.format !== 'story') err('format must be "story" (reel and carousel formats were removed)');
+  if (doc.format !== 'story') err('format must be "story" or "storyboard" (reel and carousel formats were removed)');
   if (doc.theme !== undefined && !THEMES[doc.theme]) err(`unknown theme "${doc.theme}" (use one of: ${Object.keys(THEMES).join(', ')})`);
   const sc = doc.scenes || [];
   const need = STORY_TEMPLATES[doc.template];
@@ -123,6 +127,19 @@ const validate = (doc) => {
   if (doc.caption && !VOICE_ON && /voiceover|voice-over/i.test(doc.caption)) err('caption discloses a voiceover but the video is silent (VOICE is off)');
   if (doc.caption && doc.caption.split('\n')[0].length > 125) warn('caption first line over 125 chars, it gets cut before "more"');
   if (doc.hashtags && (doc.hashtags.length < 3 || doc.hashtags.length > 5)) err('use 3 to 5 hashtags (Instagram caps at 5)');
+  return {errors, warnings};
+};
+
+// storyboard: engine checks from src/composer/storyboard.ts, plus the shared honesty and caption checks
+const validateBoard = (doc) => {
+  const {errors, warnings} = validateStoryboard(doc);
+  if (!/^[a-z0-9-]+$/.test(doc.id || '')) errors.push('id must be lowercase-with-dashes');
+  for (const s of allStrings(doc)) for (const [re, why] of BANNED) if (re.test(s)) errors.push(`banned: ${why} -> "${s.slice(0, 80)}"`);
+  if (doc.hookPattern !== undefined && !HOOK_PATTERNS.includes(doc.hookPattern)) errors.push(`"hookPattern" must be one of: ${HOOK_PATTERNS.join(', ')}`);
+  if (!doc.caption) warnings.push('no caption');
+  else if (doc.caption.split('\n')[0].length > 125) warnings.push('caption first line over 125 chars, it gets cut before "more"');
+  if (doc.caption && !VOICE_ON && /voiceover|voice-over/i.test(doc.caption)) errors.push('caption discloses a voiceover but the video is silent (VOICE is off)');
+  if (doc.hashtags && (doc.hashtags.length < 3 || doc.hashtags.length > 5)) errors.push('use 3 to 5 hashtags (Instagram caps at 5)');
   return {errors, warnings};
 };
 
@@ -381,11 +398,12 @@ const renderReel = async (script) => {
   const inputProps = {script, timing: {audio, durations, music}};
   const browserExecutable = findBrowser();
   const url = await getBundle();
-  const composition = await selectComposition({serveUrl: url, id: 'Story', inputProps, browserExecutable});
+  const composition = await selectComposition({serveUrl: url, id: script.format === 'storyboard' ? 'Composer' : 'Story', inputProps, browserExecutable});
   const outDir = path.join(OUT, script.id);
   fs.mkdirSync(outDir, {recursive: true});
   const secs = (composition.durationInFrames / composition.fps).toFixed(1);
   let last = -1;
+  const measured = new Map(); // frame -> boxes, reported by the Composer's TextProbe
   await renderMedia({
     composition,
     serveUrl: url,
@@ -395,6 +413,11 @@ const renderReel = async (script) => {
     outputLocation: path.join(outDir, 'reel.mp4'),
     inputProps,
     browserExecutable,
+    onArtifact: ({filename, content}) => {
+      if (!filename.startsWith('text-boxes-')) return;
+      const m = JSON.parse(typeof content === 'string' ? content : new TextDecoder().decode(content));
+      measured.set(m.frame, m.boxes);
+    },
     onProgress: ({progress}) => {
       const p = Math.floor(progress * 10);
       if (p !== last) {
@@ -408,6 +431,21 @@ const renderReel = async (script) => {
   await renderStill({composition, serveUrl: url, output: path.join(outDir, 'cover.png'), frame: coverFrame, inputProps, browserExecutable});
   writeCaption(script, outDir);
   console.log(c.green(`  -> ${path.relative(ROOT, outDir)}/reel.mp4, cover.png, caption.txt`));
+  if (script.format !== 'storyboard') return true;
+  // text boxes: measured in the browser at render time, then checked (safe area, card overflow, caption overlap)
+  const frames = [...measured].sort((a, b) => a[0] - b[0]).map(([frame, boxes]) => ({frame, boxes}));
+  const issues = checkTextBoxes(frames);
+  fs.writeFileSync(path.join(outDir, 'text-boxes.json'), JSON.stringify({id: script.id, measured: frames.length, issues, frames}, null, 1));
+  const fr = composition.props.frames;
+  const expected = probeFrames(script, fr, fr.map((_, i) => fr.slice(0, i).reduce((a, b) => a + b, 0))).size;
+  if (frames.length !== expected) {
+    console.log(c.red(`  error: text boxes measured on ${frames.length} of ${expected} frames (TextProbe missed some); not trusting this render`));
+    return false;
+  }
+  issues.forEach((i) => console.log((i.level === 'error' ? c.red : c.yellow)(`  ${i.level}: scene ${i.scene + 1} (${i.primitive}) "${i.text}": ${i.problem}`)));
+  const errs = issues.filter((i) => i.level === 'error').length;
+  console.log((errs ? c.red : c.green)(`  text boxes: ${frames.length} frames measured, ${errs} error(s) -> text-boxes.json`));
+  return errs === 0;
 };
 
 // ---------- main ----------
@@ -432,6 +470,6 @@ for (const f of files) {
   }
   if (!errors.length) console.log(c.green('  quality gate passed'));
   if (flags.has('--check')) continue;
-  await renderReel(doc);
+  if (!(await renderReel(doc)) && !flags.has('--vo-only')) failed++;
 }
 process.exit(failed ? 1 : 0);

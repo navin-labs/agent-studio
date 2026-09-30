@@ -4,7 +4,7 @@
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
-import {THEMES, type Theme} from '../src/themes.ts';
+import {isLight, THEMES, type Theme} from '../src/themes.ts';
 
 const AA = 4.5; // normal text
 
@@ -29,6 +29,7 @@ const PAIRS: [keyof Theme, keyof Theme][] = [
 // Self-check of the maths against known WCAG values.
 assert.ok(Math.abs(ratio('#000000', '#FFFFFF') - 21) < 0.01, 'black/white must be 21');
 assert.ok(Math.abs(ratio('#777777', '#FFFFFF') - 4.48) < 0.01, '#777 on white must be 4.48');
+assert.ok(isLight('#F4F1EA') && !isLight('#0B0B10') && !isLight('#2B4BFF'), 'isLight broken');
 
 let fails = 0;
 for (const [name, t] of Object.entries(THEMES)) {

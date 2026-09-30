@@ -12,7 +12,7 @@
     "primitives": {"type": "array", "items": {"type": "string"}},
     "opening": {"type": "string"},
     "hero_metaphor": {"type": "string"},
-    "theme": {"enum": ["paper", "ink", "mono", "studio"]},
+    "theme": {"enum": ["paper", "ink", "mono", "studio", "night"]},
     "hook_pattern": {"enum": ["pile", "should-not", "question", "number", "confession", "myth", "before-after"]},
     "caption_opener": {"type": "string"},
     "hash": {"type": "string"}

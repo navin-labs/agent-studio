@@ -22,6 +22,7 @@ export const Captions: React.FC<{vo: string; starts: number[]; top?: number}> = 
 
   return (
     <div
+      data-tb="caption"
       style={{
         position: 'absolute',
         top: top ?? ZONES.captionTop,

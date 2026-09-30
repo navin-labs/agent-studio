@@ -8,7 +8,7 @@
     "id": {"type": "string"},
     "recipe_id": {"type": "string"},
     "channel": {"enum": ["c1-automation", "c2-reach", "c3-studio"]},
-    "theme": {"enum": ["paper", "ink", "mono", "studio"]},
+    "theme": {"enum": ["paper", "ink", "mono", "studio", "night"]},
     "hook_pattern": {"enum": ["pile", "should-not", "question", "number", "confession", "myth", "before-after"]},
     "scenes": {
       "type": "array",

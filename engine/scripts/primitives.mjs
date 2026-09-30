@@ -5,15 +5,32 @@ import {renderStill, selectComposition} from '@remotion/renderer';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
+import {blinkAt, mouthFromAmplitude, mouthFromWords} from '../src/host/acting.ts';
+import {cuesOr} from '../src/lib/timing.ts';
 import {SPECS, validateParams} from '../src/primitives/specs.ts';
+import {THEMES} from '../src/themes.ts';
 
 const args = process.argv.slice(2);
 const opt = (k) => (args.includes(k) ? args[args.indexOf(k) + 1] : undefined);
-const themes = args.includes('--all-themes') ? ['paper', 'ink', 'mono', 'studio'] : [opt('--theme') ?? 'paper'];
+const themes = args.includes('--all-themes') ? Object.keys(THEMES) : [opt('--theme') ?? 'paper'];
 const ids = opt('--only') ? [opt('--only')] : Object.keys(SPECS);
 
 // the validator must reject a broken example, or this whole check means nothing
 assert.ok(validateParams('chat-pop', {app: 'X'.repeat(13), text: 'hi'}).length === 1, 'validator broken');
+// cue fill: given cues kept, missing ones always land after the last given cue, in order
+assert.deepEqual(cuesOr([], 2, 0, 100), [25, 75]);
+assert.deepEqual(cuesOr([90], 4, 6, 100), [90, 97, 98, 99]); // late single cue: the rest follow it, never before
+for (const c of [cuesOr([90], 4, 6, 100), cuesOr([10, 20, 30], 4, 10, 80), cuesOr([50, 60], 2, 0, 10)]) assert.ok(c.every((v, i) => !i || v >= c[i - 1]), `cues out of order: ${c}`);
+// host acting: mouth pulses per word, blink cadence, loudness floor
+assert.equal(mouthFromWords(0, [10, 20]), 0, 'shut before the first word');
+assert.ok(mouthFromWords(13, [10, 20]) > 0.5, 'open mid-word');
+assert.equal(mouthFromWords(19, [10, 20]), 0, 'shut between words');
+assert.equal(mouthFromWords(40, [10, 20]), 0, 'shut after the last word');
+assert.equal(blinkAt(0), 0, 'eyes open at frame 0');
+const blinks = Array.from({length: 300}, (_, f) => blinkAt(f) > 0.5).filter((b, f, a) => b && !a[f - 1]).length;
+assert.ok(blinks >= 3 && blinks <= 4, `about one blink per 3 s, got ${blinks} in 10 s`);
+assert.equal(mouthFromAmplitude(0.01), 0, 'silence keeps the mouth shut');
+assert.equal(mouthFromAmplitude(0.9), 1, 'loud caps at fully open');
 
 let fails = 0;
 for (const id of ids) {

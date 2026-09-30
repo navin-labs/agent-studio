@@ -22,7 +22,7 @@ export const CounterDrop: React.FC<PrimitiveProps<P>> = ({p, dur, cues}) => {
   return (
     <Shot dur={dur}>
       <div style={{position: 'absolute', top: STAGE.cy - 110, left: 0, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: appear, transform: `translateY(${(1 - appear) * -40}px) scale(1.6)`}}>
-        <div style={{...card(th), display: 'flex', alignItems: 'center', gap: 18, padding: '12px 28px 12px 14px', borderRadius: 18}}>
+        <div data-box style={{...card(th), display: 'flex', alignItems: 'center', gap: 18, padding: '12px 28px 12px 14px', borderRadius: 18}}>
           <div style={{width: 56, height: 56, borderRadius: 12, border: `3px solid ${th.ink}`, background: col, color: th.surface, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
             <Icon name={p.icon} size={30} stroke={2.5} />
           </div>

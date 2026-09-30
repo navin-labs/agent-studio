@@ -17,7 +17,7 @@ export const HighlighterSwipe: React.FC<PrimitiveProps<{text: string}>> = ({p, d
   const s = springFrom(f, 0, {damping: 16, stiffness: 160});
   return (
     <Shot dur={dur}>
-      <div style={{position: 'absolute', top: STAGE.top, bottom: 1920 - STAGE.bottom, left: 90, right: 90, display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 22, fontFamily: TYPE.display, fontSize: 96, fontWeight: 900, letterSpacing: '-0.035em', lineHeight: 1.08, color: th.ink, opacity: s, transform: `translateY(${(1 - s) * 50}px)`}}>
+      <div data-tb="statement" style={{position: 'absolute', top: STAGE.top, bottom: 1920 - STAGE.bottom, left: 90, right: 90, display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 22, fontFamily: TYPE.display, fontSize: 96, fontWeight: 900, letterSpacing: '-0.035em', lineHeight: 1.08, color: th.ink, opacity: s, transform: `translateY(${(1 - s) * 50}px)`}}>
         {words.map((w, i) => (
           <span key={i} style={{display: 'inline-block'}}>
             {w.accent ? <Highlight p={prog(f, at[span[i]], 8, LINEAR)}>{w.w}</Highlight> : w.w}

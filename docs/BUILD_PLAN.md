@@ -20,15 +20,26 @@ Phase done when: the same storyboard renders correctly in all 4 themes, and 3 st
   > Read CLAUDE.md, docs/TECH.md. Define the primitive interface (params, text limits, min/max seconds, cues, channels) and a registry.
   > Break the `pile-to-flow` story (engine/src/story/Story.tsx, the only template left) into about 12 primitives. One test storyboard per primitive.
   > Stop when all primitives render their test storyboard.
-- [ ] **A4 Composer.** Done when: a storyboard (list of primitives + transitions + cues) renders to one composition.
+- [x] **A4 Composer.** Done when: a storyboard (list of primitives + transitions + cues) renders to one composition. (3 storyboards in `engine/content/storyboards/`, 3 openings, 4 themes; voice path tested with placeholder audio.)
   > Read CLAUDE.md, schemas/storyboard.schema.json, engine/src/primitives/specs.ts. Build the Composer: storyboard to composition, accent cues, captions, transitions (whip-pan, ink-wipe).
-  > Rebuild pile-to-flow as a storyboard from primitives, then delete story/Story.tsx and the copied atoms.
+  > Rebuild pile-to-flow as a storyboard from primitives. Delete story/Story.tsx only after Navin compares both renders.
   > Keep old formats rendering until the Composer reproduces them.
   > Stop when one storyboard renders in all 4 themes.
-- [ ] **A5 Text box measurement.** Done when: each render writes measured text boxes to a JSON file QA can read.
+- [x] **A5 Text box measurement.** Done when: each render writes measured text boxes to a JSON file QA can read. (`out/<id>/text-boxes.json`; render fails on safe-area or card-overflow errors.)
   > Read CLAUDE.md, schemas/qa.schema.json. Measure text boxes at compose time and write them next to the render.
   > No guessing from pixels. One runnable check.
   > Stop when 3 storyboards with different openings write their text boxes.
+
+A6 Host format (pixel-narrator, ADR 13 to 15): one of several formats; spec = Navin's master prompt.
+- [x] **A6.1 Mascot concepts.** Done when: 3 C1 concepts render as stills and Navin picks one. (Chiku.)
+- [x] **A6.2 Host layer + host-hook.** Done when: a host storyboard renders with the host acting (bob, blink, tilt, react), lip-sync from voice or word timing, karaoke captions, 0 text-box errors.
+- [ ] **A6.3 UI window primitives.** Done when: inbox, sheet, chat and diff windows with a fake cursor (move, click, drag), manual steps amber/struck, automated steps lime, render in night theme with contact sheets.
+  > Read CLAUDE.md, docs/DECISIONS.md ADR 13 to 15, engine/src/primitives/specs.ts, engine/src/host/Host.tsx.
+  > Build the 4 windows as primitives (host visible beside them, tilting toward the active panel). Spring entrances staggered 80 to 120 ms.
+  > Stop when all render in night theme and pass `npm run primitives`.
+- [ ] **A6.4 Pixel-wipe, payoff card, logo line.** Done when: pixel-dissolve transition, payoff line primitive, DM AUDIT card and VT323 brand line render (VT323 self-hosted in public/fonts).
+- [ ] **A6.5 C1 host recipe + real voice.** Done when: a 60 to 75 s, 7-scene C1 storyboard (hook, pain A, pain B, turn, demo A, demo B, payoff + CTA) renders voiced with Sarvam's best voice and passes all gates. Needs engine/.env with the Sarvam key (Navin copies it; Claude never reads it).
+- [ ] **A6.6 Per-format QA.** Done when: duration limits are per format (host 60 to 75 s, composed 20 to 45 s) and text QA has platform safe-zone profiles (Instagram, YouTube Shorts).
 
 ## Phase B: agent-studio core
 Phase done when: a dry-run week for C1 goes from feed to approved queue with zero hand edits except approval.
