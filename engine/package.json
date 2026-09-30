@@ -12,7 +12,9 @@
     "watch:install": "node scripts/watch.mjs --install",
     "gate:themes": "node scripts/theme-gate.ts",
     "primitives": "node scripts/primitives.mjs",
-    "stress": "node scripts/make.mjs test/stress-ui.json"
+    "stress": "node scripts/make.mjs test/stress-ui.json",
+    "typecheck": "tsc",
+    "check": "tsc && node scripts/theme-gate.ts > /dev/null && node src/composer/textcheck.ts"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.527",
@@ -28,5 +30,9 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "remotion": "4.0.527"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.17",
+    "typescript": "7.0.2"
   }
 }

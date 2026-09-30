@@ -22,6 +22,7 @@ export const ensureFonts = () => {
       loadFont({family: 'Inter Tight', url: staticFile('fonts/inter-tight-latin-900-normal.woff2'), weight: '900'}),
       loadFont({family: 'JetBrains Mono', url: staticFile('fonts/jetbrains-mono-latin-600-normal.woff2'), weight: '600'}),
       loadFont({family: 'JetBrains Mono', url: staticFile('fonts/jetbrains-mono-latin-700-normal.woff2'), weight: '700'}),
+      loadFont({family: 'VT323', url: staticFile('fonts/vt323-latin-400-normal.woff2'), weight: '400'}),
     ]),
   )
     .then(() => continueRender(handle))

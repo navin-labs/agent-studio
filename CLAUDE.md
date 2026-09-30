@@ -24,6 +24,7 @@ Read other docs only when the task needs them.
 - Primitives use role tokens only. No hex colour outside `themes.ts`.
 - Every non-trivial function leaves one runnable check.
 - No new dependency without asking Navin.
+- Before proposing a commit: `npm run check` in engine/ (types, themes, text QA) must pass; renders touched by the change must be re-verified.
 
 ## Commit rule
 - Every task ends with a commit and a push. Never skip either.

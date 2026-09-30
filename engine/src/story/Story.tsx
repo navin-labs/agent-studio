@@ -327,8 +327,8 @@ const Flyers: React.FC<{T: Timeline}> = ({T}) => {
         const d = `M ${a.x} ${a.y} C ${a.x + 260} ${a.y - 620} ${INTAKE.x - 420} ${INTAKE.y - 260} ${INTAKE.x} ${INTAKE.y}`;
         const len = getLength(d);
         const t = prog(f, fl.start, fl.dur, Easing.bezier(0.45, 0, 0.3, 1));
-        const pt = getPointAtLength(d, len * t);
-        const tan = getTangentAtLength(d, len * t);
+        const pt = getPointAtLength(d, len * t)!; // legacy: paths here are never zero-length
+        const tan = getTangentAtLength(d, len * t)!;
         const ang = (Math.atan2(tan.y, tan.x) * 180) / Math.PI;
         return (
           <Invoice
@@ -369,7 +369,7 @@ const Machine: React.FC<{T: Timeline}> = ({T}) => {
     const seg = Math.floor(t * 3);
     if (seg === 2 && t0 + 24 < T.paidCue) continue;
     const local = t * 3 - seg;
-    const pt = getPointAtLength(LINKS[seg], LINK_LEN[seg] * local);
+    const pt = getPointAtLength(LINKS[seg], LINK_LEN[seg] * local)!;
     tokens.push(<circle key={k} cx={pt.x} cy={pt.y} r={11} fill={seg === 2 ? th.ok : th.flow} stroke={th.ink} strokeWidth={3} />);
   }
 

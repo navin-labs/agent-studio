@@ -25,6 +25,7 @@ export type Spec = {
   params: Record<string, Field>;
   example: Record<string, unknown>; // the primitive's test storyboard
   captions?: false; // never show vo captions over this shot (it carries its own text)
+  closer?: true; // may end a storyboard (a CTA card)
 };
 
 const text = (max: number, optional = false): Field => ({kind: 'text', max, optional});
@@ -183,6 +184,26 @@ export const SPECS: Record<string, Spec> = {
       {op: 'same', text: 'You check the odd ones'},
     ]},
   },
+  'host-payoff': {
+    family: 'kinetic-type',
+    about: 'Host format payoff: the takeaway as huge type, accent highlighted, the host hopping.',
+    channels: ['c1-automation'],
+    seconds: [2, 6],
+    cues: 'optional: frame the accent lands and the host hops',
+    params: {text: text(56)},
+    example: {text: 'Bills enter *themselves.* You check the odd ones.'},
+  },
+  'host-cta': {
+    family: 'kinetic-type',
+    about: 'Host format closing card: CTA, offer line, brand line in the pixel font, host waving.',
+    channels: ['c1-automation'],
+    seconds: [2.5, 5],
+    cues: 'none',
+    captions: false,
+    closer: true,
+    params: {text: text(20), sub: text(60, true)},
+    example: {text: 'DM *AUDIT*', sub: "I'll look at your most repetitive process for free."},
+  },
   'end-card': {
     family: 'kinetic-type',
     about: 'Brand end card: logo, CTA with highlighted *accent*, promise line, authorship line.',
@@ -190,6 +211,7 @@ export const SPECS: Record<string, Spec> = {
     seconds: [2, 4],
     cues: 'none',
     captions: false,
+    closer: true,
     params: {text: text(20), sub: text(60, true)},
     example: {text: '*Follow*', sub: 'One business automation, every day.'},
   },

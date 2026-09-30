@@ -5,7 +5,7 @@ import {estimateSeconds, FPS, LEAD, TAIL_AUDIO, TAIL_EST} from '../lib/timing.ts
 import {SPECS, validateParams} from '../primitives/specs.ts';
 import {THEMES, type ThemeName} from '../themes.ts';
 
-export const TRANSITIONS = ['cut', 'whip-pan', 'ink-wipe'] as const;
+export const TRANSITIONS = ['cut', 'whip-pan', 'ink-wipe', 'pixel-wipe'] as const;
 export type Transition = (typeof TRANSITIONS)[number];
 export const TRANSITION_FRAMES = 12;
 
@@ -92,7 +92,8 @@ export const validateStoryboard = (sb: Storyboard): {errors: string[]; warnings:
     if (s.vo !== undefined && (typeof s.vo !== 'string' || !s.vo.trim())) errors.push(`${w}: vo must be non-empty text or left out`);
     if (s.vo && estimateSeconds(s.vo) + TAIL_EST > spec.seconds[1]) errors.push(`${w}: vo needs about ${estimateSeconds(s.vo).toFixed(1)}s but ${s.primitive} lasts at most ${spec.seconds[1]}s; shorten it`);
   });
-  if (sc.at(-1)?.primitive !== 'end-card') errors.push('last scene must be "end-card"');
+  const closers = Object.keys(SPECS).filter((k) => SPECS[k].closer);
+  if (!SPECS[sc.at(-1)?.primitive ?? '']?.closer) errors.push(`last scene must be a closing card (${closers.join(' or ')})`);
   if (errors.length) return {errors, warnings};
   const secs = sceneFrames(sb).reduce((a, b) => a + b, 0) / FPS;
   if (secs < 20 || secs > 45) warnings.push(`estimated length ${secs.toFixed(1)}s, QA expects 20 to 45s`);

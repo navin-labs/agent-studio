@@ -6,6 +6,7 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import {blinkAt, mouthFromAmplitude, mouthFromWords} from '../src/host/acting.ts';
+import {PIXEL, pixelWipePath} from '../src/lib/pixels.ts';
 import {cuesOr} from '../src/lib/timing.ts';
 import {SPECS, validateParams} from '../src/primitives/specs.ts';
 import {THEMES} from '../src/themes.ts';
@@ -21,6 +22,12 @@ assert.ok(validateParams('chat-pop', {app: 'X'.repeat(13), text: 'hi'}).length =
 assert.deepEqual(cuesOr([], 2, 0, 100), [25, 75]);
 assert.deepEqual(cuesOr([90], 4, 6, 100), [90, 97, 98, 99]); // late single cue: the rest follow it, never before
 for (const c of [cuesOr([90], 4, 6, 100), cuesOr([10, 20, 30], 4, 10, 80), cuesOr([50, 60], 2, 0, 10)]) assert.ok(c.every((v, i) => !i || v >= c[i - 1]), `cues out of order: ${c}`);
+// pixel wipe: nothing at 0, every block at 1, more blocks as it progresses, same order every render
+const blocks = (e) => (pixelWipePath(e).match(/M/g) || []).length;
+assert.equal(pixelWipePath(0), 'M0 0z', 'no blocks at the start');
+assert.equal(blocks(1), Math.ceil(1080 / PIXEL) * Math.ceil(1920 / PIXEL), 'every block at the end');
+assert.ok(blocks(0.3) < blocks(0.6) && blocks(0.6) <= blocks(0.95), 'blocks only ever get added');
+assert.equal(pixelWipePath(0.5), pixelWipePath(0.5), 'deterministic');
 // host acting: mouth pulses per word, blink cadence, loudness floor
 assert.equal(mouthFromWords(0, [10, 20]), 0, 'shut before the first word');
 assert.ok(mouthFromWords(13, [10, 20]) > 0.5, 'open mid-word');

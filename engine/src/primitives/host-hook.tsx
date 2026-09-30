@@ -4,12 +4,11 @@ import {Sfx} from '../lib/frame';
 import {parseAccent} from '../lib/text';
 import {TYPE} from '../theme';
 import {useTheme} from '../themes';
-import {Host, HostStage} from '../host/Host';
+import {Host, HostStage, type Mood} from '../host/Host';
 import {Highlight, LINEAR, type PrimitiveProps, prog, springFrom} from './atoms';
 
-// Host format, recipe scene 1: the hook as huge type (words slam up, accent word highlighted),
-// the host below reacting to the pain on cue 0 (default: when the accent lands).
-export const HostHook: React.FC<PrimitiveProps<{text: string}>> = ({p, dur, cues}) => {
+// A line of huge type (words slam up, accent highlighted) with the host below reacting when the accent lands.
+const HostLine: React.FC<PrimitiveProps<{text: string}> & {mood: Mood; size: number}> = ({p, dur, cues, mood, size}) => {
   const th = useTheme();
   const f = useCurrentFrame();
   const words = parseAccent(p.text);
@@ -17,7 +16,7 @@ export const HostHook: React.FC<PrimitiveProps<{text: string}>> = ({p, dur, cues
   const hit = cues[0] ?? 8 + Math.max(0, accentIdx) * 3;
   return (
     <HostStage dur={dur}>
-      <div data-tb="headline" style={{position: 'absolute', top: 300, left: 70, right: 70, height: 480, display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 26, fontFamily: TYPE.display, fontSize: 118, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.02, color: th.ink}}>
+      <div data-tb="headline" style={{position: 'absolute', top: 300, left: 70, right: 70, height: 480, display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 26, fontFamily: TYPE.display, fontSize: size, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.02, color: th.ink}}>
         {words.map((w, i) => {
           const s = springFrom(f, 1 + i * 3, {damping: 13, stiffness: 190});
           return (
@@ -27,8 +26,14 @@ export const HostHook: React.FC<PrimitiveProps<{text: string}>> = ({p, dur, cues
           );
         })}
       </div>
-      <Host x={540} y={1290} scale={0.62} mood="pain" moodAt={hit} />
-      <Sfx at={hit} name="pop" volume={0.4} />
+      <Host x={540} y={1290} scale={0.62} mood={mood} moodAt={hit} />
+      <Sfx at={hit} name={mood === 'happy' ? 'ding' : 'pop'} volume={0.4} />
     </HostStage>
   );
 };
+
+// Recipe scene 1: the hook (the pain), host reacting with a head shake.
+export const HostHook: React.FC<PrimitiveProps<{text: string}>> = (props) => <HostLine {...props} mood="pain" size={118} />;
+
+// Recipe scene 7a: the payoff takeaway, host hopping.
+export const HostPayoff: React.FC<PrimitiveProps<{text: string}>> = (props) => <HostLine {...props} mood="happy" size={104} />;

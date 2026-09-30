@@ -27,6 +27,7 @@ export const FlowRun: React.FC<PrimitiveProps<{nodes: Node[]; done: string}>> = 
     const seg = Math.floor(t * links.length);
     if (seg === links.length - 1 && t0 + 24 < lastAt) continue; // the last hop only runs once the result lands
     const pt = getPointAtLength(links[seg], lens[seg] * (t * links.length - seg));
+    if (!pt) continue; // degenerate (zero-length) link
     tokens.push(<circle key={k} cx={pt.x} cy={pt.y} r={11} fill={seg === links.length - 1 ? th.ok : th.flow} stroke={th.ink} strokeWidth={3} />);
   }
   const lastLit = on(lastAt);

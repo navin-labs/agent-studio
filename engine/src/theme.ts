@@ -15,4 +15,5 @@ export const TYPE = {
   title: "'Inter Tight', 'Inter', sans-serif", // 800, 64-80px
   caption: "'Inter', sans-serif", // 800, 58px
   data: "'JetBrains Mono', 'Inter', monospace", // 600, 26-34px
+  pixel: "'VT323', 'JetBrains Mono', monospace", // brand line in the host format (VT323 self-hosted, OFL)
 };

@@ -42,6 +42,7 @@ export const Conveyor: React.FC<PrimitiveProps<{item: Item; node: Node; count: n
               const len = getLength(d);
               const pt = getPointAtLength(d, len * t);
               const tan = getTangentAtLength(d, len * t);
+              if (!pt || !tan) return null; // degenerate (zero-length) path: skip this card rather than crash
               const ang = (Math.atan2(tan.y, tan.x) * 180) / Math.PI;
               return <ItemCard key={i} item={p.item} n={1001 + i} x={pt.x} y={pt.y} rot={lerp(c.r, ang * 0.25, Math.min(1, t * 2))} scale={lerp(1, 0.32, t)} opacity={interpolate(t, [0.82, 1], [1, 0], clamp)} />;
             })}

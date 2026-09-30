@@ -5,6 +5,7 @@ import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {AbsoluteFill, Artifact, Audio, continueRender, delayRender, Easing, getRemotionEnvironment, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {ensureFonts} from '../fonts';
 import {Sfx, SfxEnabled} from '../lib/frame';
+import {pixelWipePath} from '../lib/pixels';
 import {LEAD} from '../lib/timing';
 import {prog} from '../primitives/atoms';
 import {PRIMITIVES} from '../primitives/index';
@@ -30,7 +31,11 @@ const Moving: React.FC<{sb: Storyboard; sc: StoryboardScene; i: number; dur: num
   const x = exit === 'whip-pan' ? prog(f, dur, T, WHIP) : 0;
   const Shot = PRIMITIVES[sc.primitive];
   const style: React.CSSProperties =
-    enter === 'ink-wipe' && e < 1 ? {clipPath: `inset(${(1 - e) * 100}% 0 0 0)`} : {transform: `translateX(${(enter === 'whip-pan' ? 1080 * (1 - e) : 0) - 1080 * x}px)`};
+    enter === 'ink-wipe' && e < 1
+      ? {clipPath: `inset(${(1 - e) * 100}% 0 0 0)`}
+      : enter === 'pixel-wipe' && e < 1
+        ? {clipPath: `path('${pixelWipePath(e)}')`}
+        : {transform: `translateX(${(enter === 'whip-pan' ? 1080 * (1 - e) : 0) - 1080 * x}px)`};
   return (
     <AbsoluteFill style={style} data-scene={i} data-primitive={sc.primitive}>
       <Shot p={sc.params} dur={dur} cues={sceneCues(sc, i, timing)} />

@@ -112,6 +112,14 @@ Fix: test board said "typed into Tally" (a real product); honesty rules forbid r
 Did: `engine/src/host/ui.tsx` (Window, Cursor, Tag, UiShot: night stage + window + Chiku bottom-right leaning in, groan when manual, hop when auto). Primitives ui-inbox, ui-sheet, ui-chat, ui-diff (manual = amber + cursor, auto = lime), specs with fictional Indian SME examples. Floor shadow moved from Stage into Host (it followed centre screen). Rows and type scale to fill each window. `engine/test/stress-ui.json` + `npm run stress`.
 Found and fixed: `ui-diff` used WIN without importing it (crashed the render; a type checker would catch this, see Q21); the stress test showed chat history rising out of the window, and the probe counted clipped text as visible, so measurement now trims to clipping ancestors and flags trimmed text as "cut off" unless in a `data-tb-scroll` area; duplicate reports of one moving problem (dedupe key now ignores pixel values); the brand fix lengthened a vo line past pile-drop's 6 s max (the gate caught it; shortened).
 Verified: stress board 0 errors; over-wide subject fails with "cut off by its window"; textcheck self-test; theme gate; 75 contact sheets (15 primitives x 5 themes); 12 scripts gated; story regression 24/24; 4 boards 0 text errors; host board re-voiced (only the changed line regenerated).
-Commit: pending "approve commit"
+Commit: 5f1d813 feat(engine): UI window primitives (inbox, sheet, chat, diff), clip-aware text QA, stress fixture, pushed to origin/main
 Next: A6.4 pixel-wipe, payoff card, VT323 logo line.
 Open questions: 21 (add `typescript` as a dev dependency so `tsc --noEmit` catches missing imports before render; needs Navin's OK).
+
+## 2026-10-01, session 8: TypeScript + A6.4 closing beats
+Did: Added dev dependencies typescript 7.0.2 and @types/react 19.1.17 (approved), `engine/tsconfig.json` (strict, noEmit), `npm run typecheck` and `npm run check` (tsc + theme gate + textcheck); CLAUDE.md now requires `npm run check` before a commit. First typecheck found 37 errors: dead reel scene cases left in lib/timing.ts (removed) and unguarded nulls from getPointAtLength (primitives skip a degenerate point; legacy Story.tsx asserts non-null, frames unchanged). Verified tsc catches the missing-import bug that crashed ui-diff in session 7.
+A6.4: `pixel-wipe` transition (lib/pixels.ts, asserted), `host-payoff` (shared HostLine with host-hook, happy hop), `host-cta` closing card (CTA, offer line, brand line in TYPE.pixel, host waving), spec `closer` flag (last scene must be end-card or host-cta). Test board now: hook, pile (whip), flow-run (pixel-wipe), payoff (whip), CTA; re-voiced (only new lines generated): 17.5 s, 0 text errors.
+Verified: npm run check passes; 85 contact sheets (17 primitives x 5 themes); 12 scripts gated; story regression 24/24; 3 composed boards + stress board 0 text errors.
+Commit: pending "approve commit"
+Next: A6.5 C1 host recipe: 7 scenes, 40 to 60 s measured with voice, Sarvam best voice.
+Open questions: none new. VT323 approved by Navin, self-hosted (public/fonts/vt323-latin-400-normal.woff2, 18 KB, OFL-VT323.txt).

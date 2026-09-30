@@ -17,35 +17,13 @@ export const estimateSeconds = (vo: string) => {
 export const sceneMinFrames = (s: Scene): number => {
   switch (s.type) {
     case 'hook':
-    case 'statement':
       return 45;
-    case 'inbox':
-      return 24 + s.emails.length * 9 + (s.sorted ? 18 + s.emails.length * 6 : 0) + 24;
-    case 'sheet':
-      return 20 + s.rows.length * (s.fill ? 16 : 6) + (s.highlight?.length ? 12 + s.highlight.length * 8 : 0) + 24;
-    case 'chat':
-      return 16 + s.messages.reduce((a, m) => a + (m.from === 'them' ? 26 : 14), 0) + 24;
-    case 'steps':
-      return 16 + s.steps.length * 10 + (s.strike ? 14 + s.steps.length * 6 : 0) + 24;
-    case 'flow':
-      return 20 + s.nodes.length * 18 + 30;
-    case 'notify':
-      return 16 + s.items.length * 16 + 30;
-    case 'math':
-      return 20 + s.lines.length * 12 + 40;
-    case 'myth':
-      return 80;
     case 'cta':
       return 75;
     case 'beat':
       return 90;
-    default:
-      return 60;
   }
 };
-
-export const TEXT_SCENES = new Set(['hook', 'statement', 'myth', 'cta']);
-export const captionsOn = (s: Scene) => s.captions ?? !TEXT_SCENES.has(s.type);
 
 export const voSeconds = (props: ReelProps, i: number) => {
   const measured = props.timing?.durations?.[i];

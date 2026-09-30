@@ -8,7 +8,8 @@ import {EndCard} from './end-card';
 import {FlowBuild} from './flow-build';
 import {FlowRun} from './flow-run';
 import {HighlighterSwipe} from './highlighter-swipe';
-import {HostHook} from './host-hook';
+import {HostCta} from './host-cta';
+import {HostHook, HostPayoff} from './host-hook';
 import {UiChat} from './ui-chat';
 import {UiDiff} from './ui-diff';
 import {UiInbox} from './ui-inbox';
@@ -29,6 +30,8 @@ export const PRIMITIVES: Record<keyof typeof SPECS, React.FC<PrimitiveProps<any>
   'chat-pop': ChatPop,
   'stamp-hit': StampHit,
   'host-hook': HostHook,
+  'host-payoff': HostPayoff,
+  'host-cta': HostCta,
   'ui-inbox': UiInbox,
   'ui-sheet': UiSheet,
   'ui-chat': UiChat,
