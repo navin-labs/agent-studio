@@ -296,4 +296,19 @@ Refinements (same session, Navin's list):
 - Watcher handover: SETUP step 5 order (Forge skills, unload reelwatch, watch:install); the tick alerts "two watchers" when both are loaded and a channel is live (test).
 - DISPATCH_LIVE: an in-place edit of .env is blocked by the deny rule, so `DISPATCH_LIVE=off` was appended (Node's env loader keeps the last value, checked on a scratch file); verified through `node studio/dispatch.ts --live` -> "--live ignored ... (dry run)". SETUP step 6 appends `DISPATCH_LIVE=on` at go-live.
 Checks: npm run check 14 steps pass.
-Commit: pending "approve commit"
+Commit: 1ae073a (with session 22)
+
+## 2026-10-03, session 22: P5 channel setup (C1 + C2 accounts, brand, Archive Gold)
+Did:
+- Handle @theautomationguy.navin -> @theautomationguynavin everywhere (Instagram + YouTube claimed); email in engine/README.md replaced by a placeholder.
+- brand/c1-automation: YouTube banner (Night Signal, live), profile picture, Facebook cover, two Instagram highlight covers. brand/c2-reach: barcode B mark with the rewind arrow in the stem (master, small cut, circle, mono), YouTube banner, Facebook cover, 110/32/16 px legibility sheet (two Forge review rounds).
+- C1: night theme only; Facebook publisher by page_id 1429203763599559, handle pending_retry_2026-10-05.
+- C2 is Backstory (@backstory.minute): role, audience, content_mix, archive theme, feeds (Google Trends IN, r/todayilearned, r/history), RULEBOOK (sources for every claim, no fiction as fact, sixty-second story grammar, Archive Gold only, maker credit), own n8n YouTube webhook; Facebook pending, no page_id yet.
+- Archive Gold theme (themes.ts, four schemas). Pending handles: not an approval target, skipped by dispatch; publisher `page_id` in schema and Forge queue.
+- One-theme channels skip the theme-run novelty rule (recipe + QA, tested). Per-channel end-card logo (MarkCtx; engine/public/brand/c2-reach/mark.svg), verified with a C2 render (handle @backstory.minute).
+- Writer table, Queue Publisher post.json, SETUP rows updated.
+Decisions: C2 = Backstory, Archive Gold (navy, paper, gold, grey; terracotta warn; no lime or blue). C1 night only, night muted stays #9C9A94. Brand files stay in brand/<id>/. One Google login owns every YouTube channel as a Brand Account (one Cloud project, one n8n credential per channel); separate emails only for Instagram. Old handle stays in past commits (no history rewrite).
+Checks: npm run check 14 steps pass; theme gate passes archive; old handle 0 matches; all channels live false.
+Next: P5 go-live (docs/SETUP.md): Facebook usernames retry 2026-10-05 to 09; C2 page_id; duplicate the n8n YouTube workflow for C2; Forge skills; watcher handover; W41 rejects.
+Open questions: ideas/c2-reach.jsonl holds 37 ideas from the old reach feeds (archive them?). C2 Facebook page_id.
+Commit: 1ae073a feat: C1 night-only and C2 Backstory channel setup; Archive Gold theme; pending Facebook usernames; brand assets
