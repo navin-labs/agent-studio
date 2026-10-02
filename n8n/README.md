@@ -22,3 +22,13 @@ Video job (POST `/webhook/agent-studio-youtube`, multipart: `job` JSON + `video`
 Setup (Navin): open the workflow, pick the existing YouTube credential in the upload node, Publish.
 Then `YOUTUBE_WEBHOOK_URL=http://localhost:5678/webhook/agent-studio-youtube` in agent-studio/.env. Live dispatch also needs `DISPATCH_LIVE=on`.
 
+
+## youtube-stats.json
+Every day 10:00 IST: ask the Mac which YouTube readings are due (`GET http://host.docker.internal:5680/metrics-due`: dispatched videos 24h and 7d after publishing, not yet recorded) -> read each video's statistics -> `POST http://host.docker.internal:5680/metrics` (rows checked by `studio/metrics.ts`; a video that was never dispatched is refused). A deleted video is skipped and stays due.
+YouTube's basic statistics have views only: rows carry `reach` = `views` and never count toward a KPI they cannot measure.
+
+Setup (Navin): imported on 2026-10-02 (inactive). Pick the YouTube credential in "Video statistics", Publish.
+Verified: the container reaches `/metrics-due`; a row for an undispatched video gets 400 and nothing is written.
+
+## More than one YouTube account
+The YouTube node is tied to one credential, so each YouTube account gets its own copy of `youtube-upload.json` with its own webhook path (e.g. `agent-studio-youtube-c2-reach`). Put that URL in the channel's YouTube publisher as `"webhook"`; channels without one use `YOUTUBE_WEBHOOK_URL`.

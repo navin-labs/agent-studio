@@ -68,8 +68,11 @@ export const CHARACTER = {
 
 // ---- React plumbing: a composition provides its theme once; components read it with useTheme().
 import React from 'react';
+import {HANDLE} from './theme.ts';
 
 export const ThemeCtx = React.createContext<Theme>(THEMES.paper);
+// The channel's own account, shown on closers. Set per render from channels/<id>/channel.json (make.mjs); default C1.
+export const HandleCtx = React.createContext(HANDLE);
 export const useTheme = () => React.useContext(ThemeCtx);
 
 // True for light colours (relative luminance > 0.5), e.g. to flip a light logo on a light card.

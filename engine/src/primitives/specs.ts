@@ -63,7 +63,7 @@ export const SPECS: Record<string, Spec> = {
   'pile-drop': {
     family: 'world',
     about: 'Paper cards rain onto a desk and pile up; the camera shakes when it gets buried.',
-    channels: ['c1-automation', 'c3-studio'],
+    channels: ALL,
     seconds: [2, 6],
     cues: 'optional: frame the pile is buried (shake)',
     params: {item, count: {kind: 'int', min: 4, max: 28}, start: {kind: 'int', min: 1, max: 99999}},
@@ -108,7 +108,7 @@ export const SPECS: Record<string, Spec> = {
   'chat-pop': {
     family: 'world',
     about: 'A chat bubble pops in with the app name, the message and read ticks.',
-    channels: ['c1-automation', 'c3-studio'],
+    channels: ALL,
     seconds: [1.5, 5],
     cues: 'optional: frame the bubble pops',
     params: {app: text(12), text: text(90)},
@@ -209,14 +209,14 @@ export const SPECS: Record<string, Spec> = {
     about: 'Airport board: tiles flip through letters and land on a time, count or short word, left to right.',
     channels: ALL,
     seconds: [2.5, 5],
-    cues: 'optional: frame the tiles start flipping',
+    cues: 'optional: the frame the last tile lands (default: 20 frames before the cut); the flipping starts early enough to land there',
     params: {label: text(24), text: text(10), sub: text(40, true)},
     example: {label: 'REPORT SENT AT', text: '9:30 AM', sub: 'Every morning, before anyone asks'},
   },
   'before-after-split': {
     family: 'world',
     about: 'Split screen: the manual way fills the top half, a divider sweeps and the automatic way fills the bottom.',
-    channels: ['c1-automation', 'c3-studio'],
+    channels: ALL,
     seconds: [3, 7],
     cues: 'two: the frame the before half lands, then the after half',
     params: {
@@ -245,7 +245,7 @@ export const SPECS: Record<string, Spec> = {
   'maze-to-line': {
     family: 'world',
     about: 'A tangled path (the manual way) snaps into one straight line; a dot lost in the tangle zips to the end.',
-    channels: ['c1-automation', 'c3-studio'],
+    channels: ALL,
     seconds: [3, 6],
     cues: 'optional: the frame the tangle snaps straight (default 45%)',
     params: {from: text(14), to: text(14)},

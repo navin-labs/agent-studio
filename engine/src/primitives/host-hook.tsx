@@ -16,7 +16,7 @@ const HostLine: React.FC<PrimitiveProps<{text: string}> & {mood: Mood; size: num
   const hit = cues[0] ?? 8 + Math.max(0, accentIdx) * 3;
   return (
     <HostStage dur={dur}>
-      <div data-tb="headline" style={{position: 'absolute', top: 300, left: SIDE + 20, right: SIDE + 20, /* +20: headroom for the push-in zoom */ height: 480, display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 26, fontFamily: TYPE.display, fontSize: size, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.02, color: th.ink}}>
+      <div data-tb="headline" style={{position: 'absolute', top: 300, left: SIDE + 30, right: SIDE + 30, /* +30: headroom for the 6% push-in zoom (needs 24+) */ height: 480, display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 26, fontFamily: TYPE.display, fontSize: size, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.02, color: th.ink}}>
         {words.map((w, i) => {
           const s = springFrom(f, 1 + i * 3, {damping: 13, stiffness: 190});
           return (

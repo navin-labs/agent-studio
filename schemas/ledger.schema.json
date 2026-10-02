@@ -68,6 +68,7 @@
       "items": {
         "enum": [
           "instagram",
+          "facebook",
           "youtube"
         ]
       }

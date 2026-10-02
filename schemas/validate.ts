@@ -59,7 +59,7 @@ const read = (f: string) => JSON.parse(fs.readFileSync(path.resolve(ROOT, f), 'u
 
 // One sample per schema (paths from the repo root). Real files where they exist, so the contract is tested on what runs.
 const SAMPLES: Record<string, string[]> = {
-  channel: ['channels/c1-automation/channel.json'],
+  channel: fs.readdirSync(path.join(ROOT, 'channels')).map((c) => `channels/${c}/channel.json`), // every channel, not one sample
   idea: ['schemas/samples/idea.json'],
   recipe: ['schemas/samples/recipe.json'],
   storyboard: fs.readdirSync(path.join(ROOT, 'engine/content/storyboards')).filter((f) => f.endsWith('.json')).map((f) => `engine/content/storyboards/${f}`),

@@ -4,7 +4,7 @@
 // TELEGRAM_CHAT_ID in that private chat; it is then turned into the same signed approval the web links use and goes through
 // applyApproval() (QA, week, channel and replay checks all apply). The bot token never leaves .env and is never logged.
 //
-// node studio/telegram.ts <channel> <YYYY-Www>   send the week for approval
+// node studio/telegram.ts <channel> <YYYY-Www> [--again]   send the week's QA-passed videos (each once; --again resends)
 // polling runs inside approve-server.ts when TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are set
 import fs from 'node:fs';
 import path from 'node:path';
@@ -20,9 +20,17 @@ export const telegram = (token: string): Tg => async (method, body) => {
 
 const button = (text: string, data: string) => ({inline_keyboard: [[{text, callback_data: data}]]}); // callback_data max 64 bytes
 
-export const send = async (tg: Tg, chatId: string, channel: string, week: string, p: Paths = PATHS) => {
+// What Navin has been shown: one id per line. Sends never repeat; "Approve all" covers only these.
+const sentFile = (p: Paths) => path.join(p.state, 'telegram-sent.txt');
+export const sentIds = (p: Paths = PATHS) => new Set(fs.existsSync(sentFile(p)) ? fs.readFileSync(sentFile(p), 'utf8').split('\n').filter(Boolean) : []);
+
+export const notify = (tg: Tg, chatId: string, text: string) => tg('sendMessage', {chat_id: chatId, text});
+
+export const send = async (tg: Tg, chatId: string, channel: string, week: string, p: Paths = PATHS, o: {again?: boolean} = {}) => {
   const status = currentStatus(p);
-  const ready = weekVideos(channel, week, p).map((x) => x.video).filter((v) => v?.qa?.pass && !status.get(v.id)?.status?.match(/approved|dispatched|published/));
+  const sent = sentIds(p);
+  const week_ = weekVideos(channel, week, p);
+  const ready = week_.map((x) => x.video).filter((v) => v?.qa?.pass && !status.get(v.id)?.status?.match(/approved|dispatched|published/) && (o.again || !sent.has(v.id)));
   for (const v of ready) {
     const form = new FormData();
     form.set('chat_id', chatId);
@@ -30,8 +38,13 @@ export const send = async (tg: Tg, chatId: string, channel: string, week: string
     form.set('reply_markup', JSON.stringify(button('Approve', `a|${v!.id}`)));
     form.set('video', new Blob([fs.readFileSync(path.join(v!.outDir, 'reel.mp4'))], {type: 'video/mp4'}), `${v!.id}.mp4`);
     await tg('sendVideo', form);
+    fs.mkdirSync(p.state, {recursive: true});
+    fs.appendFileSync(sentFile(p), `${v!.id}\n`);
   }
-  if (ready.length > 1) await tg('sendMessage', {chat_id: chatId, text: `${channel} ${week}: ${ready.length} videos passed QA.`, reply_markup: button(`Approve all ${ready.length}`, `A|${channel}|${week}`)});
+  // once every video of the week has been shown: one "Approve all" (it approves only what was shown)
+  const shown = sentIds(p);
+  if (ready.length && week_.length > 1 && week_.every((x) => x.video && shown.has(x.video.id)))
+    await tg('sendMessage', {chat_id: chatId, text: `${channel} ${week}: all ${week_.length} videos are in this chat.`, reply_markup: button(`Approve all ${week_.length}`, `A|${channel}|${week}`)});
   return ready.map((v) => v!.id);
 };
 
@@ -47,7 +60,7 @@ export const onUpdate = async (tg: Tg, u: any, o: {chatId: string; secret: strin
     const now = o.now ?? Date.now();
     const [kind, a, b] = String(q.data ?? '').split('|');
     const v = kind === 'a' ? findVideo(a, p) : null;
-    const target = kind === 'A' ? {channel: a, week: b, ids: weekVideos(a, b, p).flatMap((x) => (x.video ? [x.video.id] : []))} : v?.recipe ? {channel: v.doc.channel, week: v.recipe.week, ids: [v.id]} : null;
+    const target = kind === 'A' ? {channel: a, week: b, ids: weekVideos(a, b, p).flatMap((x) => (x.video && sentIds(p).has(x.video.id) ? [x.video.id] : []))} : v?.recipe ? {channel: v.doc.channel, week: v.recipe.week, ids: [v.id]} : null;
     if (!target) text = 'Video not found.';
     else
       try {
@@ -93,6 +106,6 @@ if (import.meta.main) {
     console.error('Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in agent-studio/.env first.');
     process.exit(2);
   }
-  const ids = await send(telegram(token), chatId, channel, week);
+  const ids = await send(telegram(token), chatId, channel, week, PATHS, {again: process.argv.includes('--again')});
   console.log(ids.length ? `sent ${ids.length} for approval: ${ids.join(', ')}` : 'nothing to send (no QA-passed video waiting for approval)');
 }

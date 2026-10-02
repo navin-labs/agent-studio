@@ -2,14 +2,50 @@
   "id": "c2-reach",
   "role": "Followers: audience growth",
   "audience": "Anyone who likes satisfying, smart short videos",
-  "kpi": {"metric": "follows per reach, sends per reach", "target": "TBD (owner: Navin)"},
-  "cta": [{"text": "Follow", "share": "TBD (owner: Navin)"}, {"text": "Send to a friend", "share": "TBD (owner: Navin)"}],
-  "content_mix": ["did you know business facts", "satisfying motion loops", "one-idea explainers"],
-  "themes": ["ink", "mono", "studio"],
-  "cadence": {"posts_per_week": 7},
-  "publishers": [
-    {"platform": "instagram", "handle": "TBD (owner: Navin)", "via": "forge-queue"},
-    {"platform": "youtube-shorts", "handle": "TBD (owner: Navin)", "via": "n8n"}
+  "kpi": {
+    "metric": "follows + sends per reach",
+    "target": "TBD (owner: Navin)",
+    "numerator": [
+      "follows",
+      "sends"
+    ],
+    "denominator": "reach"
+  },
+  "cta": [
+    {
+      "text": "Follow",
+      "share": "TBD (owner: Navin)"
+    },
+    {
+      "text": "Send to a friend",
+      "share": "TBD (owner: Navin)"
+    }
   ],
-  "launch_gate": "C1 has run 14 days with no missed posts"
+  "content_mix": [
+    "did you know business facts",
+    "satisfying motion loops",
+    "one-idea explainers"
+  ],
+  "themes": [
+    "ink",
+    "mono",
+    "studio"
+  ],
+  "cadence": {
+    "posts_per_week": 7
+  },
+  "publishers": [
+    {
+      "platform": "instagram",
+      "handle": "TBD (owner: Navin)",
+      "via": "forge-queue"
+    },
+    {
+      "platform": "youtube",
+      "handle": "TBD (owner: Navin)",
+      "via": "n8n"
+    }
+  ],
+  "launch_gate": "C1 has run 14 days with no missed posts",
+  "live": false
 }

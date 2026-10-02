@@ -261,3 +261,19 @@ Next: Phase D is gated on go-live (C1 must run 14 days first). Before Navin retu
 Navin (2026-10-02): no go-live until every channel is set up; he returns for the production setup and start. W41 stays approved, not dispatched. Forge skills (all of them) are installed at the end, B4b with them. Instagram posting is Forge's job via its native Meta connector, which also makes Forge the likely metrics source for Learn.
 Open questions: none new.
 Commit: 8d1d8a3 feat(engine): 5 new primitives (split-flap, before-after-split, phone-buzz, maze-to-line, zoom-dive); Recipe proven picks are a preference
+
+## 2026-10-02, session 20: production pass (Phase P)
+Did:
+- Metrics: `studio/metrics.ts` (ingest Forge's `inbox/metrics/` files, `record()`, `due()`); receiver `GET /metrics-due` and `POST /metrics`; n8n `youtube-stats.json` imported inactive, container reaches the receiver (checked live: undispatched video refused, nothing written). Learn: a row counts only if it carries a KPI numerator field; a later reading of the same window replaces the earlier one.
+- Per-channel output: closers show the channel's own handle (HandleCtx; make.mjs reads channel.json; no real handle = no render; PREVIEW_HANDLE only for samples). Every render records its handle in `out/<id>/render.json`; Dispatch blocks a video whose handle is not the channel's, and any channel without `"live": true`.
+- Channels: C2/C3 configs fixed (KPI numerator/denominator, youtube platform), `live: false` on all, every channel.json validated in check; Facebook as a platform (Forge queue `post.json` now lists `accounts`); per-channel YouTube `webhook`.
+- Formats: new C2 `reach` format (no automation flow); formats now name their channels; pile-drop, chat-pop, before-after-split, maze-to-line opened to C2. 8-week test covers all three channels: 168 recipes, 0 rule breaks.
+- Production loop `studio/run.ts` (hourly tick, `--install` for launchd): metrics, Thursday planning (never overwrites), Telegram send-once, dispatch, publish confirmation (Forge `posted.json`), problems to Telegram. Real tick with nothing live: does nothing. `planWeek()` extracted from the recipe CLI.
+- Telegram: each video shown once; "Approve all" covers only videos already shown.
+- Forge skills: Weekly Writer now covers all three channels (table of topic, format, CTA, caption per channel); new Queue Publisher and Metrics Reporter. `docs/SETUP.md`: the go-live list.
+- Samples: C2 W42 slots 1 to 2 and C3 W42 slots 1 to 2 written, voiced, rendered with a preview handle: 4 of 4 pass QA (C2 26.6 s, 23.1 s; C3 21.5 s, 23.8 s).
+Fixes found by the samples: zoom headroom was SIDE + 20 but the 6% push-in needs 24+ (word-stack-slam ran 3 px into YouTube's button column at 28 characters): now SIDE + 30 everywhere, both stress files 0 errors. split-flap now lands on its cue (it started flipping on it, so a hook with the accent at the end showed blank tiles).
+Decisions: C2 makes one-idea explainers with no invented facts; C3 makes explainers for clearly labelled example brands ("made with our motion engine"). YouTube reach = views until the Analytics API is wired. The loop is installed at go-live, not now.
+Next: P5 go-live with Navin (docs/SETUP.md), then Phase D.
+Open questions: C2's week leaned on before-after-split (4 of 7 in W42; Learn will rebalance once data exists). W41 C1 renders predate render.json, so they would need a re-render before dispatch (their dates will have passed anyway).
+Commit: pending "approve commit"

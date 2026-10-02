@@ -12,6 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {plan} from './dispatch.ts';
 import {applyApproval} from './ledger.ts';
+import {due, record} from './metrics.ts';
 import {poll, telegram} from './telegram.ts';
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'})[c]!);
@@ -27,6 +28,8 @@ export const handle = (url: string, secret: string, opts?: Parameters<typeof app
     const ok = plan(opts?.paths, opts?.now).youtube.some((j) => j.storyboard_id === id);
     return {status: ok ? 200 : 403, body: ok ? 'approved' : 'not approved for dispatch'};
   }
+  // n8n's YouTube stats workflow: which readings are due (JSON)
+  if (u.pathname === '/metrics-due') return {status: 200, body: JSON.stringify(due(opts?.paths, opts?.now))};
   if (u.pathname !== '/approve') return {status: 404, body: page('Not found', [])};
   try {
     const r = applyApproval(u.search.slice(1), secret, opts);
@@ -74,9 +77,27 @@ else if (import.meta.main) {
   const port = Number(process.env.APPROVE_PORT ?? 5680);
   http
     .createServer((req, res) => {
+      // POST /metrics: rows from n8n (YouTube statistics), checked by metrics.ts before anything is written
+      if (req.method === 'POST' && (req.url ?? '').split('?')[0] === '/metrics') {
+        let raw = '';
+        req.on('data', (c) => (raw = raw.length < 1_000_000 ? raw + c : raw));
+        req.on('end', () => {
+          let r: {recorded: number; errors: string[]};
+          try {
+            const j = JSON.parse(raw);
+            r = record(Array.isArray(j) ? j : [j]);
+          } catch (e) {
+            r = {recorded: 0, errors: [`not valid JSON: ${(e as Error).message}`]};
+          }
+          console.log(`${new Date().toISOString()} POST /metrics -> ${r.errors.length ? 400 : 200} (${r.recorded} recorded)`);
+          res.writeHead(r.errors.length ? 400 : 200, {'content-type': 'application/json'});
+          res.end(JSON.stringify(r));
+        });
+        return;
+      }
       const {status, body} = req.method === 'GET' ? handle(req.url ?? '/', secret) : {status: 405, body: 'GET only'};
       console.log(`${new Date().toISOString()} ${req.method} ${(req.url ?? '').split('?')[0]} -> ${status}`); // never log the query (it carries the signature)
-      res.writeHead(status, {'content-type': body.startsWith('<!doctype') ? 'text/html; charset=utf-8' : 'text/plain', 'cache-control': 'no-store'});
+      res.writeHead(status, {'content-type': body.startsWith('<!doctype') ? 'text/html; charset=utf-8' : body.startsWith('[') ? 'application/json' : 'text/plain', 'cache-control': 'no-store'});
       res.end(body);
     })
     .listen(port, '127.0.0.1', () => console.log(`approve receiver on http://127.0.0.1:${port} (n8n: http://host.docker.internal:${port}/approve)`));

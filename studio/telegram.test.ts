@@ -37,6 +37,10 @@ const v = calls.find((c) => c.method === 'sendVideo')!.body as FormData;
 assert.equal(v.get('chat_id'), NAVIN);
 assert.deepEqual(JSON.parse(String(v.get('reply_markup'))).inline_keyboard[0][0], {text: 'Approve', callback_data: 'a|host-supplier-bills'});
 
+// shown once: a second run sends nothing new (unless --again)
+assert.deepEqual(await send(tg, NAVIN, 'c1-automation', '2026-W40', p), []);
+assert.deepEqual(await send(tg, NAVIN, 'c1-automation', '2026-W40', p, {again: true}), ['host-supplier-bills']);
+
 // a tap from anyone else (another user, or a group the bot is in) approves nothing
 assert.equal(await onUpdate(tg, tap('a|host-supplier-bills', '999', '999'), o), 'Not allowed.');
 assert.equal(await onUpdate(tg, tap('a|host-supplier-bills', NAVIN, '-100200'), o), 'Not allowed.');

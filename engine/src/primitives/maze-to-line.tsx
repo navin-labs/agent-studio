@@ -41,7 +41,7 @@ export const MazeToLine: React.FC<PrimitiveProps<P>> = ({p, dur, cues}) => {
   const arrived = f >= snap + 26;
   const d = pts.map((q, i) => `${i ? 'L' : 'M'}${q.x.toFixed(1)} ${q.y.toFixed(1)}`).join(' ');
   const label = (text: string, on: boolean, side: 'left' | 'right') => (
-    <div data-box style={{...card(th), position: 'absolute', top: MID + 54, [side]: SIDE + 20, padding: '10px 18px', borderRadius: 14, fontFamily: TYPE.data, fontSize: 32, fontWeight: 800, color: th.ink, background: on ? th.accent : th.surface, whiteSpace: 'nowrap'}}>
+    <div data-box style={{...card(th), position: 'absolute', top: MID + 54, [side]: SIDE + 30, padding: '10px 18px', borderRadius: 14, fontFamily: TYPE.data, fontSize: 32, fontWeight: 800, color: th.ink, background: on ? th.accent : th.surface, whiteSpace: 'nowrap'}}>
       {text}
     </div>
   );

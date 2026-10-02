@@ -8,7 +8,8 @@ import {generateWeek, type Recipe, recipeDate, toFingerprint} from './recipe.ts'
 
 const ROOT = path.join(import.meta.dirname, '..');
 const c1 = JSON.parse(fs.readFileSync(path.join(ROOT, 'channels/c1-automation/channel.json'), 'utf8'));
-const c3 = {id: 'c3-studio', themes: ['ink', 'mono', 'studio']}; // no channel.json yet; enough to prove the cross-channel rule
+const c2 = JSON.parse(fs.readFileSync(path.join(ROOT, 'channels/c2-reach/channel.json'), 'utf8'));
+const c3 = JSON.parse(fs.readFileSync(path.join(ROOT, 'channels/c3-studio/channel.json'), 'utf8'));
 const schema = loadSchema('recipe');
 
 // dates
@@ -18,12 +19,12 @@ assert.equal(isoWeek('2026-10-05'), '2026-W41');
 assert.equal(weekStart('2027-W01'), '2027-01-04');
 assert.equal(isoWeek('2021-01-03'), '2020-W53');
 
-// 8 weeks, two channels, each week planned against everything before it
+// 8 weeks, all three channels, each week planned against everything before it
 const weeks = Array.from({length: 8}, (_, i) => isoWeek(addDays('2026-10-05', i * 7)));
 let history: Fingerprint[] = [];
 const all: Recipe[] = [];
 for (const w of weeks)
-  for (const ch of [c1, c3]) {
+  for (const ch of [c1, c2, c3]) {
     const rs = generateWeek(ch, w, history);
     assert.equal(rs.length, 7);
     assert.equal(rs.filter((r) => r.experiment).length, 2, '30% of 7 slots are experiments');

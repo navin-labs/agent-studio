@@ -146,3 +146,22 @@ Length per format (`LENGTH` in storyboard.ts): host 40 to 60 s, composed 20 to 4
 | Apply | `studio/ledger.ts`: verifies signature and expiry, then per id: storyboard found, same channel, in that week, QA passed, not already approved. Writes `state/ledger.jsonl` (append-only, latest line per video wins, schema-checked) and the video's fingerprint to `state/fingerprints.jsonl` (QA's novelty history) |
 | Test | `studio/approval.test.ts` in `npm run check`: one approval = one entry; replay, tampering, wrong secret, expiry, failed QA, wrong week write nothing |
 
+
+## Production loop (`studio/run.ts`)
+One idempotent tick, every hour (LaunchAgent com.theautomationguy.studio). Only channels with `"live": true` are touched.
+| Step | When | What |
+|---|---|---|
+| metrics | every tick | `studio/metrics.ts`: Forge's files in `inbox/metrics/` -> checked -> `state/metrics.jsonl`; bad files to `rejected/` with the reason |
+| plan | Thursday, once per channel and week | Learn for next week, then `planWeek()` writes `recipes/<channel>/<week>.json` (never overwrites); Telegram: "recipes are ready" |
+| telegram | every tick | each QA-passed video of this and next week, once, with an Approve button; "Approve all" only covers videos already shown |
+| dispatch | every tick | approved, QA still passing, channel live, the video shows the channel's handle (`out/<id>/render.json`) -> YouTube (per-channel n8n webhook) and Forge's queue (Instagram, Facebook) |
+| published | every tick | Forge's `posted.json` in a queue folder -> ledger `published` with every post URL |
+Problems go to Telegram ("agent-studio needs you") with the exact reason; one failing step never stops the others.
+
+## Channels and formats
+| Channel | Formats (recipe.ts `FORMATS`) | Themes | Closer |
+|---|---|---|---|
+| C1 automation | host (Chiku, night), composed | paper, studio, night | DM AUDIT or Follow |
+| C2 reach | reach: hook, setup, fact, one-idea explainer, payoff, follow (no automation flow) | ink, mono, studio | Follow |
+| C3 studio | composed (explainers for example brands) | paper, ink, mono, studio | DM MOTION |
+The closer shows the channel's own Instagram handle (make.mjs reads channel.json; no real handle, no render; `PREVIEW_HANDLE` only for sample weeks, and Dispatch refuses those renders).

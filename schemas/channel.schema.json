@@ -153,6 +153,7 @@
           "platform": {
             "enum": [
               "instagram",
+              "facebook",
               "youtube"
             ]
           },
@@ -165,6 +166,11 @@
               "forge-queue",
               "n8n"
             ]
+          },
+          "webhook": {
+            "type": "string",
+            "pattern": "^http://localhost:5678/webhook/[a-z0-9-]+$",
+            "description": "YouTube only: this channel's n8n upload webhook (one per YouTube account). Default: YOUTUBE_WEBHOOK_URL."
           }
         }
       }
@@ -180,6 +186,10 @@
         "tikku"
       ],
       "description": "the channel mascot for host-format videos"
+    },
+    "live": {
+      "type": "boolean",
+      "description": "Go-live switch. Dispatch sends nothing for a channel until this is true (Navin sets it at production setup)."
     }
   }
 }

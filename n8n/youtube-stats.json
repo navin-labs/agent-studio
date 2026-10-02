@@ -1,0 +1,112 @@
+{
+  "id": "agStudioYtStats1",
+  "name": "agent-studio: YouTube stats",
+  "active": false,
+  "nodes": [
+    {
+      "id": "c1b0a001-0000-4000-8000-000000000001",
+      "name": "Every day 10:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c1b0a001-0000-4000-8000-000000000002",
+      "name": "Readings due",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Ask the Mac which YouTube readings are due (24h and 7d after publishing). The Mac decides; n8n only relays.\nconst due = await this.helpers.httpRequest({ url: 'http://host.docker.internal:5680/metrics-due', json: true });\nreturn due.map((d) => ({ json: d }));"
+      }
+    },
+    {
+      "id": "c1b0a001-0000-4000-8000-000000000003",
+      "name": "Video statistics",
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "resource": "video",
+        "operation": "get",
+        "videoId": "={{ $json.video_id }}",
+        "part": [
+          "statistics"
+        ],
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "c1b0a001-0000-4000-8000-000000000004",
+      "name": "Send to the Mac",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// One metrics row per reading. YouTube's basic statistics have views only; reach = views (Shorts) until the Analytics API is wired.\nconst due = $('Readings due').all();\nconst rows = $input.all().flatMap((item, i) => {\n  if (!item.json.statistics) return []; // video gone or not readable: skip, it stays due\n  const d = due[i].json;\n  const views = Number(item.json.statistics?.viewCount ?? 0);\n  return [{ storyboard_id: d.storyboard_id, channel: d.channel, platform: 'youtube', window: d.window, reach: views, views }];\n});\nif (!rows.length) return [{ json: { recorded: 0 } }];\nconst r = await this.helpers.httpRequest({ method: 'POST', url: 'http://host.docker.internal:5680/metrics', body: rows, json: true });\nreturn [{ json: r }];"
+      }
+    }
+  ],
+  "connections": {
+    "Every day 10:00": {
+      "main": [
+        [
+          {
+            "node": "Readings due",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Readings due": {
+      "main": [
+        [
+          {
+            "node": "Video statistics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video statistics": {
+      "main": [
+        [
+          {
+            "node": "Send to the Mac",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata"
+  }
+}

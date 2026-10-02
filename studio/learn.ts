@@ -26,12 +26,12 @@ export type Learned = {channel: string; week: string; videos: number; bench: {pr
 // A primitive that is the only choice in some beat can never be benched: the format would have nothing to draw.
 export const UNBENCHABLE = new Set(Object.values(FORMATS).flatMap((f) => f.beats.filter((b) => b.length === 1).flat()));
 
-// Per video and platform: the 7d window when present, else 24h. Totals pool across platforms.
+// Per video and platform: the 7d window when present, else 24h; a later reading of the same window replaces an earlier one.
 const latest = (ms: Metric[]) => {
   const best = new Map<string, Metric>();
   for (const m of ms) {
     const k = `${m.storyboard_id}|${m.platform}`;
-    if (!best.has(k) || (m.window === '7d' && best.get(k)!.window === '24h')) best.set(k, m);
+    if (!best.has(k) || !(best.get(k)!.window === '7d' && m.window === '24h')) best.set(k, m);
   }
   return [...best.values()];
 };
@@ -53,7 +53,8 @@ const quantile = (xs: number[], q: number) => {
 
 export const learn = (channel: string, week: string, input: {metrics: Metric[]; fingerprints: Fingerprint[]; scheduled: Map<string, string>; kpi: Kpi}) => {
   const fp = new Map(input.fingerprints.filter((f) => f.channel === channel).map((f) => [f.id, f]));
-  const ms = latest(input.metrics.filter((m) => m.channel === channel && fp.has(m.storyboard_id)));
+  // a row counts only if it measures the KPI at all (YouTube's basic stats have no DMs or follows: they must not dilute it)
+  const ms = latest(input.metrics.filter((m) => m.channel === channel && fp.has(m.storyboard_id) && input.kpi.numerator.some((f) => m[f] !== undefined)));
   const videosOf = (xs: Metric[]) => new Set(xs.map((m) => m.storyboard_id)).size;
   const by = (key: (f: Fingerprint, m: Metric) => string[]) => {
     const g = new Map<string, Metric[]>();

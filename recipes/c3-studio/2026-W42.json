@@ -1,0 +1,198 @@
+[
+  {
+    "id": "c3-2026-w42-1",
+    "channel": "c3-studio",
+    "week": "2026-W42",
+    "slot": 1,
+    "theme": "mono",
+    "opening": "split-flap",
+    "primitives": [
+      "split-flap",
+      "chat-pop",
+      "maze-to-line",
+      "flow-run",
+      "stamp-hit",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "cut",
+      "cut",
+      "cut",
+      "cut",
+      "cut"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "confession",
+    "fingerprint": "c8acdc04e2af",
+    "experiment": false
+  },
+  {
+    "id": "c3-2026-w42-2",
+    "channel": "c3-studio",
+    "week": "2026-W42",
+    "slot": 2,
+    "theme": "mono",
+    "opening": "counter-drop",
+    "primitives": [
+      "counter-drop",
+      "conveyor",
+      "flow-build",
+      "flow-run",
+      "stamp-hit",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "ink-wipe",
+      "whip-pan",
+      "cut",
+      "cut",
+      "ink-wipe"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "question",
+    "fingerprint": "17890979659a",
+    "experiment": false
+  },
+  {
+    "id": "c3-2026-w42-3",
+    "channel": "c3-studio",
+    "week": "2026-W42",
+    "slot": 3,
+    "theme": "paper",
+    "opening": "pile-drop",
+    "primitives": [
+      "pile-drop",
+      "word-stack-slam",
+      "flow-build",
+      "conveyor",
+      "chat-pop",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "cut",
+      "whip-pan",
+      "cut",
+      "whip-pan",
+      "ink-wipe"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "number",
+    "fingerprint": "d242dfbe3686",
+    "experiment": true
+  },
+  {
+    "id": "c3-2026-w42-4",
+    "channel": "c3-studio",
+    "week": "2026-W42",
+    "slot": 4,
+    "theme": "paper",
+    "opening": "chat-pop",
+    "primitives": [
+      "chat-pop",
+      "conveyor",
+      "highlighter-swipe",
+      "flow-build",
+      "stamp-hit",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "whip-pan",
+      "ink-wipe",
+      "ink-wipe",
+      "ink-wipe",
+      "whip-pan"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "pile",
+    "fingerprint": "46e0874d076c",
+    "experiment": false
+  },
+  {
+    "id": "c3-2026-w42-5",
+    "channel": "c3-studio",
+    "week": "2026-W42",
+    "slot": 5,
+    "theme": "mono",
+    "opening": "phone-buzz",
+    "primitives": [
+      "phone-buzz",
+      "conveyor",
+      "word-stack-slam",
+      "flow-build",
+      "stamp-hit",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "ink-wipe",
+      "whip-pan",
+      "ink-wipe",
+      "cut",
+      "cut"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "question",
+    "fingerprint": "cbb9b9416012",
+    "experiment": false
+  },
+  {
+    "id": "c3-2026-w42-6",
+    "channel": "c3-studio",
+    "week": "2026-W42",
+    "slot": 6,
+    "theme": "mono",
+    "opening": "zoom-dive",
+    "primitives": [
+      "zoom-dive",
+      "pile-drop",
+      "flow-build",
+      "flow-run",
+      "counter-drop",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "whip-pan",
+      "whip-pan",
+      "cut",
+      "cut",
+      "cut"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "pile",
+    "fingerprint": "833cc022d2eb",
+    "experiment": false
+  },
+  {
+    "id": "c3-2026-w42-7",
+    "channel": "c3-studio",
+    "week": "2026-W42",
+    "slot": 7,
+    "theme": "paper",
+    "opening": "chat-pop",
+    "primitives": [
+      "chat-pop",
+      "word-stack-slam",
+      "before-after-split",
+      "flow-run",
+      "split-flap",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "ink-wipe",
+      "cut",
+      "ink-wipe",
+      "whip-pan",
+      "whip-pan"
+    ],
+    "rhythm": "TBD",
+    "hook_pattern": "number",
+    "fingerprint": "e1795ee6cdf2",
+    "experiment": true
+  }
+]

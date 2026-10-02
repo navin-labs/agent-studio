@@ -85,6 +85,13 @@ Phase done when: a dry-run week for C1 goes from feed to approved queue with zer
 - [x] **C2 Primitives batch 2.** Done when: same as C1. Built: `phone-buzz` (world), `maze-to-line` (world); registry 21.
 - [x] **C3 Primitives batch 3.** Done when: same as C1; registry has 20 primitives. Built: `zoom-dive` (camera, the first camera primitive); registry 22.
 
+## Phase P: production pass (2026-10-02)
+- [x] **P1 Metrics.** Forge (Meta connector) files and n8n YouTube stats reach Learn, checked; views-only rows never dilute a KPI.
+- [x] **P2 Per-channel output.** Each channel's handle on its closer; C2 reach format; C2 and C3 plan valid weeks (8-week test, all channels); sample videos for C2 and C3 pass QA.
+- [x] **P3 Production loop.** Hourly tick with a per-channel `live` switch; Telegram send-once; publish confirmation from Forge; Facebook via the Forge queue; per-channel YouTube webhook.
+- [x] **P4 Forge skills and setup guide.** Weekly Writer (all channels), Queue Publisher, Metrics Reporter; `docs/SETUP.md`.
+- [ ] **P5 Go-live (Navin + Claude).** `docs/SETUP.md` steps 1 to 6. Includes B4b.
+
 ## Phase D: channels (gated)
 - [ ] **D1 Launch C2 reach.** Done when: C1 has run 14 days with no missed posts, and a C2 dry-run week passes.
   > Read CLAUDE.md, channels/c2-reach/. Fill channel.json TBDs with Navin. Run a dry-run week.

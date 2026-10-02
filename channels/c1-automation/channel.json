@@ -5,7 +5,10 @@
   "kpi": {
     "metric": "DMs + profile visits per reach",
     "target": "TBD (owner: Navin)",
-    "numerator": ["dms", "profile_visits"],
+    "numerator": [
+      "dms",
+      "profile_visits"
+    ],
     "denominator": "reach"
   },
   "cta": [
@@ -42,5 +45,6 @@
     }
   ],
   "launch_gate": "First channel",
-  "host": "chiku"
+  "host": "chiku",
+  "live": false
 }

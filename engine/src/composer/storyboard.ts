@@ -34,6 +34,8 @@ export type Storyboard = {
   caption?: string;
   hashtags?: string[];
   meta?: {source?: string; idea_id?: string; recipe_id?: string; hero_metaphor?: string};
+  channel?: string;
+  handle?: string; // render-time only (not in the file): the channel's Instagram handle, added by make.mjs
 };
 
 export type Timing = {durations?: (number | null)[]; audio?: (string | null)[]};

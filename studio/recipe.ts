@@ -2,7 +2,7 @@
 // so the same inputs give the same week. Draws a candidate, checks the novelty rules, redraws; if nothing passes it throws,
 // it never hands the Writer a recipe that breaks a rule.
 //
-// node studio/recipe.ts <channel> <week> [--seed s]   -> recipes/<channel>/<week>.json (history: every other recipes/**/*.json)
+// node studio/recipe.ts <channel> <week> [--seed s] [--overwrite]   -> recipes/<channel>/<week>.json (history: every other recipes/**/*.json)
 import {createHash} from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -26,18 +26,28 @@ export type Recipe = {
   experiment: boolean;
 };
 
-// Video shapes: one pool of primitives per beat. host = the Chiku format (ADR 15, night theme); composed = the older kinetic boards.
+// Video shapes: one pool of primitives per beat, and the channels each shape is for. host = the Chiku format (ADR 15, night theme,
+// C1); composed = manual pain to automatic flow (C1, C3); reach = C2's facts and one-idea explainers (no automation flow).
 const PAIN = ['ui-inbox', 'ui-sheet', 'ui-chat', 'pile-drop', 'counter-drop', 'phone-buzz', 'zoom-dive'];
 export const FORMATS = {
   host: {
+    channels: ['c1-automation'],
     themes: ['night'],
     transitions: ['cut', 'whip-pan', 'pixel-wipe'],
     beats: [['host-hook'], PAIN, PAIN, ['ui-diff', 'highlighter-swipe', 'word-stack-slam', 'before-after-split', 'maze-to-line'], ['flow-run', 'flow-build', 'conveyor'], ['ui-sheet', 'ui-chat', 'ui-inbox', 'stamp-hit', 'chat-pop'], ['host-payoff'], ['host-cta']],
   },
   composed: {
+    channels: ['c1-automation', 'c3-studio'],
     themes: ['paper', 'ink', 'mono', 'studio'],
     transitions: ['cut', 'whip-pan', 'ink-wipe'],
     beats: [['word-stack-slam', 'pile-drop', 'counter-drop', 'highlighter-swipe', 'chat-pop', 'split-flap', 'phone-buzz', 'zoom-dive'], ['pile-drop', 'counter-drop', 'conveyor', 'chat-pop', 'word-stack-slam', 'phone-buzz'], ['highlighter-swipe', 'word-stack-slam', 'flow-build', 'before-after-split', 'maze-to-line'], ['flow-run', 'flow-build', 'conveyor'], ['stamp-hit', 'chat-pop', 'counter-drop', 'split-flap'], ['end-card']],
+  },
+  reach: {
+    channels: ['c2-reach'],
+    themes: ['ink', 'mono', 'studio'],
+    transitions: ['cut', 'whip-pan', 'ink-wipe'],
+    // hook, setup, the fact or twist, one-idea explainer, payoff, follow
+    beats: [['word-stack-slam', 'highlighter-swipe', 'split-flap', 'zoom-dive', 'phone-buzz', 'counter-drop'], ['pile-drop', 'conveyor', 'chat-pop', 'counter-drop', 'phone-buzz', 'zoom-dive'], ['highlighter-swipe', 'word-stack-slam', 'split-flap'], ['maze-to-line', 'before-after-split', 'conveyor', 'zoom-dive'], ['counter-drop', 'split-flap', 'word-stack-slam', 'chat-pop'], ['end-card']],
   },
 } as const;
 export const EXPERIMENT_SHARE = 0.3; // 70% proven, 30% experiments (Learn fills in what "proven" means in B6)
@@ -62,7 +72,7 @@ export const toFingerprint = (r: Recipe): Fingerprint => ({id: r.id, channel: r.
 const formatsFor = (ch: Channel) =>
   (Object.keys(FORMATS) as (keyof typeof FORMATS)[])
     .map((name) => ({name, ...FORMATS[name], themes: FORMATS[name].themes.filter((t) => ch.themes.includes(t))}))
-    .filter((f) => f.themes.length && (f.name !== 'host' || ch.host));
+    .filter((f) => (f.channels as readonly string[]).includes(ch.id) && f.themes.length && (f.name !== 'host' || ch.host));
 
 // proven (from Learn): the 70% draw from proven primitives; the 30% experiments must include at least one unproven one.
 export const generateWeek = (ch: Channel, week: string, history: Fingerprint[], opts: {bench?: string[]; proven?: string[]; seed?: string} = {}): Recipe[] => {
@@ -117,28 +127,35 @@ export const generateWeek = (ch: Channel, week: string, history: Fingerprint[], 
   return out;
 };
 
+// Plan one channel's week from disk: history = every other recipe file, Learn's active benches and proven list. Never overwrites.
+export const planWeek = (chId: string, week: string, o: {seed?: string; recipes?: string; state?: string; overwrite?: boolean} = {}) => {
+  const ROOT = path.join(import.meta.dirname, '..');
+  const ch: Channel = JSON.parse(fs.readFileSync(path.join(ROOT, 'channels', chId, 'channel.json'), 'utf8'));
+  const dir = o.recipes ?? process.env.STUDIO_RECIPES ?? path.join(ROOT, 'recipes');
+  const target = path.join(dir, chId, `${week}.json`);
+  if (fs.existsSync(target) && !o.overwrite) throw new Error(`${path.relative(ROOT, target)} already exists (Forge may be writing from it)`);
+  const files = fs.existsSync(dir) ? fs.readdirSync(dir, {recursive: true, encoding: 'utf8'}).filter((f) => f.endsWith('.json')).map((f) => path.join(dir, f)) : [];
+  const history = files.filter((f) => f !== target).flatMap((f) => (JSON.parse(fs.readFileSync(f, 'utf8')) as Recipe[]).map(toFingerprint));
+  // what Learn decided for this week (studio/learn.ts): active benches and the proven list
+  const lf = path.join(o.state ?? process.env.STUDIO_STATE ?? path.join(ROOT, 'state'), 'learn', chId, 'learn.json');
+  const learned = fs.existsSync(lf) ? JSON.parse(fs.readFileSync(lf, 'utf8')) : {bench: [], proven: []};
+  const bench = (learned.bench as {primitive: string; until: string}[]).filter((b) => b.until > week).map((b) => b.primitive);
+  const recipes = generateWeek(ch, week, history, {seed: o.seed, bench, proven: learned.proven});
+  fs.mkdirSync(path.dirname(target), {recursive: true});
+  fs.writeFileSync(target, JSON.stringify(recipes, null, 2) + '\n');
+  return {recipes, target, bench, proven: learned.proven as string[]};
+};
+
 if (import.meta.main) {
   const args = process.argv.slice(2);
   const [chId, week] = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--seed');
   if (!chId || !/^\d{4}-W\d{2}$/.test(week ?? '')) {
-    console.error('usage: node studio/recipe.ts <channel> <YYYY-Www> [--seed s]');
+    console.error('usage: node studio/recipe.ts <channel> <YYYY-Www> [--seed s] [--overwrite]');
     process.exit(2);
   }
-  const ROOT = path.join(import.meta.dirname, '..');
-  const ch: Channel = JSON.parse(fs.readFileSync(path.join(ROOT, 'channels', chId, 'channel.json'), 'utf8'));
-  const dir = process.env.STUDIO_RECIPES ?? path.join(ROOT, 'recipes');
-  const target = path.join(dir, chId, `${week}.json`);
-  const files = fs.existsSync(dir) ? fs.readdirSync(dir, {recursive: true, encoding: 'utf8'}).filter((f) => f.endsWith('.json')).map((f) => path.join(dir, f)) : [];
-  const history = files.filter((f) => f !== target).flatMap((f) => (JSON.parse(fs.readFileSync(f, 'utf8')) as Recipe[]).map(toFingerprint));
   const seed = args.includes('--seed') ? args[args.indexOf('--seed') + 1] : undefined;
-  // what Learn decided for this week (studio/learn.ts): active benches and the proven list
-  const lf = path.join(process.env.STUDIO_STATE ?? path.join(ROOT, 'state'), 'learn', chId, 'learn.json');
-  const learned = fs.existsSync(lf) ? JSON.parse(fs.readFileSync(lf, 'utf8')) : {bench: [], proven: []};
-  const bench = (learned.bench as {primitive: string; until: string}[]).filter((b) => b.until > week).map((b) => b.primitive);
-  if (bench.length || learned.proven.length) console.log(`learn: bench ${bench.join(', ') || 'none'}; proven ${learned.proven.join(', ') || 'none'}`);
-  const week_ = generateWeek(ch, week, history, {seed, bench, proven: learned.proven});
-  fs.mkdirSync(path.dirname(target), {recursive: true});
-  fs.writeFileSync(target, JSON.stringify(week_, null, 2) + '\n');
-  for (const x of week_) console.log(`${x.id.padEnd(16)} ${recipeDate(x)} ${x.theme.padEnd(6)} ${x.hook_pattern.padEnd(12)} ${x.experiment ? 'exp ' : '    '}${x.primitives.join(' > ')}`);
-  console.log(`-> ${path.relative(ROOT, target)}`);
+  const r = planWeek(chId, week, {seed, overwrite: args.includes('--overwrite')});
+  if (r.bench.length || r.proven.length) console.log(`learn: bench ${r.bench.join(', ') || 'none'}; proven ${r.proven.join(', ') || 'none'}`);
+  for (const x of r.recipes) console.log(`${x.id.padEnd(16)} ${recipeDate(x)} ${x.theme.padEnd(6)} ${x.hook_pattern.padEnd(12)} ${x.experiment ? 'exp ' : '    '}${x.primitives.join(' > ')}`);
+  console.log(`-> ${path.relative(path.join(import.meta.dirname, '..'), r.target)}`);
 }

@@ -140,6 +140,16 @@ const validateBoard = (doc) => {
   else if (doc.caption.split('\n')[0].length > 125) warnings.push('caption first line over 125 chars, it gets cut before "more"');
   if (doc.caption && !VOICE_ON && /voiceover|voice-over/i.test(doc.caption)) errors.push('caption discloses a voiceover but the video is silent (VOICE is off)');
   if (doc.hashtags && (doc.hashtags.length < 3 || doc.hashtags.length > 5)) errors.push('use 3 to 5 hashtags (Instagram caps at 5)');
+  // the closer shows the channel's own account: read it from channels/<id>/channel.json (no channel = test board, default handle)
+  if (doc.channel) {
+    const cf = path.join(ROOT, '..', 'channels', doc.channel, 'channel.json');
+    const ig = fs.existsSync(cf) ? JSON.parse(fs.readFileSync(cf, 'utf8')).publishers?.find((x) => x.platform === 'instagram')?.handle : undefined;
+    const real = /^@[A-Za-z0-9._]{1,30}$/.test(ig ?? '');
+    // PREVIEW_HANDLE: only while the channel has no handle yet (sample weeks); dispatch refuses a video whose handle is not the channel's
+    if (real) doc.handle = ig;
+    else if (process.env.PREVIEW_HANDLE) (doc.handle = process.env.PREVIEW_HANDLE), warnings.push(`preview handle ${doc.handle}: channel ${doc.channel} has no Instagram handle yet; this render can never be dispatched`);
+    else errors.push(`channel ${doc.channel} has no Instagram handle yet (channels/${doc.channel}/channel.json): the end card would show the wrong account`);
+  }
   return {errors, warnings};
 };
 
@@ -433,6 +443,7 @@ const renderReel = async (script) => {
     await renderStill({composition: sheet, serveUrl: url, output: path.join(outDir, 'contact.png'), frame: 0, inputProps, browserExecutable});
   }
   writeCaption(script, outDir);
+  if (script.format === 'storyboard') fs.writeFileSync(path.join(outDir, 'render.json'), JSON.stringify({handle: script.handle ?? null}) + '\n'); // the account shown on the closer; Dispatch checks it
   console.log(c.green(`  -> ${path.relative(ROOT, outDir)}/reel.mp4, cover.png, ${script.format === 'storyboard' ? 'contact.png, ' : ''}caption.txt`));
   if (script.format !== 'storyboard') return true;
   // text boxes: measured in the browser at render time, then checked (safe area, card overflow, caption overlap)

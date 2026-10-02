@@ -27,7 +27,7 @@ export const BeforeAfterSplit: React.FC<PrimitiveProps<P>> = ({p, dur, cues}) =>
       {halves.map(({h, at, col, icon, top}, k) => {
         const inP = interpolate(f, [at, at + 8], [0, 1], {...clamp, easing: EASE});
         return (
-          <div key={k} data-box style={{...card(th), position: 'absolute', top, left: SIDE + 20, right: SIDE + 20, height: PANEL_H, padding: '26px 30px', boxSizing: 'border-box', opacity: inP, transform: `translateX(${(1 - inP) * (k ? 60 : -60)}px)`}}>
+          <div key={k} data-box style={{...card(th), position: 'absolute', top, left: SIDE + 30, right: SIDE + 30, height: PANEL_H, padding: '26px 30px', boxSizing: 'border-box', opacity: inP, transform: `translateX(${(1 - inP) * (k ? 60 : -60)}px)`}}>
             <div data-tb="title" style={{display: 'inline-block', padding: '6px 16px', borderRadius: 10, background: alpha(col, 0.18), fontFamily: TYPE.data, fontSize: 34, fontWeight: 800, letterSpacing: '0.08em', color: th.ink}}>{h.title}</div>
             {h.lines.map((l, i) => {
               const lp = interpolate(f, [at + 6 + i * 5, at + 12 + i * 5], [0, 1], clamp);
@@ -43,7 +43,7 @@ export const BeforeAfterSplit: React.FC<PrimitiveProps<P>> = ({p, dur, cues}) =>
           </div>
         );
       })}
-      <div style={{position: 'absolute', top: STAGE.top + PANEL_H + GAP / 2 - 3, left: SIDE + 20, width: `${sweep * (1080 - 2 * (SIDE + 20))}px`, height: 6, borderRadius: 3, background: th.flow}} />
+      <div style={{position: 'absolute', top: STAGE.top + PANEL_H + GAP / 2 - 3, left: SIDE + 30, width: `${sweep * (1080 - 2 * (SIDE + 30))}px`, height: 6, borderRadius: 3, background: th.flow}} />
       <Sfx at={a} name="pop" volume={0.3} />
       <Sfx at={b - 8} name="whoosh" volume={0.35} />
       <Sfx at={b + 4} name="ding" volume={0.3} />
