@@ -260,4 +260,4 @@ Phase C done: 22 primitives, families kinetic-type, world, data, texture, camera
 Next: Phase D is gated on go-live (C1 must run 14 days first). Before Navin returns for production setup: the metrics collector (Forge, via its Meta connector, as the Instagram source) and the list of Forge skills per channel.
 Navin (2026-10-02): no go-live until every channel is set up; he returns for the production setup and start. W41 stays approved, not dispatched. Forge skills (all of them) are installed at the end, B4b with them. Instagram posting is Forge's job via its native Meta connector, which also makes Forge the likely metrics source for Learn.
 Open questions: none new.
-Commit: pending "approve commit"
+Commit: 8d1d8a3 feat(engine): 5 new primitives (split-flap, before-after-split, phone-buzz, maze-to-line, zoom-dive); Recipe proven picks are a preference
