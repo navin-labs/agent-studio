@@ -147,6 +147,7 @@ const validateBoard = (doc) => {
     const real = /^@[A-Za-z0-9._]{1,30}$/.test(ig ?? '');
     // PREVIEW_HANDLE: only while the channel has no handle yet (sample weeks); dispatch refuses a video whose handle is not the channel's
     if (real) doc.handle = ig;
+    if (fs.existsSync(path.join(ROOT, 'public', 'brand', doc.channel, 'mark.svg'))) doc.mark = `brand/${doc.channel}/mark.svg`; // the channel's own end-card logo
     else if (process.env.PREVIEW_HANDLE) (doc.handle = process.env.PREVIEW_HANDLE), warnings.push(`preview handle ${doc.handle}: channel ${doc.channel} has no Instagram handle yet; this render can never be dispatched`);
     else errors.push(`channel ${doc.channel} has no Instagram handle yet (channels/${doc.channel}/channel.json): the end card would show the wrong account`);
   }

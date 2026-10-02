@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {ledgerFile, type Paths} from './ledger.ts';
-import {tick} from './run.ts';
+import {OLD_WATCH_LABEL, tick, WATCH_LABEL, watcherProblem} from './run.ts';
 import type {Tg} from './telegram.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
@@ -31,7 +31,7 @@ const calls: {method: string; body: any}[] = [];
 const tg: Tg = async (method, body) => (calls.push({method, body}), true);
 const texts = () => calls.filter((c) => c.method === 'sendMessage').map((c) => c.body.text as string);
 const THU = Date.parse('2026-10-01T04:00:00Z'); // Thursday 09:30 IST, week 2026-W40
-const o = {paths: p, tg, chatId: '111', inbox: path.join(tmp, 'inbox')};
+const o = {paths: p, tg, chatId: '111', inbox: path.join(tmp, 'inbox'), watcher: () => null};
 
 // Thursday: next week planned for the live channel only, Navin told; this week's video shown once
 let r = await tick({...o, now: THU});
@@ -65,6 +65,35 @@ assert.equal(r.problems.length, 2, r.problems.join(' | '));
 assert.match(r.problems.join('\n'), /metrics rejected: bad.json/);
 assert.match(r.problems.join('\n'), /blocked host-supplier-bills: the video shows @preview.only/);
 assert.match(texts().at(-1)!, /^agent-studio needs you:/);
+
+// an upload with an unknown result: the tick sends the two-button question once, and keeps it out of the problem text
+fs.writeFileSync(path.join(out, 'render.json'), JSON.stringify({handle: '@theautomationguynavin'}));
+fs.appendFileSync(ledgerFile(p), JSON.stringify({storyboard_id: 'host-supplier-bills', channel: 'c1-automation', status: 'dispatching', approved_by: 'navin', approved_at: '2026-10-01T04:00:00Z', targets: ['instagram', 'youtube'], updated_at: '2026-10-01T06:00:00Z'}) + '\n');
+calls.length = 0;
+r = await tick({...o, now: THU + 8000_000});
+assert.ok(!r.problems.some((x) => /host-supplier-bills/.test(x)), r.problems.join(' | '));
+assert.deepEqual(calls.filter((c) => c.body?.reply_markup?.inline_keyboard?.[0]?.[0]?.callback_data === 'n|host-supplier-bills').length, 1);
+calls.length = 0;
+await tick({...o, now: THU + 8100_000});
+assert.equal(calls.length, 0, 'asked once, not every hour');
+
+// the render watcher: missing, pointing at another engine (e.g. the old reel-engine), not loaded, or right
+const agents = path.join(tmp, 'agents');
+fs.mkdirSync(agents);
+assert.match(watcherProblem({agents})!, /not installed/);
+const plist = path.join(agents, `${WATCH_LABEL}.plist`);
+fs.writeFileSync(plist, '<string>/Users/x/Dev/projects/reel-engine/scripts/watch.mjs</string>');
+assert.match(watcherProblem({agents})!, /does not run .*agent-studio\/engine\/scripts\/watch.mjs/);
+fs.writeFileSync(plist, `<string>${path.join(ROOT, 'engine/scripts/watch.mjs')}</string>`);
+assert.match(watcherProblem({agents, loaded: () => '123\t0\tcom.theautomationguy.reelwatch'})!, /not running/);
+assert.equal(watcherProblem({agents, loaded: () => `123\t0\t${WATCH_LABEL}`}), null);
+assert.match(watcherProblem({agents, loaded: () => `123\t0\t${WATCH_LABEL}\n456\t0\t${OLD_WATCH_LABEL}`})!, /^two watchers are loaded .*install the Forge skills, then launchctl unload/);
+r = await tick({...o, now: THU + 9000_000, watcher: () => 'the render watcher is not installed'});
+assert.match(r.problems.join(), /render: the render watcher is not installed/);
+// both watchers loaded while a channel is live: a "two watchers" alert on Telegram
+calls.length = 0;
+r = await tick({...o, now: THU + 9100_000, watcher: () => watcherProblem({agents, loaded: () => `1\t0\t${WATCH_LABEL}\n2\t0\t${OLD_WATCH_LABEL}`})});
+assert.match(texts().at(-1)!, /^agent-studio needs you:\nrender: two watchers are loaded/);
 
 // nothing live: the tick does nothing at all
 for (const c of ['c1-automation']) {

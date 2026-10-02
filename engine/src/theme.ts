@@ -2,7 +2,7 @@
 
 export const FONT = "'Inter', system-ui, -apple-system, sans-serif";
 
-export const HANDLE = '@theautomationguy.navin';
+export const HANDLE = '@theautomationguynavin';
 
 // Reel canvas (px)
 export const REEL = {w: 1080, h: 1920};

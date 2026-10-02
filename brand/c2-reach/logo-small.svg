@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- C2 Backstory mark, small-size cut (32 px and below: favicons, watermarks): the same B without the barcode gaps. -->
+  <defs>
+    <mask id="b">
+      <path d="M36 20H112A40 40 0 0 1 112 100H36Z" fill="#fff"/>
+      <path d="M36 96H122A42 42 0 0 1 122 180H36Z" fill="#fff"/>
+      <path d="M76 44H112A16 16 0 0 1 112 76H76Z" fill="#000"/>
+      <path d="M76 120H122A18 18 0 0 1 122 156H76Z" fill="#000"/>
+    </mask>
+  </defs>
+  <g mask="url(#b)" fill="#F4F1EA">
+    <rect x="36" y="0" width="34" height="60"/>
+    <rect x="36" y="140" width="34" height="60"/>
+    <rect x="66" y="0" width="110" height="200"/>
+  </g>
+  <path d="M70 66V134L36 100Z" fill="#E8A020"/>
+</svg>

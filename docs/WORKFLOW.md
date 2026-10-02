@@ -45,7 +45,7 @@ sequenceDiagram
 | QA fails | Exact error goes back to Forge; Forge fixes and resubmits. Max attempts TBD (owner: Navin) |
 | Mac asleep / missed render | Watcher retries; renders queue in Drive; missed day catches up |
 | Video not approved | Not dispatched. Replacement policy TBD (owner: Navin) |
-| Feed returns too few ideas | TBD (owner: Navin) |
+| Feed returns too few ideas | The Weekly Writer adds ideas itself, each with a real link it opened (no link, no idea) |
 
 ## Who does what
 | Actor | Does | Never does |

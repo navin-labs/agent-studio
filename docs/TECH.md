@@ -59,12 +59,12 @@ One repo (ADR 7).
 ## Data contracts (`schemas/`)
 | Schema | Written by | Read by |
 |---|---|---|
-| idea | Feed (n8n) | Writer |
+| idea | Feed: n8n fetches, `studio/feed.ts` parses, checks and writes `ideas/<channel>.jsonl` | Writer |
 | recipe | Recipe | Writer, QA |
 | storyboard | Writer | Composer, QA |
 | qa | QA | Approval page, Writer (on fail) |
 | ledger | Approval webhook, Dispatch | Dispatch, Learn |
-| metrics | TBD (owner: Navin) | Learn |
+| metrics | Forge (Instagram/Facebook files in `inbox/metrics/`) and n8n (YouTube views), both checked by `studio/metrics.ts` | Learn |
 | fingerprint | Recipe | Recipe (novelty), QA |
 | channel | Navin | All steps |
 
@@ -142,7 +142,7 @@ Length per format (`LENGTH` in storyboard.ts): host 40 to 60 s, composed 20 to 4
 |---|---|
 | Weekly page | `node studio/approval-page.ts <channel> <week>` -> `state/approval/<channel>/<week>/index.html` + contact sheets. One card per recipe slot: contact sheet, hook, caption, QA result. Only QA-passed videos get an Approve link; "Approve all" covers exactly those |
 | Signed links | HMAC-SHA256 over channel, week, ids, approver, expiry (7 days). Env names: `APPROVAL_WEBHOOK_URL` (https), `APPROVAL_SECRET` (16+ chars), in agent-studio/.env |
-| Webhook relay (n8n) | Receives the GET, passes the query string unchanged to `node studio/ledger.ts apply '<query>'` on the Mac (or queues it for the Mac to run). n8n does not need the secret and cannot forge or widen an approval. Hosting of n8n: TBD (owner: Navin) |
+| Webhook relay (n8n) | Receives the GET, passes the query string unchanged to the Mac receiver (`studio/approve-server.ts`, `/approve`), which runs `applyApproval`. n8n does not need the secret and cannot forge or widen an approval. n8n runs in Docker on the Mac and reaches the receiver at host.docker.internal:5680 |
 | Apply | `studio/ledger.ts`: verifies signature and expiry, then per id: storyboard found, same channel, in that week, QA passed, not already approved. Writes `state/ledger.jsonl` (append-only, latest line per video wins, schema-checked) and the video's fingerprint to `state/fingerprints.jsonl` (QA's novelty history) |
 | Test | `studio/approval.test.ts` in `npm run check`: one approval = one entry; replay, tampering, wrong secret, expiry, failed QA, wrong week write nothing |
 
@@ -151,10 +151,11 @@ Length per format (`LENGTH` in storyboard.ts): host 40 to 60 s, composed 20 to 4
 One idempotent tick, every hour (LaunchAgent com.theautomationguy.studio). Only channels with `"live": true` are touched.
 | Step | When | What |
 |---|---|---|
+| fingerprints | every tick | `repairFingerprints()`: an approval that crashed between the ledger and the fingerprint write is healed |
 | metrics | every tick | `studio/metrics.ts`: Forge's files in `inbox/metrics/` -> checked -> `state/metrics.jsonl`; bad files to `rejected/` with the reason |
 | plan | Thursday, once per channel and week | Learn for next week, then `planWeek()` writes `recipes/<channel>/<week>.json` (never overwrites); Telegram: "recipes are ready" |
 | telegram | every tick | each QA-passed video of this and next week, once, with an Approve button; "Approve all" only covers videos already shown |
-| dispatch | every tick | approved, QA still passing, channel live, the video shows the channel's handle (`out/<id>/render.json`) -> YouTube (per-channel n8n webhook) and Forge's queue (Instagram, Facebook) |
+| dispatch | every tick | approved, QA still passing, channel live, the video shows the channel's handle (`out/<id>/render.json`) -> YouTube (per-channel n8n webhook) and Forge's queue (Instagram, Facebook). Per video: claim (`dispatching`) -> upload -> YouTube URL written at once -> queue folder (`post.json` last, atomic) -> `dispatched`. Certainly-not-uploaded (n8n `{uploaded:false}`, connection refused) releases the claim for a retry; unknown (5xx, timeout, garbled) stays stuck until `node studio/dispatch.ts --resolve <id> <youtube id | none>`; a local failure after the upload resumes without uploading again |
 | published | every tick | Forge's `posted.json` in a queue folder -> ledger `published` with every post URL |
 Problems go to Telegram ("agent-studio needs you") with the exact reason; one failing step never stops the others.
 
@@ -165,3 +166,18 @@ Problems go to Telegram ("agent-studio needs you") with the exact reason; one fa
 | C2 reach | reach: hook, setup, fact, one-idea explainer, payoff, follow (no automation flow) | ink, mono, studio | Follow |
 | C3 studio | composed (explainers for example brands) | paper, ink, mono, studio | DM MOTION |
 The closer shows the channel's own Instagram handle (make.mjs reads channel.json; no real handle, no render; `PREVIEW_HANDLE` only for sample weeks, and Dispatch refuses those renders).
+
+## n8n and Forge boundaries (contracts)
+| Boundary | Direction | Contract | Fails safe by |
+|---|---|---|---|
+| Feed | n8n -> Mac | `GET /feeds` -> `[{source, url}]` (from channel.json `feeds`); `POST /feed {url}`: the Mac fetches it (only listed feeds) -> `{added, skipped, items}` (`{url, body}` also accepted) | unlisted URL never fetched; non-200 (403 blocked, 429 rate limited), non-feed text or no items: 400 with the reason, nothing written; items without a link skipped; dedupe by id and link per channel |
+| Approval | Telegram / n8n -> Mac | Telegram tap from TELEGRAM_CHAT_ID, or `GET /approve?<signed query>` | bad signature, expiry, failed QA, wrong week: refused, nothing written |
+| Resolve | Telegram -> Mac | an unknown upload gets one message per claim with **Not uploaded** (`n|<id>`) and **Uploaded** (`u|<id>`, then a forced reply with the video ID or link); signed like approvals (HMAC, 60 s) and gated to TELEGRAM_CHAT_ID | wrong chat, a reply to anything else, or a bad ID: nothing written; never an automatic retry |
+| Upload | Mac -> n8n -> YouTube | multipart `job` + `video`; n8n asks `GET /dispatch-check?id=` (yes for a fresh claim or a planned upload); reply `{uploaded: true, youtube_id}` or `{uploaded: false, reason}` | anything else is "unknown": never retried by itself |
+| YouTube stats | n8n -> Mac | `GET /metrics-due` -> `[{storyboard_id, channel, platform, window, video_id}]`; `POST /metrics [rows]` | rows for videos never dispatched (or wrong channel/platform): 400, none written |
+| Writer | Mac -> Forge -> Mac | `recipes/<ch>/<week>.json` -> `engine/content/storyboards/<recipe id>.json`; watcher writes `<id>.status.txt` (`ok`, `failed`, `failed QA` + exact errors) | QA checks shots/theme/hook/transitions against the recipe; Forge fixes and saves again |
+| Publish | Mac -> Forge -> Mac | queue folder `reel.mp4`, `caption.txt`, `post.json` (written last) -> Forge posts -> `posted.json {posted_at, urls}` | no `post.json` = still being written; `posted.json` without an instagram.com/facebook.com URL is reported, not trusted |
+| Meta metrics | Forge -> Mac | one file per video/platform/window in `inbox/metrics/` | bad file -> `inbox/metrics/rejected/` with `.error.txt` |
+
+## Crash safety
+All state is append-only JSONL. A crash mid-append leaves a torn last line: readers ignore it and the next append cuts it off; a broken line anywhere else stops everything as corruption. Approval writes the ledger, then fingerprints; `repairFingerprints()` fills a fingerprint lost in between. Dispatch claims before calling out (above).

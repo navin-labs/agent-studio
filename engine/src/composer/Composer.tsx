@@ -12,7 +12,7 @@ import {PRIMITIVES} from '../primitives/index';
 import {HostCtx, KaraokeCaptions, VoiceCtx} from '../host/Host';
 import {Captions} from '../story/Captions';
 import {HANDLE} from '../theme';
-import {HandleCtx, THEMES, ThemeCtx, useTheme} from '../themes';
+import {HandleCtx, MarkCtx, THEMES, ThemeCtx, useTheme} from '../themes';
 import type {TextBox} from './textcheck';
 import {captionsOn, probeFrames, sceneCues, sceneFrames, type Storyboard, type StoryboardScene, type Timing, TRANSITION_FRAMES as T, type Transition, voWordStarts} from './storyboard';
 
@@ -156,6 +156,7 @@ export const Composer: React.FC<ComposerProps> = ({script, timing, frames: given
   return (
     <ThemeCtx.Provider value={th}>
       <HandleCtx.Provider value={script.handle ?? HANDLE}>
+      <MarkCtx.Provider value={script.mark}>
       <HostCtx.Provider value={script.host ?? 'chiku'}>
       <SfxEnabled.Provider value={script.sfx !== false}>
         <AbsoluteFill style={{background: th.bg}}>
@@ -172,6 +173,7 @@ export const Composer: React.FC<ComposerProps> = ({script, timing, frames: given
         </AbsoluteFill>
       </SfxEnabled.Provider>
       </HostCtx.Provider>
+      </MarkCtx.Provider>
       </HandleCtx.Provider>
     </ThemeCtx.Provider>
   );

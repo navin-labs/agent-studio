@@ -11,8 +11,9 @@ Every hour (a Forge scheduled task), and whenever Navin says "post the queue".
 `STUDIO/state/queue/instagram/`: one folder per approved video, named `<date>-<channel>-<id>`, holding:
 - `reel.mp4`: the video
 - `caption.txt`: the caption with hashtags, posted exactly as written
-- `post.json`: `{"storyboard_id", "channel", "accounts": [{"platform": "instagram" | "facebook", "handle"}], "scheduled_for"}` (IST time)
+- `post.json`: `{"storyboard_id", "channel", "accounts": [{"platform": "instagram" | "facebook", "handle", "page_id"?}], "scheduled_for"}` (IST time). A Facebook account carries `page_id`: post to that page by its ID. A Facebook page whose username is still pending is left out of `accounts` until it is claimed
 - `posted.json`: present once the folder has been posted. Skip any folder that has it.
+- A folder without `post.json` is still being written (the studio writes it last): skip it until the next run.
 
 ## Do
 For each folder without `posted.json` whose `scheduled_for` is now or in the past:

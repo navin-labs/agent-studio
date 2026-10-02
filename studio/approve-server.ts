@@ -11,7 +11,8 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import {plan} from './dispatch.ts';
-import {applyApproval} from './ledger.ts';
+import {applyApproval, currentStatus} from './ledger.ts';
+import {feeds, type Get, ingestFeed, pullFeed} from './feed.ts';
 import {due, record} from './metrics.ts';
 import {poll, telegram} from './telegram.ts';
 
@@ -25,9 +26,14 @@ export const handle = (url: string, secret: string, opts?: Parameters<typeof app
   // n8n's YouTube workflow asks this before every upload: yes only if the dispatcher would send this video now
   if (u.pathname === '/dispatch-check') {
     const id = u.searchParams.get('id') ?? '';
-    const ok = plan(opts?.paths, opts?.now).youtube.some((j) => j.storyboard_id === id);
+    // dispatch claims a video ("dispatching") just before it calls n8n, so the claim in flight is what says yes (30 minutes)
+    const e = currentStatus(opts?.paths).get(id);
+    const inFlight = e?.status === 'dispatching' && !e.post_urls?.some((u) => u.includes('youtube.com/')) && (opts?.now ?? Date.now()) - Date.parse(e.updated_at) < 30 * 60_000;
+    const ok = inFlight || plan(opts?.paths, opts?.now).youtube.some((j) => j.storyboard_id === id);
     return {status: ok ? 200 : 403, body: ok ? 'approved' : 'not approved for dispatch'};
   }
+  // n8n's feed workflow: which feeds to fetch (JSON)
+  if (u.pathname === '/feeds') return {status: 200, body: JSON.stringify(feeds(opts?.paths).map(({source, url}) => ({source, url})))};
   // n8n's YouTube stats workflow: which readings are due (JSON)
   if (u.pathname === '/metrics-due') return {status: 200, body: JSON.stringify(due(opts?.paths, opts?.now))};
   if (u.pathname !== '/approve') return {status: 404, body: page('Not found', [])};
@@ -36,6 +42,28 @@ export const handle = (url: string, secret: string, opts?: Parameters<typeof app
     return {status: 200, body: page(r.written.length ? `Approved ${r.written.length}` : 'Nothing new approved', [...r.written.map((e) => `${e.storyboard_id}: approved for ${e.targets!.join(', ')}`), ...r.skipped])};
   } catch (e) {
     return {status: 403, body: page('Refused', [(e as Error).message])};
+  }
+};
+
+// The POST endpoints, as a plain function (tested in feed.test.ts and metrics.test.ts).
+export const post = async (route: string, raw: string, tooBig = false, opts?: {paths?: Parameters<typeof record>[1]; root?: string; fetch?: Get}): Promise<{status: number; body: unknown}> => {
+  if (tooBig) return {status: 413, body: {errors: ['body over 5 MB']}};
+  let j: any;
+  try {
+    j = JSON.parse(raw);
+  } catch (e) {
+    return {status: 400, body: {errors: [`not valid JSON: ${(e as Error).message}`]}};
+  }
+  if (route === '/metrics') {
+    const r = record(Array.isArray(j) ? j : [j], opts?.paths);
+    return {status: r.errors.length ? 400 : 200, body: r};
+  }
+  try {
+    if (typeof j?.url !== 'string') throw new Error('send {"url": "<feed url>"} (the Mac fetches it) or {"url", "body": "<the feed text>"}');
+    // {url}: the Mac fetches (Reddit blocks the n8n container); {url, body}: n8n already fetched it
+    return {status: 200, body: typeof j.body === 'string' ? ingestFeed(j.url, j.body, {paths: opts?.paths, root: opts?.root}) : await pullFeed(j.url, {paths: opts?.paths, root: opts?.root, fetch: opts?.fetch})};
+  } catch (e) {
+    return {status: 400, body: {errors: [(e as Error).message]}};
   }
 };
 
@@ -77,21 +105,18 @@ else if (import.meta.main) {
   const port = Number(process.env.APPROVE_PORT ?? 5680);
   http
     .createServer((req, res) => {
-      // POST /metrics: rows from n8n (YouTube statistics), checked by metrics.ts before anything is written
-      if (req.method === 'POST' && (req.url ?? '').split('?')[0] === '/metrics') {
+      // POST from n8n: /metrics (YouTube statistics rows) and /feed ({url}: the Mac fetches that listed feed; or {url, body}). Both are checked
+      // here before anything is written; a body over 5 MB is refused.
+      const route = (req.url ?? '').split('?')[0];
+      if (req.method === 'POST' && (route === '/metrics' || route === '/feed')) {
         let raw = '';
-        req.on('data', (c) => (raw = raw.length < 1_000_000 ? raw + c : raw));
-        req.on('end', () => {
-          let r: {recorded: number; errors: string[]};
-          try {
-            const j = JSON.parse(raw);
-            r = record(Array.isArray(j) ? j : [j]);
-          } catch (e) {
-            r = {recorded: 0, errors: [`not valid JSON: ${(e as Error).message}`]};
-          }
-          console.log(`${new Date().toISOString()} POST /metrics -> ${r.errors.length ? 400 : 200} (${r.recorded} recorded)`);
-          res.writeHead(r.errors.length ? 400 : 200, {'content-type': 'application/json'});
-          res.end(JSON.stringify(r));
+        let big = false;
+        req.on('data', (c) => (raw.length + c.length > 5_000_000 ? (big = true) : (raw += c)));
+        req.on('end', async () => {
+          const {status, body} = await post(route, raw, big);
+          console.log(`${new Date().toISOString()} POST ${route} -> ${status}`);
+          res.writeHead(status, {'content-type': 'application/json'});
+          res.end(JSON.stringify(body));
         });
         return;
       }

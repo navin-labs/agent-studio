@@ -7,7 +7,7 @@ import path from 'node:path';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import {buildPage} from './approval-page.ts';
 import {handle} from './approve-server.ts';
-import {applyApproval, approvalQuery, currentStatus, fingerprintFile, ledgerFile, type Paths, verifyApproval} from './ledger.ts';
+import {applyApproval, approvalQuery, currentStatus, fingerprintFile, ledgerFile, type Paths, readFingerprints, reject, repairFingerprints, verifyApproval} from './ledger.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'approval-test-'));
@@ -51,7 +51,7 @@ assert.deepEqual([r.written.length, r.skipped.length], [1, 0]);
 assert.equal(lines(ledgerFile(p)).length, 1);
 const entry = JSON.parse(lines(ledgerFile(p))[0]);
 assert.deepEqual(validate(loadSchema('ledger'), entry), []);
-assert.deepEqual([entry.status, entry.approved_by, entry.targets], ['approved', 'navin', ['instagram', 'youtube']]);
+assert.deepEqual([entry.status, entry.approved_by, entry.targets], ['approved', 'navin', ['instagram', 'youtube']], 'C1 lists Facebook with a pending username: not a target');
 assert.equal(lines(fingerprintFile(p)).length, 1);
 assert.deepEqual(validate(loadSchema('fingerprint'), JSON.parse(lines(fingerprintFile(p))[0])), []);
 
@@ -98,5 +98,21 @@ assert.equal(lines(ledgerFile(p)).length, 1);
 assert.match(handle(`/approve?${signed(['host-supplier-bills'])}`, secret, at).body, /already approved/);
 assert.equal(lines(ledgerFile(p)).length, 1);
 
+// crash between the ledger write and the fingerprint write: the next approval (or tick) heals it, once
+assert.equal(lines(fingerprintFile(p)).length, 1);
+fs.writeFileSync(fingerprintFile(p), ''); // the fingerprint never made it to disk
+assert.deepEqual(repairFingerprints(p), ['host-supplier-bills']);
+assert.deepEqual(repairFingerprints(p), [], 'idempotent');
+fs.writeFileSync(fingerprintFile(p), '');
+handle(`/approve?${signed(['host-supplier-bills'])}`, secret, at); // a replayed tap also repairs, and still writes no new approval
+assert.deepEqual([lines(fingerprintFile(p)).length, lines(ledgerFile(p)).length], [1, 1]);
+fs.appendFileSync(fingerprintFile(p), lines(fingerprintFile(p))[0] + '\n'); // a duplicate (e.g. replayed write) counts once
+assert.equal(readFingerprints(p).length, 1);
+
+// taking an approval back: only while it has not gone out
+reject(['host-supplier-bills'], p);
+assert.equal(currentStatus(p).get('host-supplier-bills')!.status, 'rejected');
+assert.throws(() => reject(['host-supplier-bills'], p), /only approved videos can be rejected: host-supplier-bills is rejected/);
+
 fs.rmSync(tmp, {recursive: true});
-console.log('approval ok: a test approval writes one ledger entry; replay, tampering, expiry, failed QA and bad secrets write nothing');
+console.log('approval ok: a test approval writes one ledger entry; replay, tampering, expiry, failed QA and bad secrets write nothing; a lost fingerprint is repaired once');

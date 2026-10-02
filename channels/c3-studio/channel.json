@@ -39,5 +39,15 @@
     }
   ],
   "launch_gate": "20 approved videos to choose showcase pieces from",
-  "live": false
+  "live": false,
+  "feeds": [
+    {
+      "source": "reddit",
+      "url": "https://www.reddit.com/r/motiondesign/.rss"
+    },
+    {
+      "source": "reddit",
+      "url": "https://www.reddit.com/r/marketing/.rss"
+    }
+  ]
 }

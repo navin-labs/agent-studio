@@ -14,11 +14,11 @@ import os from 'node:os';
 import path from 'node:path';
 import {dispatch, markPublished, plan} from './dispatch.ts';
 import {runLearn} from './learn.ts';
-import {PATHS, type Paths} from './ledger.ts';
+import {PATHS, type Paths, repairFingerprints} from './ledger.ts';
 import {ingest} from './metrics.ts';
 import {addDays, isoWeek} from './novelty.ts';
 import {planWeek} from './recipe.ts';
-import {notify, send, type Tg, telegram} from './telegram.ts';
+import {askResolve, notify, send, type Tg, telegram} from './telegram.ts';
 
 export const PLAN_DAY = 4; // Thursday (IST): recipes for next week, so Forge writes Thu-Fri and Navin approves over the weekend
 const ROOT = path.join(import.meta.dirname, '..');
@@ -32,7 +32,24 @@ const ist = (now: number) => {
   return {date: d.toISOString().slice(0, 10), weekday: d.getUTCDay()};
 };
 
-export type TickOpts = {now?: number; paths?: Paths; tg?: Tg | null; chatId?: string; live?: boolean; youtubeUrl?: string; plan?: (ch: string, week: string) => {recipes: unknown[]}; inbox?: string};
+// Production renders with THIS repo's engine: the studiowatch LaunchAgent must be loaded and point at agent-studio/engine.
+// (The old v1 watcher, com.theautomationguy.reelwatch, only watches ~/Dev/projects/reel-engine and never sees these boards.)
+export const WATCH_LABEL = 'com.theautomationguy.studiowatch';
+export const OLD_WATCH_LABEL = 'com.theautomationguy.reelwatch'; // the v1 watcher (reel-engine)
+export const watcherProblem = (o: {agents?: string; loaded?: () => string} = {}): string | null => {
+  const plist = path.join(o.agents ?? path.join(os.homedir(), 'Library/LaunchAgents'), `${WATCH_LABEL}.plist`);
+  if (!fs.existsSync(plist)) return `the render watcher is not installed: cd engine && npm run watch:install`;
+  const want = path.join(ROOT, 'engine', 'scripts', 'watch.mjs');
+  if (!fs.readFileSync(plist, 'utf8').includes(`<string>${want}</string>`)) return `the render watcher (${WATCH_LABEL}) does not run ${want}: cd engine && npm run watch:install`;
+  const loaded = (o.loaded ?? (() => spawnSync('launchctl', ['list'], {encoding: 'utf8'}).stdout ?? ''))();
+  const running = (label: string) => loaded.split('\n').some((l) => l.trim().endsWith(label));
+  if (!running(WATCH_LABEL)) return `the render watcher is installed but not running: launchctl load -w ${plist}`;
+  // both watchers render and copy to Drive; once a channel is live only this repo's may run (SETUP.md step 5 order)
+  if (running(OLD_WATCH_LABEL)) return `two watchers are loaded (${OLD_WATCH_LABEL} from reel-engine and ${WATCH_LABEL}): install the Forge skills, then launchctl unload ~/Library/LaunchAgents/${OLD_WATCH_LABEL}.plist`;
+  return null;
+};
+
+export type TickOpts = {watcher?: () => string | null; fetch?: Parameters<typeof dispatch>[1]['fetch']; now?: number; paths?: Paths; tg?: Tg | null; chatId?: string; live?: boolean; youtubeUrl?: string; plan?: (ch: string, week: string) => {recipes: unknown[]}; inbox?: string};
 
 export const tick = async (o: TickOpts = {}) => {
   const p = o.paths ?? PATHS;
@@ -52,6 +69,16 @@ export const tick = async (o: TickOpts = {}) => {
   const thisWeek = isoWeek(date);
   const nextWeek = isoWeek(addDays(date, 7));
   const channels = liveChannels(p);
+
+  if (channels.length) {
+    const w = (o.watcher ?? watcherProblem)();
+    if (w) problems.push(`render: ${w}`);
+  }
+
+  await step('fingerprints', () => {
+    const fixed = repairFingerprints(p); // heals an approval that crashed between the ledger and the fingerprint write
+    return fixed.length ? `repaired ${fixed.join(', ')}` : '';
+  });
 
   await step('metrics', () => {
     const r = ingest(p, o.inbox);
@@ -77,10 +104,14 @@ export const tick = async (o: TickOpts = {}) => {
 
   await step('dispatch', async () => {
     const pl = plan(p, now);
-    const r = await dispatch(pl, {live: o.live ?? false, youtubeUrl: o.youtubeUrl, paths: p, now});
-    problems.push(...r.failed.map((f) => `dispatch ${f}`));
+    const r = await dispatch(pl, {live: o.live ?? false, youtubeUrl: o.youtubeUrl, fetch: o.fetch, paths: p, now});
+    // an upload whose YouTube result is unknown gets its own Telegram message with two buttons (askResolve), once per claim
+    const buttons = !!(o.tg && o.chatId);
+    const unknown = (x: string) => buttons && /--resolve|upload state unknown/.test(x);
+    problems.push(...r.failed.filter((f) => !unknown(f)).map((f) => `dispatch ${f}`));
     // blocked videos of live channels are a problem worth a message; other channels' are expected until go-live
-    problems.push(...pl.blocked.filter((b) => !/is not live/.test(b)).map((b) => `blocked ${b}`));
+    problems.push(...pl.blocked.filter((b) => !/is not live/.test(b)).map((b) => `blocked ${b}`), ...pl.stuck.filter((b) => !unknown(b)).map((b) => `stuck ${b}`));
+    if (buttons) await askResolve(o.tg!, o.chatId!, p);
     return r.sent.length ? `sent ${r.sent.join('; ')}` : '';
   });
 

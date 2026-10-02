@@ -28,6 +28,7 @@ export type QaInputs = {
   recipe: Recipe | null;
   date: string;
   history: Fingerprint[]; // approved / published videos
+  themes?: number; // how many themes the channel renders in (1: the theme-run rule is off)
 };
 
 const first = (s = '', re: RegExp) => s.split(re)[0].trim();
@@ -77,7 +78,7 @@ export const evaluate = (x: QaInputs): QaResult => {
     if (r.hook_pattern !== fp.hook_pattern) recipeErrors.push(`hook pattern ${fp.hook_pattern} differs from recipe ${r.id} (${r.hook_pattern})`);
     if (r.transitions.join('>') !== tr.join('>')) recipeErrors.push(`transitions differ from recipe ${r.id}: ${tr.join(' > ')} vs ${r.transitions.join(' > ')}`);
   }
-  add('fingerprint', [...recipeErrors, ...checkNovelty(fp, x.history.filter((h) => h.id !== fp.id)).map((v) => `${v.rule}: ${v.error}`)]);
+  add('fingerprint', [...recipeErrors, ...checkNovelty(fp, x.history.filter((h) => h.id !== fp.id), {themes: x.themes}).map((v) => `${v.rule}: ${v.error}`)]);
 
   add('naming', [
     ...(x.file === `${x.doc.id}.json` ? [] : [`file is ${x.file}, must be ${x.doc.id}.json`]),
@@ -110,6 +111,7 @@ export const runQa = async (boardPath: string, opts: {outDir?: string; date?: st
     recipe,
     date: opts.date ?? (recipe ? recipeDate(recipe) : new Date().toISOString().slice(0, 10)),
     history: readFingerprints(), // approved videos, appended by ledger.ts on approval
+    themes: readJson(path.join(ROOT, 'channels', String(doc.channel), 'channel.json'))?.themes?.length,
   });
   const rel = (f: string) => path.relative(ROOT, f);
   const out = {...result, video_path: rel(result.video_path), contact_sheet_path: rel(result.contact_sheet_path)};

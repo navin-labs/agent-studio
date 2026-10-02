@@ -25,8 +25,6 @@
     "manual pain to how it can run itself"
   ],
   "themes": [
-    "paper",
-    "studio",
     "night"
   ],
   "cadence": {
@@ -35,16 +33,32 @@
   "publishers": [
     {
       "platform": "instagram",
-      "handle": "@theautomationguy.navin",
+      "handle": "@theautomationguynavin",
       "via": "forge-queue"
     },
     {
       "platform": "youtube",
-      "handle": "TBD (owner: Navin)",
+      "handle": "@theautomationguynavin",
       "via": "n8n"
+    },
+    {
+      "platform": "facebook",
+      "handle": "pending_retry_2026-10-05",
+      "via": "forge-queue",
+      "page_id": "1429203763599559"
     }
   ],
   "launch_gate": "First channel",
   "host": "chiku",
-  "live": false
+  "live": false,
+  "feeds": [
+    {
+      "source": "google-trends",
+      "url": "https://trends.google.com/trending/rss?geo=IN"
+    },
+    {
+      "source": "reddit",
+      "url": "https://www.reddit.com/r/smallbusiness/.rss"
+    }
+  ]
 }

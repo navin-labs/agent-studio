@@ -1,7 +1,7 @@
 {
   "id": "c2-reach",
-  "role": "Followers: audience growth",
-  "audience": "Anyone who likes satisfying, smart short videos",
+  "role": "Followers: audience growth, future monetization",
+  "audience": "Curious people who like business and tech history",
   "kpi": {
     "metric": "follows + sends per reach",
     "target": "TBD (owner: Navin)",
@@ -22,14 +22,12 @@
     }
   ],
   "content_mix": [
-    "did you know business facts",
-    "satisfying motion loops",
-    "one-idea explainers"
+    "how an everyday business or tech object came to be (the barcode, the shipping container, the spreadsheet)",
+    "the person and the problem behind an invention",
+    "one surprising sourced fact, told as a sixty-second story"
   ],
   "themes": [
-    "ink",
-    "mono",
-    "studio"
+    "archive"
   ],
   "cadence": {
     "posts_per_week": 7
@@ -37,15 +35,35 @@
   "publishers": [
     {
       "platform": "instagram",
-      "handle": "TBD (owner: Navin)",
+      "handle": "@backstory.minute",
       "via": "forge-queue"
     },
     {
       "platform": "youtube",
-      "handle": "TBD (owner: Navin)",
-      "via": "n8n"
+      "handle": "@backstory.minute",
+      "via": "n8n",
+      "webhook": "http://localhost:5678/webhook/agent-studio-youtube-c2-reach"
+    },
+    {
+      "platform": "facebook",
+      "handle": "pending_retry_2026-10-05",
+      "via": "forge-queue"
     }
   ],
   "launch_gate": "C1 has run 14 days with no missed posts",
-  "live": false
+  "live": false,
+  "feeds": [
+    {
+      "source": "google-trends",
+      "url": "https://trends.google.com/trending/rss?geo=IN"
+    },
+    {
+      "source": "reddit",
+      "url": "https://www.reddit.com/r/todayilearned/.rss"
+    },
+    {
+      "source": "reddit",
+      "url": "https://www.reddit.com/r/history/.rss"
+    }
+  ]
 }

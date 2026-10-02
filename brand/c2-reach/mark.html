@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- C2 Backstory mark renders. ?circle : profile picture (navy disc, 1080). ?mono : one colour, paper on transparent (1080).
+     ?test : the mark and the mono mark at 110, 32 and 16 px on navy, then the small-size cut, for the legibility check. Render: README.md. -->
+<meta charset="utf-8">
+<style>
+  :root { --bg: #0E1A2B; --paper: #F4F1EA; }
+  html, body { margin: 0; background: transparent; }
+  body { width: 1080px; height: 1080px; display: grid; place-items: center; }
+  .disc { width: 1080px; height: 1080px; border-radius: 50%; background: var(--bg); display: grid; place-items: center; }
+  .disc img { width: 760px; }
+  .mono { width: 1000px; height: 1000px; background: var(--paper); -webkit-mask: url(logo-master.svg) center / contain no-repeat; }
+  .test.on { position: fixed; top: 0; left: 0; display: grid; } .test { background: var(--bg); grid-template-columns: repeat(3, auto); align-items: center; gap: 40px 60px; padding: 40px 60px; }
+  .test .m { background: var(--paper); -webkit-mask: url(logo-master.svg) center / contain no-repeat; }
+  body > :not(.on) { display: none; }
+</style>
+<div class="disc"><img src="logo-master.svg"></div>
+<div class="mono"></div>
+<div class="test">
+  <img src="logo-master.svg" width="110"><img src="logo-master.svg" width="32"><img src="logo-master.svg" width="16">
+  <div class="m" style="width:110px;height:110px"></div><div class="m" style="width:32px;height:32px"></div><div class="m" style="width:16px;height:16px"></div>
+  <img src="logo-small.svg" width="110"><img src="logo-small.svg" width="32"><img src="logo-small.svg" width="16">
+</div>
+<script>
+  const k = ['circle', 'mono', 'test'].find((c) => new URLSearchParams(location.search).has(c)) ?? 'circle';
+  document.querySelector({circle: '.disc', mono: '.mono', test: '.test'}[k]).classList.add('on');
+</script>

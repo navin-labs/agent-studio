@@ -120,7 +120,8 @@
           "ink",
           "mono",
           "studio",
-          "night"
+          "night",
+          "archive"
         ]
       }
     },
@@ -159,13 +160,19 @@
           },
           "handle": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "@name; \"pending_...\" while the username cannot be claimed yet: the channel renders, and nothing is sent to that platform"
           },
           "via": {
             "enum": [
               "forge-queue",
               "n8n"
             ]
+          },
+          "page_id": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "description": "Facebook only: the page ID (Forge posts to the page by ID)."
           },
           "webhook": {
             "type": "string",
@@ -190,6 +197,33 @@
     "live": {
       "type": "boolean",
       "description": "Go-live switch. Dispatch sends nothing for a channel until this is true (Navin sets it at production setup)."
+    },
+    "feeds": {
+      "type": "array",
+      "description": "Where this channel's ideas come from. n8n fetches each, the Mac turns items into ideas (studio/feed.ts).",
+      "items": {
+        "type": "object",
+        "required": [
+          "source",
+          "url"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "source": {
+            "enum": [
+              "reddit",
+              "google-trends",
+              "youtube",
+              "ig-question"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://"
+          }
+        }
+      }
     }
   }
 }

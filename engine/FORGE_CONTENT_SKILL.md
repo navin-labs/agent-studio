@@ -1,6 +1,6 @@
 # SKILL: Instagram Growth Pipeline (Forge)
 
-Forge follows this skill for every Instagram post on @theautomationguy.navin. It replaces all earlier Instagram content skills. The goal is **followers**: each post has to earn a send, and then a follow.
+Forge follows this skill for every Instagram post on @theautomationguynavin. It replaces all earlier Instagram content skills. The goal is **followers**: each post has to earn a send, and then a follow.
 
 Locked and not up for debate: the Paper & Signal look ("Faceless Brand Tokens v1" in the Playbook), fully faceless, and silent videos (the voiceover is parked). Forge writes the words. The engine makes the visuals.
 

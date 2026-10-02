@@ -33,9 +33,11 @@ flowchart LR
 | Part | Tool |
 |---|---|
 | Renderer + motion library | `engine/` (Remotion, React, TypeScript) |
-| Orchestrator, novelty, QA, dispatch, learn | `agent-studio` (this repo), language TBD (owner: Navin) |
+| Orchestrator, feed, novelty, QA, approval, dispatch, metrics, learn | `studio/` (TypeScript on Node 26, no build step, no dependencies) |
 | Writer | Forge (Muse tokens) |
-| Feeds, YouTube upload, approval webhook | n8n |
+| Feed fetching, YouTube upload and stats, approval webhook | n8n (relays only; the Mac checks and writes) |
+| Approvals and alerts | Telegram bot (Approve buttons; "agent-studio needs you") |
+| Scheduler | `studio/run.ts`, an hourly idempotent tick (launchd) |
 | State | Files (JSON, JSONL), no database |
 | Build sessions | Claude Code |
 
@@ -43,12 +45,17 @@ flowchart LR
 | Phase | Scope | State |
 |---|---|---|
 | Docs + scaffold | This repo's plan and contracts | Done |
-| A | Themes, primitives, Composer, text QA, host format (`engine/`) | A1 to A5 done; A6 host format in progress |
-| B | agent-studio core: recipes, novelty, QA, approval, dispatch, learn | Not started |
-| C | 8 new primitives | Not started |
-| D | Launch C2, then C3 (gated) | Not started |
+| A | Themes, primitives, Composer, text QA, host format (`engine/`) | Done |
+| B | agent-studio core: feed, recipes, novelty, QA, approval, dispatch, learn | Done (B4b: render watcher on this engine installed; Forge's switch at go-live) |
+| C | New primitives (22 in total, 5 families incl. camera) | Done |
+| P | Production pass: metrics, per-channel output, hourly loop, crash-safe dispatch, Forge skills | Done |
+| Go-live | Accounts, Forge skills, `"live": true` (`docs/SETUP.md`) | Waiting on Navin |
+| D | Launch C2, then C3 (gated) | After go-live |
 
 ## How to run
-Placeholder until Phase B. See `docs/BUILD_PLAN.md`.
+- Checks (types, themes, text QA, schemas, every studio test incl. the end-to-end loop): `cd engine && npm run check`
+- Render one storyboard: `cd engine && npm run make -- content/storyboards/<id>.json`
+- One production tick by hand: `node studio/run.ts tick` (does nothing until a channel has `"live": true`)
+- Go-live: `docs/SETUP.md`
 
 Built by Navin Rana.

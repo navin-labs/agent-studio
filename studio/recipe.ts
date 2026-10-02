@@ -27,7 +27,7 @@ export type Recipe = {
 };
 
 // Video shapes: one pool of primitives per beat, and the channels each shape is for. host = the Chiku format (ADR 15, night theme,
-// C1); composed = manual pain to automatic flow (C1, C3); reach = C2's facts and one-idea explainers (no automation flow).
+// C1); composed = manual pain to automatic flow (C1 in night, C3); reach = C2 Backstory's sixty-second history stories (archive only).
 const PAIN = ['ui-inbox', 'ui-sheet', 'ui-chat', 'pile-drop', 'counter-drop', 'phone-buzz', 'zoom-dive'];
 export const FORMATS = {
   host: {
@@ -38,13 +38,13 @@ export const FORMATS = {
   },
   composed: {
     channels: ['c1-automation', 'c3-studio'],
-    themes: ['paper', 'ink', 'mono', 'studio'],
+    themes: ['paper', 'ink', 'mono', 'studio', 'night'],
     transitions: ['cut', 'whip-pan', 'ink-wipe'],
     beats: [['word-stack-slam', 'pile-drop', 'counter-drop', 'highlighter-swipe', 'chat-pop', 'split-flap', 'phone-buzz', 'zoom-dive'], ['pile-drop', 'counter-drop', 'conveyor', 'chat-pop', 'word-stack-slam', 'phone-buzz'], ['highlighter-swipe', 'word-stack-slam', 'flow-build', 'before-after-split', 'maze-to-line'], ['flow-run', 'flow-build', 'conveyor'], ['stamp-hit', 'chat-pop', 'counter-drop', 'split-flap'], ['end-card']],
   },
   reach: {
     channels: ['c2-reach'],
-    themes: ['ink', 'mono', 'studio'],
+    themes: ['archive'],
     transitions: ['cut', 'whip-pan', 'ink-wipe'],
     // hook, setup, the fact or twist, one-idea explainer, payoff, follow
     beats: [['word-stack-slam', 'highlighter-swipe', 'split-flap', 'zoom-dive', 'phone-buzz', 'counter-drop'], ['pile-drop', 'conveyor', 'chat-pop', 'counter-drop', 'phone-buzz', 'zoom-dive'], ['highlighter-swipe', 'word-stack-slam', 'split-flap'], ['maze-to-line', 'before-after-split', 'conveyor', 'zoom-dive'], ['counter-drop', 'split-flap', 'word-stack-slam', 'chat-pop'], ['end-card']],
@@ -116,7 +116,7 @@ export const generateWeek = (ch: Channel, week: string, history: Fingerprint[], 
         fingerprint: recipeHash(theme, primitives, hook),
         experiment: experiments.has(slot),
       };
-      last = checkNovelty(toFingerprint(rec), [...history, ...out.map(toFingerprint)]);
+      last = checkNovelty(toFingerprint(rec), [...history, ...out.map(toFingerprint)], {themes: ch.themes.length});
       if (!last.length) {
         out.push(rec);
         break;

@@ -54,7 +54,8 @@ export const structureDistance = (a: string[], b: string[]) => {
   return 1 - jaccard(bag(a), bag(b));
 };
 
-export const checkNovelty = (fp: Fingerprint, history: Fingerprint[]): Violation[] => {
+// themes: how many themes the channel renders in; a one-theme channel (C1 night, C2 archive) cannot vary its theme, so that rule is off.
+export const checkNovelty = (fp: Fingerprint, history: Fingerprint[], o: {themes?: number} = {}): Violation[] => {
   const out: Violation[] = [];
   const v = (rule: Rule, error: string) => out.push({rule, error});
   const before = history.filter((h) => h.date < fp.date).sort((a, b) => a.date.localeCompare(b.date));
@@ -80,7 +81,7 @@ export const checkNovelty = (fp: Fingerprint, history: Fingerprint[]): Violation
   }
 
   const run = Array.from({length: LIMITS.themeRun - 1}, (_, i) => onDay(i + 1));
-  if (run.every((h) => h?.theme === fp.theme)) v('theme', `theme ${fp.theme} would run ${LIMITS.themeRun} days in a row`);
+  if (o.themes !== 1 && run.every((h) => h?.theme === fp.theme)) v('theme', `theme ${fp.theme} would run ${LIMITS.themeRun} days in a row`);
 
   const last = mine.slice(-(LIMITS.hookRun - 1));
   if (last.length === LIMITS.hookRun - 1 && last.every((h) => h.hook_pattern === fp.hook_pattern)) v('hook-pattern', `hook pattern ${fp.hook_pattern} would run ${LIMITS.hookRun} posts in a row`);

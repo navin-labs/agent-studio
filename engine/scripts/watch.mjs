@@ -3,7 +3,7 @@
 // The result is written next to the script as <name>.status.txt (Forge reads it); storyboards are QA-checked too.
 // Finished files are copied to Google Drive/Reel Engine/<id>/ (or iCloud, or RENDER_COPY_DIR in .env) so they reach your phone.
 //   npm run watch            run in this Terminal window
-//   npm run watch:install    run in the background, starts at login, keeps the Mac awake on power
+//   npm run watch:install    run in the background, starts at login, keeps the Mac awake on power (LaunchAgent com.theautomationguy.studiowatch)
 import {spawn, spawnSync} from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -123,7 +123,7 @@ jsonFiles().forEach(enqueue); // anything saved while the watcher was off
 log(`watching content/stories and content/storyboards${COPY_TO ? `; results copied to ${COPY_TO}` : ''}`);
 
 function install() {
-  const label = 'com.theautomationguy.reelwatch';
+  const label = 'com.theautomationguy.studiowatch'; // not reelwatch: that label belongs to the old reel-engine watcher (v1)
   const plist = path.join(os.homedir(), 'Library/LaunchAgents', `${label}.plist`);
   const logFile = path.join(ROOT, 'out', 'watch.log');
   fs.mkdirSync(path.dirname(plist), {recursive: true});

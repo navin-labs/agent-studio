@@ -11,7 +11,7 @@ Once a week per live channel. Every Thursday the studio writes `recipes/<channel
 
 ## Read (in this order, nothing else)
 1. `STUDIO/recipes/<channel>/<week>.json`: 7 recipes. Each fixes `id`, `theme`, `hook_pattern`, the shot list (`primitives`) and `transitions`. **Never change any of them.**
-2. `STUDIO/ideas/<channel>.jsonl`: the idea list, one JSON per line.
+2. `STUDIO/ideas/<channel>.jsonl`: the idea list, one JSON per line. The feed adds new ideas every morning (each with its source link); newest are at the bottom.
 3. `STUDIO/state/learn/<channel>/scoreboard.md` if it exists: what worked. Lean on proven topics and hook words; avoid the bench.
 4. `STUDIO/channels/<channel>/RULEBOOK.md`: honesty, CTA and hashtag rules.
 5. `STUDIO/engine/src/primitives/specs.ts`: every shot's fields, character limits, length in seconds and what its `*accent*` words drive. Each spec has an `example`.
@@ -24,11 +24,11 @@ Once a week per live channel. Every Thursday the studio writes `recipes/<channel
 - What counts as an idea depends on the channel (next section).
 
 ## Channels: what each one makes
-| | C1 `c1-automation` | C2 `c2-reach` | C3 `c3-studio` |
+| | C1 `c1-automation` | C2 `c2-reach` (Backstory) | C3 `c3-studio` |
 |---|---|---|---|
-| Goal | Leads for automation work | Followers | Leads for motion and explainer work |
-| Topic | One boring manual task an Indian SME does every day, and how it can run itself. Rotate role families (accounts, orders and email, purchase and stock, dispatch, MIS reporting, sales follow-up, HR and admin); never the same twice in a row | One smart, general idea (work habits, money basics, how a business thing works). No automation pitch. Facts only with the idea's source link; no invented facts or numbers | An explainer the engine made for an example brand (a sweets shop's delivery, a gym's onboarding): the process shown as one clear story. Label it "Example brand" |
-| Formats | host (Chiku, night, 40 to 60 s) and composed (20 to 45 s) | reach (ink, mono, studio; 20 to 45 s) | composed (20 to 45 s) |
+| Goal | Leads for automation work | Followers, future monetization | Leads for motion and explainer work |
+| Topic | One boring manual task an Indian SME does every day, and how it can run itself. Rotate role families (accounts, orders and email, purchase and stock, dispatch, MIS reporting, sales follow-up, HR and admin); never the same twice in a row | Business and tech history in sixty seconds: how an everyday object came to be (the barcode, the shipping container, the spreadsheet), the person and the problem behind it. Story grammar: hook, the world before, the turn (who, where, when), one idea shown, why it matters today, follow. Every factual claim needs a source (`meta.source`); a Reddit post is a lead, not a source. No fiction as fact, no invented quotes, dates or numbers. No automation pitch. Rules: `channels/c2-reach/RULEBOOK.md` | An explainer the engine made for an example brand (a sweets shop's delivery, a gym's onboarding): the process shown as one clear story. Label it "Example brand" |
+| Formats | host (Chiku, 40 to 60 s) and composed (20 to 45 s), night only | reach (archive only, Archive Gold; 20 to 45 s) | composed (20 to 45 s) |
 | CTA | about 1 in 5 `DM *AUDIT*` (sub: "I'll look at your most repetitive process for free."), the rest `*Follow*` | `*Follow*` (sub promises the next idea); the caption asks for a send | `DM *MOTION*` (sub: "We turn your process into a 30 second explainer.") |
 | Caption must include | `Example data.` | `Example data.` when any number is illustrative | `Example brand, example data.` and "made with our motion engine" |
 

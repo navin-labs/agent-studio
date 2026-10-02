@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "metrics",
-  "description": "Post performance at 24h and 7d. Source and collector TBD (owner: Navin).",
+  "description": "Post performance at 24h and 7d. Instagram/Facebook from Forge (inbox/metrics), YouTube views from n8n; every row checked by studio/metrics.ts.",
   "type": "object",
   "required": [
     "storyboard_id",

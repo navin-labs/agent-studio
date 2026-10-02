@@ -11,13 +11,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import {metricsFile, type Metric} from './learn.ts';
-import {currentStatus, PATHS, type Paths} from './ledger.ts';
+import {appendJsonl, currentStatus, PATHS, type Paths, readJsonl} from './ledger.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 export const INBOX = path.join(ROOT, 'inbox', 'metrics');
 const WINDOWS = {'24h': 24 * 3600_000, '7d': 7 * 24 * 3600_000} as const;
 
-const rows = (p: Paths): Metric[] => (fs.existsSync(metricsFile(p)) ? fs.readFileSync(metricsFile(p), 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : []);
+const rows = (p: Paths): Metric[] => readJsonl<Metric>(metricsFile(p));
 const key = (m: Pick<Metric, 'storyboard_id' | 'platform' | 'window'>) => `${m.storyboard_id}|${m.platform}|${m.window}`;
 
 // Why a row cannot be recorded, or null. Untrusted input: schema first, then it must belong to a real dispatched post.
@@ -36,8 +36,7 @@ export const problem = (m: unknown, p: Paths = PATHS): string | null => {
 export const record = (batch: unknown[], p: Paths = PATHS) => {
   const errors = batch.map((m, i) => problem(m, p) && `row ${i + 1}: ${problem(m, p)}`).filter(Boolean) as string[];
   if (errors.length) return {recorded: 0, errors};
-  fs.mkdirSync(p.state, {recursive: true});
-  fs.appendFileSync(metricsFile(p), batch.map((m) => JSON.stringify(m) + '\n').join(''));
+  appendJsonl(metricsFile(p), batch);
   return {recorded: batch.length, errors};
 };
 

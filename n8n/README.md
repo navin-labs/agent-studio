@@ -32,3 +32,11 @@ Verified: the container reaches `/metrics-due`; a row for an undispatched video 
 
 ## More than one YouTube account
 The YouTube node is tied to one credential, so each YouTube account gets its own copy of `youtube-upload.json` with its own webhook path (e.g. `agent-studio-youtube-c2-reach`). Put that URL in the channel's YouTube publisher as `"webhook"`; channels without one use `YOUTUBE_WEBHOOK_URL`.
+
+## feed.json
+Every day 07:00 IST: `GET /feeds` (the feeds listed in channels/*/channel.json) -> `POST /feed {url}` for each, 8 s apart. The Mac fetches the feed itself (Reddit answers 403/429 to this container), parses RSS/Atom, keeps each item's own link, checks every idea against idea.schema.json, dedupes per channel and appends to `ideas/<channel>.jsonl`. One failing feed never stops the others.
+Setup (Navin): imported on 2026-10-02 (inactive). Publish it.
+Verified 2026-10-02 from inside the container: Google Trends India -> 20 ideas (n8n-fetched); then through the Mac fetch path r/productivity -> 25 ideas, all schema-valid with their post links, while three Reddit feeds rate-limited that hour (429) wrote nothing and reported "answered HTTP 429 (rate limited, try later)". `{url, body}` (n8n fetched it) is still accepted.
+
+## Upload contract (youtube-upload.json)
+The Mac claims a video (ledger `dispatching`) just before it posts the job, so `/dispatch-check` says yes for a fresh claim (30 minutes). Replies the Mac understands: `{uploaded: true, youtube_id}` (done) and `{uploaded: false, reason}` (certainly not uploaded: retried next hour). A workflow error (500) or anything else is "unknown": the Mac never re-sends it and tells Navin on Telegram to check YouTube Studio and run `node studio/dispatch.ts --resolve <id> <youtube id | none>`.

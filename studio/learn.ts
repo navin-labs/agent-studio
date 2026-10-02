@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {SPECS} from '../engine/src/primitives/specs.ts';
 import {loadSchema, validate} from '../schemas/validate.ts';
-import {currentStatus, PATHS, type Paths, readFingerprints} from './ledger.ts';
+import {currentStatus, PATHS, type Paths, readFingerprints, readJsonl} from './ledger.ts';
 import {addDays, type Fingerprint, isoWeek, weekStart} from './novelty.ts';
 import {FORMATS} from './recipe.ts';
 
@@ -113,7 +113,6 @@ export const scoreboard = (r: ReturnType<typeof learn>) =>
     '',
   ].join('\n');
 
-const readLines = <T,>(f: string): T[] => (fs.existsSync(f) ? fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : []);
 export const metricsFile = (p: Paths) => path.join(p.state, 'metrics.jsonl');
 export const learnFile = (channel: string, p: Paths) => path.join(p.state, 'learn', channel, 'learn.json');
 
@@ -123,7 +122,7 @@ export const scheduledTimes = (p: Paths) => new Map([...currentStatus(p)].filter
 export const runLearn = (channel: string, week: string, p: Paths = PATHS) => {
   const ch = JSON.parse(fs.readFileSync(path.join(p.channels, channel, 'channel.json'), 'utf8'));
   const schema = loadSchema('metrics');
-  const metrics = readLines<Metric>(metricsFile(p));
+  const metrics = readJsonl<Metric>(metricsFile(p));
   metrics.forEach((m, i) => {
     const bad = validate(schema, m);
     if (bad.length) throw new Error(`state/metrics.jsonl line ${i + 1}: ${bad.join('; ')}`);

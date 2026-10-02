@@ -1,0 +1,57 @@
+{
+  "id": "agStudioFeed1",
+  "name": "agent-studio: feed",
+  "active": false,
+  "nodes": [
+    {
+      "id": "f1b0a001-0000-4000-8000-000000000001",
+      "name": "Every day 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "f1b0a001-0000-4000-8000-000000000002",
+      "name": "Hand each feed to the Mac",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Ask the Mac which feeds to read, then hand it each feed URL: the Mac fetches and parses it (Reddit refuses requests from\n// this container), checks every idea and writes them. n8n only triggers. One failing feed never stops the others.\nconst mac = 'http://host.docker.internal:5680';\nconst list = await this.helpers.httpRequest({ url: `${mac}/feeds`, json: true });\nconst out = [];\nfor (const f of list) {\n  await new Promise((r) => setTimeout(r, 8000)); // Reddit rate-limits quick repeats (429)\n  try {\n    const r = await this.helpers.httpRequest({ method: 'POST', url: `${mac}/feed`, body: { url: f.url }, json: true, timeout: 60000 });\n    out.push({ json: { url: f.url, added: r.added.length, skipped: r.skipped.length } });\n  } catch (e) {\n    out.push({ json: { url: f.url, error: e.message } });\n  }\n}\nreturn out;"
+      }
+    }
+  ],
+  "connections": {
+    "Every day 07:00": {
+      "main": [
+        [
+          {
+            "node": "Hand each feed to the Mac",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata"
+  }
+}

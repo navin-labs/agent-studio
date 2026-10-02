@@ -6,10 +6,10 @@ Why: turn a manual task an Indian SMB owns into a lead (DM AUDIT) or a follow.
 |---|---|
 | Role | Leads: automation clients |
 | KPI | DMs + profile visits per reach |
-| CTA | DM AUDIT or Follow. Ratio TBD (plan 1 in 3, Forge skill 1 in 5) |
-| Themes | paper (default), studio (alternate) |
+| CTA | DM AUDIT or Follow, about 1 in 5 DM AUDIT (Weekly Writer skill; Navin may change it) |
+| Themes | night only (one channel, one look: Night Signal, the banner and Chiku's stage) |
 | Cadence | 1 post a day |
-| Publisher | IG @theautomationguy.navin + YouTube Shorts mirror |
+| Publisher | IG @theautomationguynavin + YouTube Shorts mirror; Facebook page 1429203763599559 (username pending, retry 2026-10-05) |
 
 ## Writing rules (from the Forge skill)
 - Send test: name who the viewer would DM this to. No specific person, drop the idea.

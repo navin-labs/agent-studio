@@ -1,4 +1,4 @@
-# Reel Engine: theautomationguy.navin
+# Reel Engine: theautomationguynavin
 
 > This is the engine inside agent-studio (`engine/`). It is not live yet: `~/Dev/projects/reel-engine` keeps rendering daily posts until the switch-over (BUILD_PLAN task B4b). Setup paths below still point at the live copy. Only the **story** format is supported here; reels and carousels were removed (ADR 9).
 
@@ -59,9 +59,9 @@ npm run make -- content/stories/story-order-emails.json    # test render
 npm run watch:install # start auto-render (runs at every login from now on)
 ```
 
-**Phone delivery:** install Google Drive for desktop (google.com/drive/download) on the Mac and sign in with theautomationguy.navin@gmail.com. Then run `npm run watch:install` again. Finished posts appear in the Google Drive app on your phone. If Drive for desktop has several Google accounts signed in, set the folder yourself in `.env`:
+**Phone delivery:** install Google Drive for desktop (google.com/drive/download) on the Mac and sign in with <your Google account email>. Then run `npm run watch:install` again. Finished posts appear in the Google Drive app on your phone. If Drive for desktop has several Google accounts signed in, set the folder yourself in `.env`:
 ```
-RENDER_COPY_DIR=/Users/navinrana/Library/CloudStorage/GoogleDrive-theautomationguy.navin@gmail.com/My Drive/Reel Engine
+RENDER_COPY_DIR=/Users/navinrana/Library/CloudStorage/<your Google account email>/My Drive/Reel Engine
 ```
 
 macOS may show "Background Items Added: node". Allow it, because that's the watcher.

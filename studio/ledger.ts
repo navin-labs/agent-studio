@@ -4,6 +4,7 @@
 // environment (APPROVAL_SECRET), never from code or docs.
 //
 // node studio/ledger.ts apply '<query string or full approve URL>'   verify + write approved entries (what the n8n webhook runs)
+// node studio/ledger.ts reject <id...>                               take back approvals that have not gone out
 // node studio/ledger.ts status [id]                                   current status per video
 import {createHmac, timingSafeEqual} from 'node:crypto';
 import fs from 'node:fs';
@@ -23,15 +24,37 @@ export const PATHS: Paths = {
 };
 
 export type LedgerEntry = {storyboard_id: string; channel: string; status: string; approved_by?: string; approved_at?: string; targets?: string[]; scheduled_for?: string; post_urls?: string[]; updated_at: string};
-const readLines = <T,>(f: string): T[] => (fs.existsSync(f) ? fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as T) : []);
-const append = (f: string, rows: unknown[]) => {
+// Append-only JSONL, crash-safe: a crash mid-append can leave a torn last line. Readers ignore a torn LAST line (that row never
+// completed); a broken line anywhere else is real corruption and stops everything. Appends first cut a torn last row off
+// (it never completed), so a new row never glues onto it.
+export const readJsonl = <T,>(f: string): T[] => {
+  if (!fs.existsSync(f)) return [];
+  const lines = fs.readFileSync(f, 'utf8').split('\n');
+  return lines.flatMap((l, i) => {
+    if (!l.trim()) return [];
+    try {
+      return [JSON.parse(l) as T];
+    } catch {
+      if (lines.slice(i + 1).every((x) => !x.trim())) return []; // torn last line
+      throw new Error(`${path.basename(f)} line ${i + 1} is not valid JSON (corrupted)`);
+    }
+  });
+};
+export const appendJsonl = (f: string, rows: unknown[]) => {
+  if (!rows.length) return;
   fs.mkdirSync(path.dirname(f), {recursive: true});
+  if (fs.existsSync(f)) {
+    const text = fs.readFileSync(f, 'utf8');
+    if (text && !text.endsWith('\n')) fs.truncateSync(f, Buffer.byteLength(text.slice(0, text.lastIndexOf('\n') + 1))); // drop the torn row
+  }
   fs.appendFileSync(f, rows.map((r) => JSON.stringify(r) + '\n').join(''));
 };
+const readLines = readJsonl;
+const append = appendJsonl;
 export const ledgerFile = (p = PATHS) => path.join(p.state, 'ledger.jsonl');
 export const fingerprintFile = (p = PATHS) => path.join(p.state, 'fingerprints.jsonl');
 export const currentStatus = (p = PATHS) => new Map(readLines<LedgerEntry>(ledgerFile(p)).map((e) => [e.storyboard_id, e]));
-export const readFingerprints = (p = PATHS) => readLines<Fingerprint>(fingerprintFile(p));
+export const readFingerprints = (p = PATHS) => [...new Map(readLines<Fingerprint>(fingerprintFile(p)).map((f) => [f.id, f])).values()]; // one per video
 
 // ---- signed approvals ----
 export type Approval = {channel: string; week: string; ids: string[]; by: string; exp: number};
@@ -92,9 +115,11 @@ export const applyApproval = (raw: string, secret: string, opts: {now?: number; 
   const p = opts.paths ?? PATHS;
   const now = opts.now ?? Date.now();
   const a = verifyApproval(raw, secret, now);
+  repairFingerprints(p);
   const channel = readJson(path.join(p.channels, a.channel, 'channel.json'));
   if (!channel) throw new Error(`unknown channel ${a.channel}`);
-  const targets = [...new Set<string>(channel.publishers.map((x: {platform: string}) => x.platform))];
+  // a publisher whose username is still pending (handle "pending_...") is not a target: nothing is sent there until it is claimed
+  const targets = [...new Set<string>(channel.publishers.filter((x: {handle: string}) => !x.handle.startsWith('pending')).map((x: {platform: string}) => x.platform))];
   const status = currentStatus(p);
   const at = new Date(now).toISOString();
   const written: LedgerEntry[] = [];
@@ -103,7 +128,7 @@ export const applyApproval = (raw: string, secret: string, opts: {now?: number; 
   const schema = loadSchema('ledger');
   for (const id of a.ids) {
     const prev = status.get(id)?.status;
-    if (prev && ['approved', 'dispatched', 'published'].includes(prev)) {
+    if (prev && ['approved', 'dispatching', 'dispatched', 'published'].includes(prev)) {
       skipped.push(`${id}: already ${prev}`);
       continue;
     }
@@ -117,13 +142,38 @@ export const applyApproval = (raw: string, secret: string, opts: {now?: number; 
       const bad = validate(schema, e);
       if (bad.length) throw new Error(`ledger entry breaks ledger.schema.json: ${bad.join('; ')}`);
       written.push(e);
-      const prim = v.doc.scenes.map((s: {primitive: string}) => s.primitive);
-      prints.push({id, channel: a.channel, date: recipeDate(v.recipe), primitives: prim, opening: prim[0], theme: v.doc.theme, hook_pattern: v.doc.hookPattern, topic_text: String(v.doc.caption).split(/\n\s*\n/)[0].trim(), caption_opener: String(v.doc.caption).split(/(?<=[.!?])\s/)[0].trim(), ...(v.doc.meta?.hero_metaphor ? {hero_metaphor: v.doc.meta.hero_metaphor} : {}), hash: v.recipe.fingerprint});
+      prints.push(fingerprintOf(v));
     }
   }
+  // ledger first, then fingerprints; a crash between the two is healed by repairFingerprints (every approval and every tick)
   append(ledgerFile(p), written);
   append(fingerprintFile(p), prints);
   return {written, skipped};
+};
+
+// The novelty fingerprint of an approved video (what Recipe and QA compare new videos against).
+export const fingerprintOf = (v: Video): Fingerprint => {
+  const prim = v.doc.scenes.map((s: {primitive: string}) => s.primitive);
+  const cap = String(v.doc.caption ?? '');
+  return {id: v.id, channel: v.doc.channel, date: recipeDate(v.recipe!), primitives: prim, opening: prim[0], theme: v.doc.theme, hook_pattern: v.doc.hookPattern, topic_text: cap.split(/\n\s*\n/)[0].trim(), caption_opener: cap.split(/(?<=[.!?])\s/)[0].trim(), ...(v.doc.meta?.hero_metaphor ? {hero_metaphor: v.doc.meta.hero_metaphor} : {}), hash: v.recipe!.fingerprint};
+};
+
+// Every approved (or later) video has exactly one fingerprint. Writes the missing ones; idempotent.
+export const repairFingerprints = (p = PATHS) => {
+  const have = new Set(readFingerprints(p).map((f) => f.id));
+  const missing = [...currentStatus(p).values()].filter((e) => ['approved', 'dispatching', 'dispatched', 'published'].includes(e.status) && !have.has(e.storyboard_id));
+  const rows = missing.map((e) => findVideo(e.storyboard_id, p)).filter((v): v is Video => !!v?.recipe).map(fingerprintOf);
+  append(fingerprintFile(p), rows);
+  return rows.map((f) => f.id);
+};
+
+// Navin takes back an approval before it went out (e.g. a stale week). Only "approved" can be rejected; anything already
+// dispatching or sent is refused, so this can never orphan an upload.
+export const reject = (ids: string[], p = PATHS, now = Date.now()) => {
+  const status = currentStatus(p);
+  const bad = ids.filter((id) => status.get(id)?.status !== 'approved');
+  if (bad.length) throw new Error(`only approved videos can be rejected: ${bad.map((id) => `${id} is ${status.get(id)?.status ?? 'unknown'}`).join(', ')}`);
+  append(ledgerFile(p), ids.map((id) => ({...status.get(id)!, status: 'rejected', updated_at: new Date(now).toISOString()})));
 };
 
 if (import.meta.main) {
@@ -139,10 +189,13 @@ if (import.meta.main) {
       console.error(`refused: ${(e as Error).message}`);
       process.exit(1);
     }
+  } else if (cmd === 'reject' && arg) {
+    reject(process.argv.slice(3));
+    console.log(`rejected ${process.argv.slice(3).join(', ')}`);
   } else if (cmd === 'status') {
     for (const [id, e] of currentStatus()) if (!arg || id === arg) console.log(`${id.padEnd(28)} ${e.status.padEnd(17)} ${e.updated_at}`);
   } else {
-    console.error("usage: node studio/ledger.ts apply '<query>' | status [id]");
+    console.error("usage: node studio/ledger.ts apply '<query>' | reject <id...> | status [id]");
     process.exit(2);
   }
 }

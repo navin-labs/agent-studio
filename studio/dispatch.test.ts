@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import {handle} from './approve-server.ts';
-import {dispatch, markPublished, plan, slotTime} from './dispatch.ts';
+import {dispatch, markPublished, plan, resolve, slotTime} from './dispatch.ts';
 import {currentStatus, type LedgerEntry, ledgerFile, type Paths} from './ledger.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
@@ -31,7 +31,7 @@ const video = (id: string, {qa = true, mp4 = true} = {}) => {
   fs.mkdirSync(d, {recursive: true});
   fs.writeFileSync(path.join(d, 'qa.json'), JSON.stringify({storyboard_id: id, pass: qa, checks: []}));
   if (mp4) fs.writeFileSync(path.join(d, 'reel.mp4'), `video ${id}`);
-  fs.writeFileSync(path.join(d, 'render.json'), JSON.stringify({handle: '@theautomationguy.navin'}));
+  fs.writeFileSync(path.join(d, 'render.json'), JSON.stringify({handle: '@theautomationguynavin'}));
 };
 const ledger = (rows: Partial<LedgerEntry>[]) => fs.appendFileSync(ledgerFile(p), rows.map((r) => JSON.stringify({channel: 'c1-automation', ...r}) + '\n').join(''));
 
@@ -62,15 +62,15 @@ assert.match(pl.blocked.find((b) => b.startsWith('v-hand-edit'))!, /missing "app
 assert.deepEqual(pl.skipped.sort(), ['v-dispatched: dispatched', 'v-pending: pending-approval', 'v-qa-failed: qa-failed', 'v-rejected: rejected', 'v-rendered: rendered', 'v-revoked: rejected']);
 const job = pl.youtube[0];
 assert.deepEqual([job.scheduled_for, job.tags], ['2026-10-01T19:00:00+05:30', ['automation', 'n8n', 'smallbusinessindia', 'accountspayable']]);
-assert.deepEqual(pl.instagram[0].accounts, [{platform: 'instagram', handle: '@theautomationguy.navin'}]);
+assert.deepEqual(pl.instagram[0].accounts, [{platform: 'instagram', handle: '@theautomationguynavin'}]);
 
 // not live yet, or the video shows another account: blocked, nothing sent
 setChannel({live: false});
 assert.match(plan(p, NOW).blocked.find((b) => b.startsWith('v-approved'))!, /not live/);
 setChannel({});
 fs.writeFileSync(path.join(p.out, 'v-approved', 'render.json'), JSON.stringify({handle: '@preview.only'}));
-assert.match(plan(p, NOW).blocked.find((b) => b.startsWith('v-approved'))!, /shows @preview.only but the channel is @theautomationguy.navin/);
-fs.writeFileSync(path.join(p.out, 'v-approved', 'render.json'), JSON.stringify({handle: '@theautomationguy.navin'}));
+assert.match(plan(p, NOW).blocked.find((b) => b.startsWith('v-approved'))!, /shows @preview.only but the channel is @theautomationguynavin/);
+fs.writeFileSync(path.join(p.out, 'v-approved', 'render.json'), JSON.stringify({handle: '@theautomationguynavin'}));
 
 // posting times come from data when Learn has written them; a slot already past goes out 15 minutes from now
 fs.mkdirSync(path.join(p.state, 'learn'), {recursive: true});
@@ -94,16 +94,32 @@ assert.equal(fs.readFileSync(ledgerFile(p), 'utf8'), before);
 assert.ok(!fs.existsSync(path.join(p.state, 'queue')));
 await assert.rejects(dispatch(pl, {live: true, fetch: noCall, paths: p}), /YOUTUBE_WEBHOOK_URL/);
 
-// n8n answered 200 but did not upload (or answered garbage): treated as a failure, nothing queued
-const odd = await dispatch(pl, {live: true, youtubeUrl: 'http://n8n.test/yt', fetch: async () => ({ok: true, status: 200, text: async () => '{"uploaded":false}'}), paths: p});
-assert.match(odd.failed[0], /unexpected reply/);
-assert.ok(!fs.existsSync(path.join(p.state, 'queue')));
+const yt = 'http://n8n.test/yt';
+const status = (id: string) => currentStatus(p).get(id)!.status;
+const reply = (code: number, body: string) => async () => ({ok: code < 300, status: code, text: async () => body});
 
-// live with YouTube down: nothing queued, entry stays approved for a retry
-const down = await dispatch(pl, {live: true, youtubeUrl: 'http://n8n.test/yt', fetch: async () => ({ok: false, status: 502, text: async () => ''}), paths: p});
-assert.deepEqual(down, {sent: [], failed: ['youtube v-approved: HTTP 502']});
-assert.ok(!fs.existsSync(path.join(p.state, 'queue')));
-assert.equal(currentStatus(p).get('v-approved')!.status, 'approved');
+// n8n certainly did not upload (it said so, or the connection never opened): the claim is released, the next run retries
+const refused = await dispatch(pl, {live: true, youtubeUrl: yt, fetch: reply(403, '{"uploaded":false,"reason":"not approved for dispatch"}'), paths: p});
+assert.match(refused.failed[0], /HTTP 403: not approved for dispatch \(will retry\)/);
+assert.deepEqual([status('v-approved'), fs.existsSync(path.join(p.state, 'queue'))], ['approved', false]);
+const noN8n = await dispatch(pl, {live: true, youtubeUrl: yt, fetch: async () => { throw Object.assign(new TypeError('fetch failed'), {cause: {code: 'ECONNREFUSED'}}); }, paths: p});
+assert.match(noN8n.failed[0], /not reachable \(ECONNREFUSED\) \(will retry\)/);
+assert.equal(status('v-approved'), 'approved');
+assert.deepEqual(plan(p, NOW).youtube.map((j) => j.storyboard_id), ['v-approved'], 'retried');
+
+// result unknown (5xx, timeout, garbled 200): stays "dispatching", never uploaded again by itself; Navin resolves it
+for (const fetch of [reply(502, ''), reply(200, 'garbage'), async () => { throw new Error('timeout'); }]) {
+  const r = await dispatch(plan(p, NOW), {live: true, youtubeUrl: yt, fetch, paths: p});
+  assert.match(r.failed[0], /--resolve v-approved/);
+  assert.equal(status('v-approved'), 'dispatching');
+  const stuck = plan(p, NOW);
+  assert.deepEqual([stuck.youtube.length, stuck.resume, stuck.stuck.length], [0, [], 1]);
+  assert.deepEqual(await dispatch(stuck, {live: true, youtubeUrl: yt, fetch: noCall, paths: p}), {sent: [], failed: []}, 'a stuck video is never sent again');
+  assert.ok(!fs.existsSync(path.join(p.state, 'queue')));
+  resolve('v-approved', 'none', p); // "not in YouTube Studio": back to approved
+  assert.equal(status('v-approved'), 'approved');
+}
+assert.throws(() => resolve('v-approved', 'none', p), /not stuck/);
 
 // live: exactly the approved video is sent, queued and marked dispatched
 const calls: string[] = [];
@@ -112,7 +128,7 @@ assert.deepEqual(calls, ['v-approved']);
 assert.deepEqual(up.sent, ['youtube v-approved https://www.youtube.com/shorts/Q8sNfIm_PMU', 'forge-queue v-approved (instagram)']);
 const q = path.join(p.state, 'queue/instagram/2026-10-01-c1-automation-v-approved');
 assert.deepEqual(fs.readdirSync(q).sort(), ['caption.txt', 'post.json', 'reel.mp4']);
-assert.deepEqual(JSON.parse(fs.readFileSync(path.join(q, 'post.json'), 'utf8')), {storyboard_id: 'v-approved', channel: 'c1-automation', accounts: [{platform: 'instagram', handle: '@theautomationguy.navin'}], scheduled_for: '2026-10-01T19:00:00+05:30'});
+assert.deepEqual(JSON.parse(fs.readFileSync(path.join(q, 'post.json'), 'utf8')), {storyboard_id: 'v-approved', channel: 'c1-automation', accounts: [{platform: 'instagram', handle: '@theautomationguynavin'}], scheduled_for: '2026-10-01T19:00:00+05:30'});
 const last = currentStatus(p).get('v-approved')!;
 assert.equal(last.status, 'dispatched');
 assert.deepEqual([last.post_urls, last.scheduled_for], [['https://www.youtube.com/shorts/Q8sNfIm_PMU'], '2026-10-01T19:00:00+05:30']);
@@ -133,6 +149,44 @@ assert.equal(sentJobs[0].scheduled_for, '');
 const held = currentStatus(p).get('v-hold')!;
 assert.deepEqual([held.status, held.scheduled_for, held.post_urls], ['dispatched', undefined, ['https://www.youtube.com/shorts/abcdefghijk']]);
 
+// YouTube uploaded, then the local queue write failed: the next run finishes it WITHOUT uploading again
+video('v-crash');
+ledger([{storyboard_id: 'v-crash', status: 'approved', ...ok}]);
+const blocker = path.join(p.state, 'queue/instagram/2026-10-01-c1-automation-v-crash');
+fs.mkdirSync(path.dirname(blocker), {recursive: true});
+fs.writeFileSync(blocker, 'not a folder'); // makes the queue write fail
+let uploads = 0;
+const once = async () => (uploads++, {ok: true, status: 200, text: async () => JSON.stringify({uploaded: true, youtube_id: 'crashcrash1'})});
+const half = await dispatch(plan(p, NOW), {live: true, youtubeUrl: yt, fetch: once, now: NOW, paths: p});
+assert.match(half.failed[0], /forge-queue v-crash: .*the next run finishes it without uploading again/);
+assert.deepEqual([status('v-crash'), currentStatus(p).get('v-crash')!.post_urls], ['dispatching', ['https://www.youtube.com/shorts/crashcrash1']]);
+fs.rmSync(blocker);
+const next = plan(p, NOW);
+assert.deepEqual([next.resume, next.youtube.length], [['v-crash'], 0]);
+const done = await dispatch(next, {live: true, youtubeUrl: yt, fetch: noCall, now: NOW, paths: p});
+assert.deepEqual([done.failed, uploads, status('v-crash')], [[], 1, 'dispatched']);
+assert.deepEqual(fs.readdirSync(blocker).sort(), ['caption.txt', 'post.json', 'reel.mp4'], 'queued once, no temp files left');
+
+// the process died after the claim, before YouTube answered: unknown, so stuck; Navin finds it in YouTube Studio
+video('v-died');
+ledger([{storyboard_id: 'v-died', status: 'dispatching', ...ok}]);
+assert.match(plan(p, NOW).stuck.join(), /v-died: upload state unknown/);
+resolve('v-died', 'diedvideo01', p);
+const fin = await dispatch(plan(p, NOW), {live: true, youtubeUrl: yt, fetch: noCall, now: NOW, paths: p});
+assert.deepEqual([fin.failed, status('v-died'), currentStatus(p).get('v-died')!.post_urls], [[], 'dispatched', ['https://www.youtube.com/shorts/diedvideo01']]);
+
+// n8n's pre-upload check accepts a fresh claim (the upload in flight), not a stale one
+ledger([{storyboard_id: 'v-flight', status: 'dispatching', ...ok, updated_at: new Date(NOW).toISOString()}]);
+video('v-flight');
+assert.equal(handle('/dispatch-check?id=v-flight', 'x'.repeat(16), {paths: p, now: NOW + 60_000}).status, 200);
+assert.equal(handle('/dispatch-check?id=v-flight', 'x'.repeat(16), {paths: p, now: NOW + 3600_000}).status, 403);
+
+// a torn last ledger line (crash mid-write) is ignored, and the next write starts on a fresh line
+fs.appendFileSync(ledgerFile(p), '{"storyboard_id": "v-to');
+assert.equal(status('v-crash'), 'dispatched');
+resolve('v-flight', 'none', p);
+assert.equal(status('v-flight'), 'approved');
+
 // Forge posted it: posted.json in the queue folder marks it published once, keeping the YouTube URL
 fs.writeFileSync(path.join(q, 'posted.json'), JSON.stringify({posted_at: '2026-10-01T13:30:00Z', urls: {instagram: 'https://www.instagram.com/reel/ABC123/'}}));
 assert.deepEqual(markPublished(p, NOW), {published: ['v-approved'], problems: []});
@@ -148,14 +202,15 @@ setChannel({publishers: c1.publishers.map((x: {platform: string}) => (x.platform
 video('v-own-yt');
 ledger([{storyboard_id: 'v-own-yt', status: 'approved', ...ok}]);
 const urls: string[] = [];
-await dispatch({...plan(p, NOW), instagram: []}, {live: true, fetch: async (u) => (urls.push(u), {ok: true, status: 200, text: async () => JSON.stringify({uploaded: true, youtube_id: 'abcdefghij2'})}), now: NOW, paths: p});
+const own = plan(p, NOW);
+await dispatch({...own, youtube: own.youtube.filter((j) => j.storyboard_id === 'v-own-yt'), instagram: [], resume: []}, {live: true, fetch: async (u) => (urls.push(u), {ok: true, status: 200, text: async () => JSON.stringify({uploaded: true, youtube_id: 'abcdefghij2'})}), now: NOW, paths: p});
 assert.deepEqual(urls, ['http://localhost:5678/webhook/agent-studio-youtube-c1'], 'no global URL needed');
 
 // Facebook rides in the same Forge queue folder when the channel has a Facebook account and the approval targets it
 setChannel({publishers: [...c1.publishers, {platform: 'facebook', handle: '@theautomationguy.fb', via: 'forge-queue'}]});
 video('v-fb');
 ledger([{storyboard_id: 'v-fb', status: 'approved', ...ok, targets: ['instagram', 'facebook', 'youtube']}]);
-assert.deepEqual(plan(p, NOW).instagram.find((q) => q.storyboard_id === 'v-fb')!.accounts, [{platform: 'instagram', handle: '@theautomationguy.navin'}, {platform: 'facebook', handle: '@theautomationguy.fb'}]);
+assert.deepEqual(plan(p, NOW).instagram.find((q) => q.storyboard_id === 'v-fb')!.accounts, [{platform: 'instagram', handle: '@theautomationguynavin'}, {platform: 'facebook', handle: '@theautomationguy.fb'}]);
 
 fs.rmSync(tmp, {recursive: true});
-console.log('dispatch ok: only approved entries reach YouTube or the Instagram queue; dry run sends and writes nothing');
+console.log('dispatch ok: only approved entries go out; refused uploads retry, unknown ones stick for Navin, a local failure after YouTube resumes without uploading again; torn ledger lines are safe');

@@ -1,0 +1,19 @@
+<!doctype html>
+<!-- Instagram highlight covers, C1. 1080x1920 (story size); Instagram shows a circle from the centre, so the icon sits in the
+     middle 560 px. Night Signal tokens. ?start = "Start here" (the mark), ?flow = "Automations" (three nodes, the flow motif). -->
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 1080px; height: 1920px; background: #0B0B10; overflow: hidden; }
+  .c { position: absolute; left: 260px; top: 700px; width: 560px; height: 560px; display: flex; align-items: center; justify-content: center; }
+  img, svg { width: 540px; height: 540px; display: none; }
+  .start img, .flow svg { display: block; }
+</style>
+<script>document.documentElement.className = location.search.slice(1);</script>
+<div class="c">
+  <img src="../../engine/public/brand/mark.png">
+  <svg viewBox="0 0 400 400"><!-- done, done, next: the same flow line as the banner -->
+    <line x1="40" y1="200" x2="360" y2="200" stroke="#C6F432" stroke-width="16" stroke-linecap="round"/>
+    <circle cx="70" cy="200" r="44" fill="#C6F432"/><circle cx="200" cy="200" r="44" fill="#C6F432"/>
+    <circle cx="330" cy="200" r="38" fill="#0B0B10" stroke="#C6F432" stroke-width="16"/>
+  </svg>
+</div>

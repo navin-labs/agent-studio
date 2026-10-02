@@ -1,0 +1,28 @@
+<!doctype html>
+<!-- C2 Backstory banner. 2560x1440 YouTube banner: the lockup fills the 1546x423 safe area (all devices).
+     ?fb : Facebook cover 1640x856, content in x 59..1581, y 116..740, no logo. Palette Archive Gold. Render: README.md. -->
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: 'Inter Tight'; font-weight: 900; src: url(../../engine/public/fonts/inter-tight-latin-900-normal.woff2); }
+  @font-face { font-family: 'JetBrains Mono'; font-weight: 700; src: url(../../engine/public/fonts/jetbrains-mono-latin-700-normal.woff2); }
+  :root { --bg: #0E1A2B; --paper: #F4F1EA; --gold: #E8A020; --grey: #A8A59E; }
+  html { margin: 0; } body { margin: 0; width: 2560px; height: 1440px; position: relative; background: var(--bg); overflow: hidden; }
+  .safe { position: absolute; left: 507px; top: 509px; width: 1546px; height: 423px; display: flex; align-items: center; justify-content: center; gap: 56px; }
+  .mark { width: 420px; margin: -10px 0 0 -40px; }
+  h1 { margin: 0; font: 900 148px/0.98 'Inter Tight', sans-serif; letter-spacing: -4px; color: var(--paper); white-space: nowrap; }
+  h1 span { color: var(--gold); }
+  p { margin: 26px 0 0 4px; font: 700 46px/1 'JetBrains Mono', monospace; color: var(--grey); }
+  :root.fb body { width: 1640px; height: 856px; }
+  :root.fb .safe { left: 59px; top: 116px; width: 1522px; height: 624px; text-align: center; }
+  :root.fb .mark { display: none; }
+  :root.fb h1 { font-size: 172px; }
+  :root.fb p { margin-top: 34px; font-size: 54px; }
+</style>
+<script>if (new URLSearchParams(location.search).has('fb')) document.documentElement.classList.add('fb');</script>
+<div class="safe">
+  <img class="mark" src="logo-master.svg">
+  <div>
+    <h1>History in<br><span>sixty seconds.</span></h1>
+    <p>@backstory.minute</p>
+  </div>
+</div>

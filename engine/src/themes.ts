@@ -17,7 +17,7 @@ export type Theme = {
   shadow: string; // hard offset shadow
 };
 
-export type ThemeName = 'paper' | 'ink' | 'mono' | 'studio' | 'night';
+export type ThemeName = 'paper' | 'ink' | 'mono' | 'studio' | 'night' | 'archive';
 
 export const THEMES: Record<ThemeName, Theme> = {
   // Paper & Signal v1 (locked 2026-09-29): values copied from P in theme.ts.
@@ -43,6 +43,12 @@ export const THEMES: Record<ThemeName, Theme> = {
   night: {
     bg: '#0B0B10', surface: '#15151C', ink: '#F4F1EA', muted: '#9C9A94', rule: '#26262F',
     accent: '#C6F432', onAccent: '#0B0B10', flow: '#2B4BFF', ok: '#C6F432', alert: '#E5484D', warn: '#F5A623', shadow: '#000000',
+  },
+  // Archive Gold, C2 Backstory only (2026-10-03): deep navy, paper text, one gold pop. No C1 lime or flow blue; warn is
+  // terracotta so it never reads as the gold.
+  archive: {
+    bg: '#0E1A2B', surface: '#16243A', ink: '#F4F1EA', muted: '#A8A59E', rule: '#1E2D45',
+    accent: '#E8A020', onAccent: '#0E1A2B', flow: '#E8A020', ok: '#E8A020', alert: '#E5484D', warn: '#E07A4F', shadow: '#000000',
   },
 };
 
@@ -73,6 +79,8 @@ import {HANDLE} from './theme.ts';
 export const ThemeCtx = React.createContext<Theme>(THEMES.paper);
 // The channel's own account, shown on closers. Set per render from channels/<id>/channel.json (make.mjs); default C1.
 export const HandleCtx = React.createContext(HANDLE);
+// The end card's logo: a channel's own mark (public/brand/<channel>/mark.svg, drawn for its end card) or the C1 mark.
+export const MarkCtx = React.createContext<string | undefined>(undefined);
 export const useTheme = () => React.useContext(ThemeCtx);
 
 // True for light colours (relative luminance > 0.5), e.g. to flip a light logo on a light card.

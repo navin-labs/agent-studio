@@ -37,8 +37,11 @@ for (const w of weeks)
     all.push(...rs);
   }
 // independent re-check: every recipe against the full history of what came before it
-for (const r of all) assert.deepEqual(checkNovelty(toFingerprint(r), history.filter((h) => h.id !== r.id)), [], `${r.id} breaks a rule`);
-assert.ok(all.some((r) => r.primitives[0] === 'host-hook') && all.some((r) => r.theme !== 'night'), 'C1 mixes host and composed videos');
+for (const r of all) assert.deepEqual(checkNovelty(toFingerprint(r), history.filter((h) => h.id !== r.id), {themes: [c1, c2, c3].find((c) => c.id === r.channel).themes.length}), [], `${r.id} breaks a rule`);
+const c1all = all.filter((r) => r.channel === 'c1-automation');
+assert.ok(c1all.some((r) => r.primitives[0] === 'host-hook') && c1all.some((r) => r.primitives[0] !== 'host-hook'), 'C1 mixes host and composed videos');
+assert.ok(c1all.every((r) => r.theme === 'night'), 'C1 is night only');
+assert.ok(all.filter((r) => r.channel === 'c2-reach').every((r) => r.theme === 'archive'), 'C2 renders in Archive Gold only');
 
 // seeded: same inputs, same week; another seed, another week
 assert.deepEqual(generateWeek(c1, '2026-W41', []), generateWeek(c1, '2026-W41', []));
@@ -65,6 +68,7 @@ assert.deepEqual(rules({...base, hero_metaphor: 'Bills entering themselves'}, [h
 assert.deepEqual(rules({...base, hero_metaphor: 'bills entering themselves'}, [h(14, {hero_metaphor: 'bills entering themselves'})]), []);
 assert.deepEqual(rules(base, [h(1, {theme: 'paper'}), h(2, {theme: 'paper'})]), ['theme']);
 assert.deepEqual(rules(base, [h(1, {theme: 'paper'}), h(3, {theme: 'paper'})]), [], 'a gap day breaks the run');
+assert.deepEqual(checkNovelty(base, [h(1, {theme: 'paper'}), h(2, {theme: 'paper'})], {themes: 1}), [], 'a one-theme channel has no theme-run rule');
 assert.deepEqual(rules(base, [h(1, {hook_pattern: 'pile'}), h(2, {hook_pattern: 'pile'})]), ['hook-pattern']);
 assert.deepEqual(rules({...base, caption_opener: 'Nobody should type this.'}, [h(2, {caption_opener: 'nobody should type this'})]), ['hook-pattern']);
 assert.deepEqual(rules({...base, hash: 'abc'}, [h(1, {channel: 'c3-studio', hash: 'abc'})]), ['cross-channel']);

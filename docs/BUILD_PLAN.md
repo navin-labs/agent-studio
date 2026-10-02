@@ -60,7 +60,7 @@ Phase done when: a dry-run week for C1 goes from feed to approved queue with zer
   > Read CLAUDE.md, schemas/ledger.schema.json. Generate the weekly page per channel with approve and approve-all.
   > Webhook URL from env name only. Never read .env.
   > Stop when a test approval writes one ledger entry.
-- [ ] **B4b Switch-over.** Done when: the watcher and Forge use `engine/`, and the old reel-engine is retired.
+- [ ] **B4b Switch-over.** Done when: the watcher and Forge use `engine/`, and the old reel-engine is retired. Watcher part done 2026-10-02 (com.theautomationguy.studiowatch renders this repo; the tick checks it). Forge part and retiring the old watcher: at go-live (SETUP.md).
   > Read CLAUDE.md. Point the watcher (launchd) and Forge's content path at agent-studio/engine.
   > Render one story from the new path. Old reel-engine stays as a read-only backup.
   > Stop when a Forge story renders from engine/.
@@ -90,6 +90,7 @@ Phase done when: a dry-run week for C1 goes from feed to approved queue with zer
 - [x] **P2 Per-channel output.** Each channel's handle on its closer; C2 reach format; C2 and C3 plan valid weeks (8-week test, all channels); sample videos for C2 and C3 pass QA.
 - [x] **P3 Production loop.** Hourly tick with a per-channel `live` switch; Telegram send-once; publish confirmation from Forge; Facebook via the Forge queue; per-channel YouTube webhook.
 - [x] **P4 Forge skills and setup guide.** Weekly Writer (all channels), Queue Publisher, Metrics Reporter; `docs/SETUP.md`.
+- [x] **P6 Audit.** Feed (n8n -> /feed -> ideas), crash-safe dispatch (claim, resume, stuck + resolve), torn-line-safe JSONL, fingerprint repair, render watcher on this engine, end-to-end loop test.
 - [ ] **P5 Go-live (Navin + Claude).** `docs/SETUP.md` steps 1 to 6. Includes B4b.
 
 ## Phase D: channels (gated)
