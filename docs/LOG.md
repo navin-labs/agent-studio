@@ -276,4 +276,4 @@ Fixes found by the samples: zoom headroom was SIDE + 20 but the 6% push-in needs
 Decisions: C2 makes one-idea explainers with no invented facts; C3 makes explainers for clearly labelled example brands ("made with our motion engine"). YouTube reach = views until the Analytics API is wired. The loop is installed at go-live, not now.
 Next: P5 go-live with Navin (docs/SETUP.md), then Phase D.
 Open questions: C2's week leaned on before-after-split (4 of 7 in W42; Learn will rebalance once data exists). W41 C1 renders predate render.json, so they would need a re-render before dispatch (their dates will have passed anyway).
-Commit: pending "approve commit"
+Commit: 5ddfc07 feat(studio): production pass: metrics, per-channel output and live switch, C2 reach format, hourly loop, Forge skills, SETUP.md
