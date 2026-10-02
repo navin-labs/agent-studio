@@ -64,7 +64,8 @@ const formatsFor = (ch: Channel) =>
     .map((name) => ({name, ...FORMATS[name], themes: FORMATS[name].themes.filter((t) => ch.themes.includes(t))}))
     .filter((f) => f.themes.length && (f.name !== 'host' || ch.host));
 
-export const generateWeek = (ch: Channel, week: string, history: Fingerprint[], opts: {bench?: string[]; seed?: string} = {}): Recipe[] => {
+// proven (from Learn): the 70% draw from proven primitives; the 30% experiments must include at least one unproven one.
+export const generateWeek = (ch: Channel, week: string, history: Fingerprint[], opts: {bench?: string[]; proven?: string[]; seed?: string} = {}): Recipe[] => {
   const r = rng(opts.seed ?? `${ch.id}|${week}`);
   const n = ch.cadence?.posts_per_week ?? 7;
   const allowed = (p: string) => SPECS[p]?.channels.includes(ch.id as never) && !opts.bench?.includes(p);
@@ -79,12 +80,16 @@ export const generateWeek = (ch: Channel, week: string, history: Fingerprint[], 
     for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
       const f = pick(r, formats);
       const primitives: string[] = [];
+      const proven = opts.proven?.length ? opts.proven : null;
+      const exp = experiments.has(slot);
       for (const beat of f.beats) {
         const pool = beat.filter((p) => allowed(p) && !primitives.includes(p));
+        const best = proven && !exp ? pool.filter((p) => proven.includes(p)) : [];
         if (!pool.length) break;
-        primitives.push(pick(r, pool));
+        primitives.push(pick(r, best.length ? best : pool)); // no proven option in this beat: fall back to the whole pool
       }
       if (primitives.length !== f.beats.length) continue; // a beat had nothing left (bench or channel filter)
+      if (proven && exp && f.beats.every((b, i) => b.length === 1 || proven.includes(primitives[i]))) continue; // an experiment must try something unproven
       const theme = pick(r, f.themes);
       const hook = pick(r, HOOK_PATTERNS);
       const rec: Recipe = {
@@ -121,12 +126,17 @@ if (import.meta.main) {
   }
   const ROOT = path.join(import.meta.dirname, '..');
   const ch: Channel = JSON.parse(fs.readFileSync(path.join(ROOT, 'channels', chId, 'channel.json'), 'utf8'));
-  const dir = path.join(ROOT, 'recipes');
+  const dir = process.env.STUDIO_RECIPES ?? path.join(ROOT, 'recipes');
   const target = path.join(dir, chId, `${week}.json`);
   const files = fs.existsSync(dir) ? fs.readdirSync(dir, {recursive: true, encoding: 'utf8'}).filter((f) => f.endsWith('.json')).map((f) => path.join(dir, f)) : [];
   const history = files.filter((f) => f !== target).flatMap((f) => (JSON.parse(fs.readFileSync(f, 'utf8')) as Recipe[]).map(toFingerprint));
   const seed = args.includes('--seed') ? args[args.indexOf('--seed') + 1] : undefined;
-  const week_ = generateWeek(ch, week, history, {seed});
+  // what Learn decided for this week (studio/learn.ts): active benches and the proven list
+  const lf = path.join(process.env.STUDIO_STATE ?? path.join(ROOT, 'state'), 'learn', chId, 'learn.json');
+  const learned = fs.existsSync(lf) ? JSON.parse(fs.readFileSync(lf, 'utf8')) : {bench: [], proven: []};
+  const bench = (learned.bench as {primitive: string; until: string}[]).filter((b) => b.until > week).map((b) => b.primitive);
+  if (bench.length || learned.proven.length) console.log(`learn: bench ${bench.join(', ') || 'none'}; proven ${learned.proven.join(', ') || 'none'}`);
+  const week_ = generateWeek(ch, week, history, {seed, bench, proven: learned.proven});
   fs.mkdirSync(path.dirname(target), {recursive: true});
   fs.writeFileSync(target, JSON.stringify(week_, null, 2) + '\n');
   for (const x of week_) console.log(`${x.id.padEnd(16)} ${recipeDate(x)} ${x.theme.padEnd(6)} ${x.hook_pattern.padEnd(12)} ${x.experiment ? 'exp ' : '    '}${x.primitives.join(' > ')}`);

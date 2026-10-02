@@ -68,7 +68,7 @@ Phase done when: a dry-run week for C1 goes from feed to approved queue with zer
   > Read CLAUDE.md, agents/dispatch/RULES.md. Build ledger to n8n (YouTube) and Forge queue (Instagram).
   > Dry-run mode by default. Nothing publishes.
   > Stop when a test proves unapproved entries are never dispatched.
-- [ ] **B6 Learn.** Done when: sample metrics produce a scoreboard, bench list and 70/30 split the Recipe step reads.
+- [x] **B6 Learn.** Done when: sample metrics produce a scoreboard, bench list and 70/30 split the Recipe step reads.
   > Read CLAUDE.md, agents/learn/RULES.md, schemas/metrics.schema.json.
   > Build KPI by primitive, theme, hook pattern and topic; bench bottom quartile for 2 weeks.
   > Stop when the Recipe step consumes the output in a test.

@@ -4,7 +4,9 @@
   "audience": "Indian SMB owners, ops managers",
   "kpi": {
     "metric": "DMs + profile visits per reach",
-    "target": "TBD (owner: Navin)"
+    "target": "TBD (owner: Navin)",
+    "numerator": ["dms", "profile_visits"],
+    "denominator": "reach"
   },
   "cta": [
     {
