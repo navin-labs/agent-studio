@@ -27,17 +27,17 @@ export type Recipe = {
 };
 
 // Video shapes: one pool of primitives per beat. host = the Chiku format (ADR 15, night theme); composed = the older kinetic boards.
-const PAIN = ['ui-inbox', 'ui-sheet', 'ui-chat', 'pile-drop', 'counter-drop'];
+const PAIN = ['ui-inbox', 'ui-sheet', 'ui-chat', 'pile-drop', 'counter-drop', 'phone-buzz', 'zoom-dive'];
 export const FORMATS = {
   host: {
     themes: ['night'],
     transitions: ['cut', 'whip-pan', 'pixel-wipe'],
-    beats: [['host-hook'], PAIN, PAIN, ['ui-diff', 'highlighter-swipe', 'word-stack-slam'], ['flow-run', 'flow-build', 'conveyor'], ['ui-sheet', 'ui-chat', 'ui-inbox', 'stamp-hit', 'chat-pop'], ['host-payoff'], ['host-cta']],
+    beats: [['host-hook'], PAIN, PAIN, ['ui-diff', 'highlighter-swipe', 'word-stack-slam', 'before-after-split', 'maze-to-line'], ['flow-run', 'flow-build', 'conveyor'], ['ui-sheet', 'ui-chat', 'ui-inbox', 'stamp-hit', 'chat-pop'], ['host-payoff'], ['host-cta']],
   },
   composed: {
     themes: ['paper', 'ink', 'mono', 'studio'],
     transitions: ['cut', 'whip-pan', 'ink-wipe'],
-    beats: [['word-stack-slam', 'pile-drop', 'counter-drop', 'highlighter-swipe', 'chat-pop'], ['pile-drop', 'counter-drop', 'conveyor', 'chat-pop', 'word-stack-slam'], ['highlighter-swipe', 'word-stack-slam', 'flow-build'], ['flow-run', 'flow-build', 'conveyor'], ['stamp-hit', 'chat-pop', 'counter-drop'], ['end-card']],
+    beats: [['word-stack-slam', 'pile-drop', 'counter-drop', 'highlighter-swipe', 'chat-pop', 'split-flap', 'phone-buzz', 'zoom-dive'], ['pile-drop', 'counter-drop', 'conveyor', 'chat-pop', 'word-stack-slam', 'phone-buzz'], ['highlighter-swipe', 'word-stack-slam', 'flow-build', 'before-after-split', 'maze-to-line'], ['flow-run', 'flow-build', 'conveyor'], ['stamp-hit', 'chat-pop', 'counter-drop', 'split-flap'], ['end-card']],
   },
 } as const;
 export const EXPERIMENT_SHARE = 0.3; // 70% proven, 30% experiments (Learn fills in what "proven" means in B6)
@@ -84,7 +84,7 @@ export const generateWeek = (ch: Channel, week: string, history: Fingerprint[], 
       const exp = experiments.has(slot);
       for (const beat of f.beats) {
         const pool = beat.filter((p) => allowed(p) && !primitives.includes(p));
-        const best = proven && !exp ? pool.filter((p) => proven.includes(p)) : [];
+        const best = proven && !exp && attempt < ATTEMPTS / 2 ? pool.filter((p) => proven.includes(p)) : []; // a preference: if proven picks cannot pass novelty, the second half draws from the whole pool
         if (!pool.length) break;
         primitives.push(pick(r, best.length ? best : pool)); // no proven option in this beat: fall back to the whole pool
       }

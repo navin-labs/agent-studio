@@ -78,12 +78,12 @@ Phase done when: a dry-run week for C1 goes from feed to approved queue with zer
   > Stop when the dry-run week passes.
 
 ## Phase C: 8 new primitives (`engine/`), 2 or 3 per session
-- [ ] **C1 Primitives batch 1.** Done when: each new primitive has schema, cues, channels, test storyboard, contact sheet and renders in 4 themes.
+- [x] **C1 Primitives batch 1.** Done when: each new primitive has schema, cues, channels, test storyboard, contact sheet and renders in 4 themes. Built: `split-flap` (data), `before-after-split` (world); registry 19.
   > Read CLAUDE.md, the Learn missing-primitive hint. Build 2 or 3 primitives from the plan section 5 list.
   > Role tokens only. One test storyboard each.
   > Stop when all render in 4 themes.
-- [ ] **C2 Primitives batch 2.** Done when: same as C1.
-- [ ] **C3 Primitives batch 3.** Done when: same as C1; registry has 20 primitives.
+- [x] **C2 Primitives batch 2.** Done when: same as C1. Built: `phone-buzz` (world), `maze-to-line` (world); registry 21.
+- [x] **C3 Primitives batch 3.** Done when: same as C1; registry has 20 primitives. Built: `zoom-dive` (camera, the first camera primitive); registry 22.
 
 ## Phase D: channels (gated)
 - [ ] **D1 Launch C2 reach.** Done when: C1 has run 14 days with no missed posts, and a C2 dry-run week passes.

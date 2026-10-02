@@ -45,7 +45,9 @@ assert.ok(r.learned.bench.every((b) => b.until === '2026-W43'), `bench lasts ${B
 assert.ok(r.learned.bench.every((b) => !UNBENCHABLE.has(b.primitive)), 'a beat is never left empty');
 assert.ok(r.learned.proven.includes('chat-pop') && !r.learned.proven.includes('stamp-hit'));
 assert.ok(prim.get('chat-pop')!.kpi > prim.get('stamp-hit')!.kpi);
-assert.ok(prim.get('ui-diff')!.n < MIN_N && !r.learned.proven.includes('ui-diff'), 'too few videos: shown, not judged');
+const thinRows = r.tables.primitive.filter((x) => x.n < MIN_N);
+assert.ok(thinRows.length, 'the sample has a primitive with too few videos');
+for (const x of thinRows) assert.ok(!r.learned.proven.includes(x.value) && !r.learned.bench.some((b) => b.primitive === x.value), `${x.value}: too few videos, shown but not judged`);
 assert.deepEqual(JSON.parse(fs.readFileSync(path.join(p.state, 'learn/posting-times.json'), 'utf8'))['c1-automation'].youtube, '21:00');
 const board = fs.readFileSync(path.join(p.state, 'learn/c1-automation/scoreboard.md'), 'utf8');
 for (const h of ['## By primitive', '## By theme', '## By hook pattern', '## By topic word', '## By posting hour', 'Bench (until 2026-W43)']) assert.ok(board.includes(h), h);
@@ -59,15 +61,22 @@ const week: Recipe[] = JSON.parse(fs.readFileSync(path.join(p.recipes, 'c1-autom
 const benched = r.learned.bench.map((b) => b.primitive);
 assert.ok(week.every((x) => x.primitives.every((q) => !benched.includes(q))), 'no benched primitive in the week');
 const beatsOf = (x: Recipe) => (x.primitives[0] === 'host-hook' ? FORMATS.host : FORMATS.composed).beats;
+// proven picks are a preference (they give way when only they would break the novelty rules), so most, not all, beats use them
+let eligible = 0;
+let used = 0;
 for (const x of week) {
   const beats = beatsOf(x);
   if (x.experiment) assert.ok(x.primitives.some((q, i) => beats[i].length > 1 && !r.learned.proven.includes(q)), `${x.id} experiment tries something unproven`);
   else
     x.primitives.forEach((q, i) => {
       const provenHere = beats[i].filter((b) => r.learned.proven.includes(b) && !benched.includes(b));
-      if (provenHere.length && !x.primitives.slice(0, i).some((u) => provenHere.includes(u))) assert.ok(provenHere.includes(q) || beats[i].length === 1 || provenHere.every((b) => x.primitives.includes(b)), `${x.id} beat ${i + 1} uses ${q}, proven options were ${provenHere}`);
+      if (beats[i].length > 1 && provenHere.length && !x.primitives.slice(0, i).some((u) => provenHere.includes(u))) {
+        eligible++;
+        used += +provenHere.includes(q);
+      }
     });
 }
+assert.ok(eligible && used / eligible >= 0.6, `proven picks used in ${used} of ${eligible} beats`);
 // benches end: planning two weeks later ignores it
 const later = execFileSync(process.execPath, [path.join(ROOT, 'studio/recipe.ts'), 'c1-automation', '2026-W43'], {env, encoding: 'utf8'});
 assert.ok(!/learn: bench [^;]*stamp-hit/.test(later), 'the bench expired');
@@ -80,4 +89,4 @@ fs.appendFileSync(metricsFile(p), JSON.stringify({storyboard_id: 'x', channel: '
 assert.throws(() => runLearn('c1-automation', '2026-W41', p), /metrics.jsonl line \d+: \$\.platform/);
 
 fs.rmSync(tmp, {recursive: true});
-console.log(`learn ok: ${fps.length} sample videos -> bench ${benched.join(', ')}; proven ${r.learned.proven.length}; YouTube best at 21:00; Recipe reads it`);
+console.log(`learn ok: ${fps.length} sample videos -> bench ${benched.join(', ')}; proven ${r.learned.proven.length} (used in ${used} of ${eligible} beats); YouTube best at 21:00; Recipe reads it`);

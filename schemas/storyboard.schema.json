@@ -98,7 +98,12 @@
               "ui-diff",
               "host-payoff",
               "host-cta",
-              "end-card"
+              "end-card",
+              "split-flap",
+              "before-after-split",
+              "phone-buzz",
+              "maze-to-line",
+              "zoom-dive"
             ]
           },
           "params": {

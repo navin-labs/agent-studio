@@ -1,0 +1,130 @@
+{
+  "format": "storyboard",
+  "id": "stress-ui-2",
+  "theme": "night",
+  "host": "chiku",
+  "captionStyle": "karaoke",
+  "scenes": [
+    {
+      "primitive": "split-flap",
+      "params": {
+        "label": "MONTH-END MIS REPORT WWW",
+        "text": "MMMMMMMMMM",
+        "sub": "Every single morning, before anyone asks"
+      },
+      "vo": "The report lands at *nine thirty* every day."
+    },
+    {
+      "primitive": "before-after-split",
+      "params": {
+        "before": {
+          "title": "WWWWWW BY HAND",
+          "lines": [
+            "Download WMS stock exports",
+            "Merge MMMM sheets by hand.",
+            "Mail the owner each MMMMMM"
+          ]
+        },
+        "after": {
+          "title": "WWWW AUTOMATIC",
+          "lines": [
+            "Exports pulled at MM:MM AM",
+            "Merged into one WMS sheet.",
+            "Summary sent to the owners"
+          ]
+        }
+      },
+      "vo": "*Before*, three exports by hand. *After*, one summary on its own."
+    },
+    {
+      "primitive": "phone-buzz",
+      "params": {
+        "time": "10:44",
+        "notes": [
+          {
+            "icon": "whatsapp",
+            "from": "Mmmm Wholesale WWW",
+            "text": "WWW order MMMM is it ready"
+          },
+          {
+            "icon": "whatsapp",
+            "from": "Mmmm Wholesale WWW",
+            "text": "WWW order MMMM is it ready"
+          },
+          {
+            "icon": "whatsapp",
+            "from": "Mmmm Wholesale WWW",
+            "text": "WWW order MMMM is it ready"
+          },
+          {
+            "icon": "whatsapp",
+            "from": "Mmmm Wholesale WWW",
+            "text": "WWW order MMMM is it ready"
+          },
+          {
+            "icon": "whatsapp",
+            "from": "Mmmm Wholesale WWW",
+            "text": "WWW order MMMM is it ready"
+          }
+        ]
+      },
+      "vo": "*Ping*, *ping*, *ping*, *ping*, *ping*. All morning."
+    },
+    {
+      "primitive": "maze-to-line",
+      "params": {
+        "from": "WWWW ORDER INN",
+        "to": "MMMM BUYER WWW"
+      },
+      "vo": "Then it all *snaps* into one line."
+    },
+    {
+      "primitive": "zoom-dive",
+      "params": {
+        "layers": [
+          {
+            "icon": "inbox",
+            "label": "WWW Wholesale MMMM",
+            "sub": "Mmmm WWW order typed again"
+          },
+          {
+            "icon": "mail",
+            "label": "WWW Wholesale MMMM",
+            "sub": "Mmmm WWW order typed again"
+          },
+          {
+            "icon": "file",
+            "label": "WWW Wholesale MMMM",
+            "sub": "Mmmm WWW order typed again"
+          },
+          {
+            "icon": "keyboard",
+            "label": "WWW Wholesale MMMM",
+            "sub": "Mmmm WWW order typed again"
+          }
+        ]
+      },
+      "vo": "*Inbox*. *Email*. *Attachment*. *One* number typed by hand."
+    },
+    {
+      "primitive": "host-cta",
+      "params": {
+        "text": "DM *WORKFLOWS*",
+        "sub": "I'll look at your most repetitive workflow for free, promise"
+      }
+    },
+    {
+      "primitive": "end-card",
+      "params": {
+        "text": "DM *AUDIT*",
+        "sub": "I'll look at your most repetitive process for free."
+      }
+    }
+  ],
+  "caption": "Stress test: every UI field at its maximum length.\n\nExample data.",
+  "hashtags": [
+    "#automation",
+    "#n8n",
+    "#smallbusinessindia"
+  ]
+}

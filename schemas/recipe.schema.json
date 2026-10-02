@@ -67,7 +67,12 @@
         "ui-diff",
         "host-payoff",
         "host-cta",
-        "end-card"
+        "end-card",
+        "split-flap",
+        "before-after-split",
+        "phone-buzz",
+        "maze-to-line",
+        "zoom-dive"
       ],
       "description": "Primitive id of the opener"
     },
@@ -91,7 +96,12 @@
           "ui-diff",
           "host-payoff",
           "host-cta",
-          "end-card"
+          "end-card",
+          "split-flap",
+          "before-after-split",
+          "phone-buzz",
+          "maze-to-line",
+          "zoom-dive"
         ]
       },
       "minItems": 3,

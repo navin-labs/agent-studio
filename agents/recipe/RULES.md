@@ -14,7 +14,7 @@ Why: uniqueness is guaranteed by code, not by asking an AI to be creative.
 - Random but seeded, so runs are repeatable.
 - Redraw until all 7 novelty rules pass (docs/TECH.md).
 - Use only primitives suited to the channel and not benched.
-- 70% proven, 30% experiments.
+- 70% proven, 30% experiments. Proven picks are a preference: when only they would break a novelty rule, the slot draws from the whole pool (benched shots stay out).
 
 ## Never
 - Call an AI.
