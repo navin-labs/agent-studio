@@ -25,7 +25,7 @@ flowchart TB
   FEED --> IDEAS[(ideas/channel.jsonl)] --> FORGE
   RECIPE --> REC[(recipes/channel/week.json)] --> FORGE
   LEARN --> SB[(scoreboard.md)] --> FORGE
-  FORGE --> SBJ[(content/channel/*.json storyboards)] --> COMP
+  FORGE --> SBJ[(engine/content/storyboards/id.json)] --> COMP
   PRIM --> COMP --> MP4[(mp4 + text boxes)] --> QA
   QA -- fail + exact error --> FORGE
   QA -- pass --> PAGE --> NAVIN{Navin}

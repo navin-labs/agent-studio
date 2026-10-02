@@ -1,0 +1,100 @@
+{
+  "format": "storyboard",
+  "id": "c1-2026-w41-7",
+  "channel": "c1-automation",
+  "theme": "paper",
+  "hookPattern": "should-not",
+  "scenes": [
+    {
+      "primitive": "pile-drop",
+      "params": {
+        "item": {
+          "title": "QUOTE",
+          "id": "QT-",
+          "pill": "SENT",
+          "amount": true
+        },
+        "count": 20,
+        "start": 501
+      },
+      "vo": "Quotes should not die in the sent folder. Twenty went out this week."
+    },
+    {
+      "primitive": "chat-pop",
+      "transition": "ink-wipe",
+      "params": {
+        "app": "EMAIL",
+        "text": "Hi Desai ji, following up on quote QT-512 for 40 chairs. Any questions?"
+      },
+      "vo": "Nobody followed up. Not Desai, not the other nineteen."
+    },
+    {
+      "primitive": "highlighter-swipe",
+      "transition": "whip-pan",
+      "params": {
+        "text": "Follow up on *day 3*, every time."
+      },
+      "vo": "Here's the *fix*. A follow up on day three, every time."
+    },
+    {
+      "primitive": "flow-build",
+      "transition": "whip-pan",
+      "params": {
+        "nodes": [
+          {
+            "icon": "file",
+            "label": "Log the quote",
+            "sub": "Quotes_Oct.xlsx"
+          },
+          {
+            "icon": "calendar",
+            "label": "Wait 3 days",
+            "sub": "No reply yet"
+          },
+          {
+            "icon": "mail",
+            "label": "Send follow up",
+            "sub": "Same email thread"
+          },
+          {
+            "icon": "bell",
+            "label": "Alert sales",
+            "sub": "When they reply"
+          }
+        ]
+      },
+      "vo": "It *logs* the quote, *waits* three days, *follows* up, *alerts* sales."
+    },
+    {
+      "primitive": "stamp-hit",
+      "transition": "ink-wipe",
+      "params": {
+        "label": "FOLLOWED",
+        "count": 3
+      },
+      "vo": "Every quote gets a follow up. No one forgets."
+    },
+    {
+      "primitive": "end-card",
+      "transition": "whip-pan",
+      "params": {
+        "text": "*Follow*",
+        "sub": "One business automation, every day."
+      },
+      "vo": "Follow for one business automation, every day."
+    }
+  ],
+  "caption": "Quotes should not die in the sent folder.\n\nA small automation can log each quote, wait three days and send a follow up in the same email thread if there is no reply. Sales gets an alert when the buyer answers.\n\nExample data.\n\nFollow for one business automation every day. Send this to whoever sends your quotations.",
+  "hashtags": [
+    "#automation",
+    "#smallbusinessindia",
+    "#n8n",
+    "#salesfollowup"
+  ],
+  "meta": {
+    "source": "https://trends.google.com/trends/explore?geo=IN&q=quotation%20follow%20up",
+    "idea_id": "idea-2026-10-02-quote-followup",
+    "recipe_id": "c1-2026-w41-7",
+    "hero_metaphor": "sent folder"
+  }
+}

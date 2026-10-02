@@ -62,7 +62,7 @@ const SAMPLES: Record<string, string[]> = {
   channel: ['channels/c1-automation/channel.json'],
   idea: ['schemas/samples/idea.json'],
   recipe: ['schemas/samples/recipe.json'],
-  storyboard: fs.readdirSync(path.join(ROOT, 'engine/content/storyboards')).map((f) => `engine/content/storyboards/${f}`),
+  storyboard: fs.readdirSync(path.join(ROOT, 'engine/content/storyboards')).filter((f) => f.endsWith('.json')).map((f) => `engine/content/storyboards/${f}`),
   fingerprint: ['schemas/samples/fingerprint.json'],
   qa: ['schemas/samples/qa.json'],
   ledger: ['schemas/samples/ledger.json'],

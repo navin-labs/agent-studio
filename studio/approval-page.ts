@@ -5,7 +5,7 @@
 // node studio/approval-page.ts <channel> <YYYY-Www>   -> state/approval/<channel>/<week>/index.html (+ contact sheets beside it)
 import fs from 'node:fs';
 import path from 'node:path';
-import {approvalQuery, currentStatus, findVideo, PATHS, type Paths, weekRecipes} from './ledger.ts';
+import {approvalQuery, currentStatus, PATHS, type Paths, weekRecipes, weekVideos} from './ledger.ts';
 import {recipeDate} from './recipe.ts';
 
 export const LINK_DAYS = 7;
@@ -20,24 +20,13 @@ export const buildPage = (channel: string, week: string, env: {url: string; secr
   const now = env.now ?? Date.now();
   const exp = Math.floor(now / 1000) + LINK_DAYS * 86400;
   const by = env.by ?? 'navin';
-  const recipes = weekRecipes(channel, week, p);
-  if (!recipes.length) throw new Error(`no recipes for ${channel} ${week}`);
+  if (!weekRecipes(channel, week, p).length) throw new Error(`no recipes for ${channel} ${week}`);
   const status = currentStatus(p);
   const dir = path.join(p.state, 'approval', channel, week);
   fs.mkdirSync(dir, {recursive: true});
-  const boards = [...p.content].flatMap((d) => (fs.existsSync(d) ? fs.readdirSync(d, {recursive: true, encoding: 'utf8'}).filter((f) => f.endsWith('.json')).map((f) => path.join(d, f)) : []));
-  const rows: Row[] = recipes.map((r) => {
+  const rows: Row[] = weekVideos(channel, week, p).map(({recipe: r, video: v}) => {
     const base = {slot: r.slot, date: recipeDate(r), recipeId: r.id};
-    const file = boards.find((f) => {
-      try {
-        const d = JSON.parse(fs.readFileSync(f, 'utf8'));
-        return d?.meta?.recipe_id === r.id && d.channel === channel;
-      } catch {
-        return false;
-      }
-    });
-    if (!file) return {...base, state: 'missing', note: 'not written yet'};
-    const v = findVideo(path.basename(file, '.json'), p)!;
+    if (!v) return {...base, state: 'missing', note: 'not written yet'};
     const first = v.doc.scenes[0];
     const row = {...base, id: v.id, hook: plain(first.vo ?? first.params?.text), caption: v.doc.caption};
     if (!v.qa) return {...row, state: 'missing', note: 'not rendered and checked yet'};

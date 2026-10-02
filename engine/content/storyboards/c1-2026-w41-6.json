@@ -1,0 +1,93 @@
+{
+  "format": "storyboard",
+  "id": "c1-2026-w41-6",
+  "channel": "c1-automation",
+  "theme": "studio",
+  "hookPattern": "confession",
+  "scenes": [
+    {
+      "primitive": "chat-pop",
+      "params": {
+        "app": "WHATSAPP",
+        "text": "Did anyone reorder the 20L primer? Shelf is empty."
+      },
+      "vo": "Most shops still notice low stock when the shelf is empty."
+    },
+    {
+      "primitive": "pile-drop",
+      "transition": "cut",
+      "params": {
+        "item": {
+          "title": "ITEM",
+          "id": "SKU-",
+          "pill": "LOW",
+          "amount": false
+        },
+        "count": 14,
+        "start": 1040
+      },
+      "vo": "Then someone counts every shelf and writes the low items on paper, one by one."
+    },
+    {
+      "primitive": "highlighter-swipe",
+      "transition": "cut",
+      "params": {
+        "text": "The stock sheet *orders* itself."
+      },
+      "vo": "Here's the fix. The stock sheet *orders* itself."
+    },
+    {
+      "primitive": "conveyor",
+      "transition": "whip-pan",
+      "params": {
+        "item": {
+          "title": "ITEM",
+          "id": "SKU-",
+          "pill": "LOW",
+          "amount": false
+        },
+        "node": {
+          "icon": "cart",
+          "label": "Draft PO",
+          "sub": "To the usual supplier"
+        },
+        "count": 8
+      },
+      "vo": "Every item below its minimum gets a draft order to the usual supplier."
+    },
+    {
+      "primitive": "counter-drop",
+      "transition": "whip-pan",
+      "params": {
+        "label": "TO CHECK",
+        "icon": "checklist",
+        "from": 14,
+        "to": 2,
+        "tone": "ok"
+      },
+      "vo": "Fourteen low items. You only check the two odd ones."
+    },
+    {
+      "primitive": "end-card",
+      "transition": "whip-pan",
+      "params": {
+        "text": "*Follow*",
+        "sub": "One business automation, every day."
+      },
+      "vo": "Follow for one business automation, every day."
+    }
+  ],
+  "caption": "Most shops find out stock is gone when the shelf is empty.\n\nA small automation can watch the stock sheet and draft an order to the usual supplier when an item drops below its minimum. Your team only checks the odd ones.\n\nExample data.\n\nFollow for one business automation every day. Send this to whoever handles purchase and stock.",
+  "hashtags": [
+    "#automation",
+    "#smallbusinessindia",
+    "#n8n",
+    "#inventory"
+  ],
+  "meta": {
+    "source": "https://trends.google.com/trends/explore?geo=IN&q=stock%20reorder",
+    "idea_id": "idea-2026-10-02-stock-reorder",
+    "recipe_id": "c1-2026-w41-6",
+    "hero_metaphor": "empty shelf"
+  }
+}

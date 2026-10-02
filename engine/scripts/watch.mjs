@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Auto-render: any new or changed .json in content/stories or content/storyboards gets rendered.
-// The result is written next to the script as <name>.status.txt (Forge reads it).
+// The result is written next to the script as <name>.status.txt (Forge reads it); storyboards are QA-checked too.
 // Finished files are copied to Google Drive/Reel Engine/<id>/ (or iCloud, or RENDER_COPY_DIR in .env) so they reach your phone.
 //   npm run watch            run in this Terminal window
 //   npm run watch:install    run in the background, starts at login, keeps the Mac awake on power
@@ -81,7 +81,12 @@ function next() {
     // ponytail: a failed file is not retried until it changes; rewrite it to retry after a network error
     state[f] = h;
     save();
-    if (code === 0) {
+    // storyboards also go through QA; its exact errors land in the status file for Forge
+    const qa = code === 0 && f.includes(`${path.sep}storyboards${path.sep}`) ? spawnSync(process.execPath, [path.join(ROOT, '../studio/qa.ts'), f], {encoding: 'utf8'}) : null;
+    if (qa?.status) {
+      fs.writeFileSync(statusFile, `failed QA ${new Date().toISOString()}\n\n${qa.stdout}${qa.stderr}`);
+      log(`failed QA ${path.relative(ROOT, f)} (see ${path.basename(statusFile)})`);
+    } else if (code === 0) {
       let copied = '';
       try {
         const {id} = JSON.parse(fs.readFileSync(f, 'utf8'));
@@ -92,7 +97,7 @@ function next() {
       } catch (e) {
         copied = `\ncopy failed: ${e.message}`;
       }
-      fs.writeFileSync(statusFile, `ok ${new Date().toISOString()}${copied}\n\n${text.slice(-1500)}`);
+      fs.writeFileSync(statusFile, `ok ${new Date().toISOString()}${copied}\n\n${qa ? qa.stdout : text.slice(-1500)}`);
       log(`done ${path.relative(ROOT, f)}${copied}`);
     } else {
       fs.writeFileSync(statusFile, `failed ${new Date().toISOString()}\n\n${text.slice(-3000)}`);

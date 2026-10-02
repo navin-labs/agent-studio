@@ -1,7 +1,7 @@
 // Approve receiver on the Mac. n8n runs in Docker and cannot see this repo, so its approval webhook forwards the signed query
 // here (http://host.docker.internal:5680/approve?...). Everything is verified by ledger.ts; this only moves bytes.
 // /dispatch-check?id= lets n8n's YouTube workflow confirm a video is approved before it uploads (defence in depth).
-// Listens on 127.0.0.1 only. The secret stays in agent-studio/.env (APPROVAL_SECRET); n8n never holds it.
+// Also polls Telegram for Approve taps when configured (studio/telegram.ts). Listens on 127.0.0.1 only. The secret stays in agent-studio/.env (APPROVAL_SECRET); n8n never holds it.
 //
 // node studio/approve-server.ts            (APPROVE_PORT, default 5680)
 // node studio/approve-server.ts --install  run it at login via launchd (log: state/approve.log)
@@ -12,6 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {plan} from './dispatch.ts';
 import {applyApproval} from './ledger.ts';
+import {poll, telegram} from './telegram.ts';
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'})[c]!);
 const page = (title: string, lines: string[]) =>
@@ -79,4 +80,8 @@ else if (import.meta.main) {
       res.end(body);
     })
     .listen(port, '127.0.0.1', () => console.log(`approve receiver on http://127.0.0.1:${port} (n8n: http://host.docker.internal:${port}/approve)`));
+  // Telegram approvals from the phone (studio/telegram.ts): outbound long-polling only
+  const {TELEGRAM_BOT_TOKEN: token, TELEGRAM_CHAT_ID: chatId} = process.env;
+  if (token && chatId) poll(telegram(token), {chatId, secret}).catch((e) => console.error(e.message));
+  console.log(token && chatId ? 'telegram approvals: polling' : 'telegram approvals: off (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID not set)');
 }

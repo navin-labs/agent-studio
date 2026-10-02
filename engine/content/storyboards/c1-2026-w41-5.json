@@ -1,0 +1,110 @@
+{
+  "format": "storyboard",
+  "id": "c1-2026-w41-5",
+  "channel": "c1-automation",
+  "theme": "studio",
+  "hookPattern": "confession",
+  "scenes": [
+    {
+      "primitive": "pile-drop",
+      "params": {
+        "item": {
+          "title": "LEAVE",
+          "id": "LV-",
+          "pill": "NEW",
+          "amount": false
+        },
+        "count": 18,
+        "start": 301
+      },
+      "vo": "Most offices still track leave by hand. Every request, one by one."
+    },
+    {
+      "primitive": "conveyor",
+      "transition": "whip-pan",
+      "params": {
+        "item": {
+          "title": "LEAVE",
+          "id": "LV-",
+          "pill": "NEW",
+          "amount": false
+        },
+        "node": {
+          "icon": "keyboard",
+          "label": "Type in register",
+          "sub": "Leave_2026.xlsx"
+        },
+        "count": 10
+      },
+      "vo": "Each WhatsApp request gets typed into the register, then someone checks the balance."
+    },
+    {
+      "primitive": "highlighter-swipe",
+      "transition": "whip-pan",
+      "params": {
+        "text": "Here's the *fix.*"
+      },
+      "vo": "Here's the *fix*. The request fills the register itself."
+    },
+    {
+      "primitive": "flow-build",
+      "transition": "ink-wipe",
+      "params": {
+        "nodes": [
+          {
+            "icon": "whatsapp",
+            "label": "Read request",
+            "sub": "Name, dates, type"
+          },
+          {
+            "icon": "sheet",
+            "label": "Check balance",
+            "sub": "Leave_2026.xlsx"
+          },
+          {
+            "icon": "user",
+            "label": "Ask manager",
+            "sub": "Approve or reject"
+          },
+          {
+            "icon": "send",
+            "label": "Reply to staff",
+            "sub": "Status and balance"
+          }
+        ]
+      },
+      "vo": "It *reads* the request, *checks* the balance, *asks* the manager, *replies*."
+    },
+    {
+      "primitive": "chat-pop",
+      "transition": "whip-pan",
+      "params": {
+        "app": "WHATSAPP",
+        "text": "Hi Priya, your leave for 14 to 16 Oct is approved. Balance: 6 days."
+      },
+      "vo": "Priya gets her answer. HR only checks the odd ones."
+    },
+    {
+      "primitive": "end-card",
+      "transition": "ink-wipe",
+      "params": {
+        "text": "*Follow*",
+        "sub": "One business automation, every day."
+      },
+      "vo": "Follow for one business automation, every day."
+    }
+  ],
+  "caption": "Most offices still type every leave request into a register.\n\nA small automation can read the WhatsApp request, check the balance, ask the manager and reply to the staff member. HR only checks the odd ones.\n\nExample data.\n\nFollow for one business automation every day. Send this to whoever runs HR and admin.",
+  "hashtags": [
+    "#automation",
+    "#smallbusinessindia",
+    "#n8n",
+    "#hradmin"
+  ],
+  "meta": {
+    "source": "https://trends.google.com/trends/explore?geo=IN&q=leave%20management",
+    "idea_id": "idea-2026-10-02-leave-register",
+    "recipe_id": "c1-2026-w41-5",
+    "hero_metaphor": "leave register"
+  }
+}

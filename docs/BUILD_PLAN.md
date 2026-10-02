@@ -72,7 +72,7 @@ Phase done when: a dry-run week for C1 goes from feed to approved queue with zer
   > Read CLAUDE.md, agents/learn/RULES.md, schemas/metrics.schema.json.
   > Build KPI by primitive, theme, hook pattern and topic; bench bottom quartile for 2 weeks.
   > Stop when the Recipe step consumes the output in a test.
-- [ ] **B7 Forge Weekly Writer skill update.** Done when: Forge produces 7 C1 storyboards that pass QA from one recipe file.
+- [x] **B7 Forge Weekly Writer skill update.** Done when: Forge produces 7 C1 storyboards that pass QA from one recipe file. Skill: `agents/writer/FORGE_WEEKLY_WRITER.md`. Dry-run week 2026-W41 written to the skill (by Claude standing in for Forge): 7 of 7 pass QA. Forge's own first run follows the install (with B4b).
   > Read CLAUDE.md, agents/writer/RULES.md. Draft the "Weekly Writer" skill text for Forge (Navin installs it).
   > Inputs and outputs as in plan section 8.
   > Stop when the dry-run week passes.

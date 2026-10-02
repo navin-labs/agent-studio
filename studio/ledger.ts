@@ -72,6 +72,22 @@ export const findVideo = (id: string, p = PATHS): Video | null => {
 };
 
 // ---- apply: the only code path that writes "approved" ----
+// The written board for each of a week's recipes (matched by meta.recipe_id), in slot order; null = not written yet.
+export const weekVideos = (channel: string, week: string, p = PATHS) => {
+  const boards = p.content.flatMap((d) => (fs.existsSync(d) ? fs.readdirSync(d, {recursive: true, encoding: 'utf8'}).filter((f) => f.endsWith('.json')).map((f) => path.join(d, f)) : []));
+  const docs = boards.map((f) => {
+    try {
+      return {f, d: JSON.parse(fs.readFileSync(f, 'utf8'))};
+    } catch {
+      return null;
+    }
+  });
+  return weekRecipes(channel, week, p).map((r) => {
+    const hit = docs.find((x) => x?.d?.meta?.recipe_id === r.id && x.d.channel === channel);
+    return {recipe: r, video: hit ? findVideo(path.basename(hit.f, '.json'), p) : null};
+  });
+};
+
 export const applyApproval = (raw: string, secret: string, opts: {now?: number; paths?: Paths} = {}) => {
   const p = opts.paths ?? PATHS;
   const now = opts.now ?? Date.now();
