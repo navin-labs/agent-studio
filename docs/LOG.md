@@ -229,4 +229,4 @@ Go live (Navin: "do the best option"): YOUTUBE_WEBHOOK_URL and DISPATCH_LIVE=on 
 B4b: Forge's folder is set by the skill text Navin installs in Forge (paths are relative to where Forge runs); the switch-over goes into the B7 Forge skill draft so one install moves Forge and the watcher together. Old watcher keeps rendering until then.
 Test video Q8sNfIm_PMU: left for Navin to delete (permanent delete is his).
 Open questions: metrics collector (n8n in Docker cannot write state/metrics.jsonl; it will need a receiver endpoint like approvals).
-Commit: pending "approve commit"
+Commit: 9061301 feat(studio): Learn scoreboard, bench, 70/30 split and data-driven posting times
