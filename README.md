@@ -110,7 +110,7 @@ Renders land in `engine/out/<channel>/<date>/<id>/<platform>/`, every file named
 The safety model, end to end:
 1. **QA per variant.** Each variant is checked on its own; a failing variant is held alone and the others can proceed. The QA result records the SHA-256 of the file it checked.
 2. **Approval per file.** One Telegram tap writes one ledger line per passing variant, with that variant's hash. Approval links are signed, expire and work once; a re-render needs a new approval.
-3. **Dispatch fails closed.** Right before sending, each variant is checked again: valid ledger line, known platform, channel owns the board, manifest present and matching, exactly one non-pending publisher reached the platform's way, destination unchanged, QA passing for this exact file, the file's hash equal to the approved hash, channel live, not already queued. Any failure is a refusal with its reason on Telegram.
+3. **Dispatch fails closed.** Right before sending, each variant is checked again: valid ledger line, known platform, channel owns the board, manifest present and matching, exactly one publisher that can receive posts (a pending username only on Facebook with a page ID) reached the platform's way, destination unchanged, QA passing for this exact file, the file's hash equal to the approved hash, channel live, not already queued. Any failure is a refusal with its reason on Telegram.
 4. **Two switches.** Nothing is sent unless the channel has `"live": true` and `DISPATCH_LIVE=on` is combined with `--live`. Both default to off.
 5. **Never twice.** A variant is claimed before sending; an unclear upload result is never retried automatically and waits for a human answer.
 6. **n8n checks too.** Each upload workflow accepts only its own channel's YouTube jobs and asks the Mac before uploading.
@@ -128,24 +128,24 @@ Metrics (YouTube stats from n8n, Instagram and Facebook from the metrics reporte
 - `cd engine && npm run stress` and `npm run primitives`: text stress renders and contact sheets for every primitive.
 
 ## Verification
-Reproducible pre-launch verification, run on 2026-10-03 with Node 26.0.0. Commands, raw logs, the six variant manifests and contact sheets: [docs/proof](docs/proof/README.md).
+Reproducible pre-launch verification, run on 2026-10-04 with Node 26.0.0. Commands, raw logs, the six variant manifests and contact sheets: [docs/proof](docs/proof/README.md).
 
 | Check | Result |
 |---|---|
 | `npm run check` | exit 0: `tsc` clean; theme gate 41 contrast pairs pass, 0 fail; textcheck ok; 19 schema samples ok; 12 of 12 suites pass |
-| Test suites (assertion call sites) | recipe 44, qa 55, approval 53, dispatch 93, learn 23, telegram 52, metrics 16, run 24, feed 28, experiment 40, improve 30, loop 32 (490 total) |
-| `node studio/simulate.ts` | exit 0: 2 videos x 3 variants; 4 variants approved (YouTube and Instagram), 2 held (Facebook); plan 2 YouTube jobs and 2 queue items, 0 blocked; 9 refusal cases refused; second run 0 uploads and 0 queue writes |
-| `node studio/qa.ts` on `engine/test/style-c1.json` | YouTube pass, Instagram pass, Facebook held (destination: username pending) |
-| `node studio/qa.ts` on `engine/test/style-c2.json` | YouTube pass, Instagram pass, Facebook held (destination: username pending, page ID missing) |
+| Test suites (assertion call sites) | recipe 44, qa 57, approval 53, dispatch 94, learn 23, telegram 52, metrics 16, run 24, feed 28, experiment 40, improve 30, loop 32 (493 total) |
+| `node studio/simulate.ts` | exit 0: 2 videos x 3 variants; all 6 approved with one tap per video; plan 2 YouTube jobs and 4 queue items (Instagram by handle, Facebook by page ID), 0 blocked; 10 refusal cases refused; second run 0 uploads and 0 queue writes |
+| `node studio/qa.ts` on `engine/test/style-c1.json` | YouTube, Instagram, Facebook pass (36 of 36 checks) |
+| `node studio/qa.ts` on `engine/test/style-c2.json` | YouTube, Instagram, Facebook pass (36 of 36 checks) |
 
 Measured test renders (all mp4, 1080x1920, 30 fps, with audio):
 
 | Board | YouTube | Instagram | Facebook | Allowed |
 |---|---|---|---|---|
 | style-c1 | 46.36 s | 46.08 s | 46.49 s | 40 to 60 s |
-| style-c2 | 31.02 s | 30.78 s | 31.15 s | 25 to 45 s |
+| style-c2 | 31.00 s | 30.78 s | 31.15 s | 25 to 45 s |
 
-The simulation's refusal cases: a channel pointed at another channel's workflow, missing manifest, unknown platform, wrong channel/platform pair, wrong channel on the ledger line, changed destination handle, video changed after approval, approval taken back, duplicate queue item.
+The simulation's refusal cases: a channel pointed at another channel's workflow, missing manifest, unknown platform, wrong channel/platform pair, wrong channel on the ledger line, changed destination handle, Facebook username pending with no page ID, video changed after approval, approval taken back, duplicate queue item.
 
 ## Status
 Pre-launch. The pipeline is complete and tested; every channel is `"live": false` and dispatch is off until the accounts and launch steps in `docs/SETUP.md` are done.

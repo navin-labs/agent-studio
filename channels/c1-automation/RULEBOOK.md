@@ -10,7 +10,7 @@ Why: turn a manual task an Indian SMB owns into a lead (DM AUDIT) or a follow.
 | Formats | host (Chiku) and explainer, 8 shots each, both 40 to 60 s, no exceptions (the length check measures every platform video) |
 | Themes | night only (one channel, one look: Night Signal, the banner and Chiku's stage) |
 | Cadence | 1 post a day |
-| Publisher | Three platform videos per approved video: Instagram @theautomationguynavin (Forge queue), YouTube @theautomationguynavin (its own n8n workflow, `agent-studio-youtube-c1-automation`), Facebook page 1429203763599559 (Forge queue; username pending, retry 2026-10-05: QA holds the Facebook video until it is claimed) |
+| Publisher | Three platform videos per approved video: Instagram @theautomationguynavin (Forge queue), YouTube @theautomationguynavin (its own n8n workflow, `agent-studio-youtube-c1-automation`), Facebook page 1429203763599559 (Forge queue, posted to the page by its ID; username pending, retry 2026-10-05: until then the end card names no account) |
 
 ## Writing rules (from the Forge skill)
 - Send test: name who the viewer would DM this to. No specific person, drop the idea.

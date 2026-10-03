@@ -350,3 +350,9 @@ Decisions: C2 stays 25 to 45 s until the phase-2 history shots (the current 6-be
 Next: P5 go-live (docs/SETUP.md).
 Open questions: none blocking.
 Commit: 73b35d5 docs: open-source README, MIT license; fix: skip dotfiles in folder scans
+
+## 2026-10-04, session 26: Facebook posts by page ID while usernames are pending; Forge skills installed
+Did: Forge installed the three skills (Weekly Writer 109 lines, Queue Publisher 52, Metrics Reporter 28) with schedules (Writer Thursday 12:00 IST, Publisher hourly, Reporter daily 09:00 IST) and removed the old Sunday batch cron; inbox/metrics created on the Mac. C2's Facebook page_id added (1320532171147125). New rule (ADR 22): a Facebook publisher with a page_id posts while its username is pending (studio/variant.ts sendable), its end card naming no account; a pending username elsewhere, or Facebook without a page_id, stays held. QA, approval targets, dispatch and the queue schema follow it; tests updated (both held cases kept), simulate.ts now approves and routes all six variants and refuses Facebook without a page_id. Test boards re-rendered (2026-10-04): all six variants pass QA (36 of 36 checks per board); proof pack regenerated.
+Decisions: ADR 22.
+Next: go-live (docs/SETUP.md step 5 then 6): watcher handover, hourly loop, C1 live, this week's recipes (2026-W41) by hand.
+Open questions: none blocking. Reinstall the Weekly Writer skill in Forge (one example line changed).

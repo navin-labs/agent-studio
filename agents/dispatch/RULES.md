@@ -20,7 +20,7 @@ Code: `studio/dispatch.ts` (`node studio/dispatch.ts [--live] [--hold]`), test `
 - Only the latest ledger line per (video, platform) counts. Re-checked right before sending, each a refusal with its reason (Telegram "agent-studio needs you" on the hourly tick):
   - the ledger line is schema-valid (approver, time, the approved video's `sha256`), its platform is youtube, instagram or facebook, its channel exists and owns the storyboard;
   - the variant was rendered and has a schema-valid manifest whose channel, platform and video id match the ledger line;
-  - the channel has exactly one publisher for that platform, not pending, reached the platform's way (`via`: youtube `n8n`, the others `forge-queue`), YouTube with its own webhook, Facebook with a `page_id`;
+  - the channel has exactly one publisher for that platform, not pending (a Facebook page with a `page_id` posts while its username is pending), reached the platform's way (`via`: youtube `n8n`, the others `forge-queue`), YouTube with its own webhook, Facebook with a `page_id`;
   - the manifest's destination (via, handle, page_id) is still what channel.json says (otherwise: render it again);
   - QA still passes, for this exact file; the video file exists and is byte for byte the one approved (`sha256`; a render after approval needs a new approval);
   - the video's end card shows that platform's own account; a YouTube job passes the SEO preflight;

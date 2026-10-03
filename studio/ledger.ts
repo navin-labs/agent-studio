@@ -12,7 +12,7 @@ import path from 'node:path';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import type {Fingerprint} from './novelty.ts';
 import {type Recipe, recipeDate} from './recipe.ts';
-import {file as vfile, findVariants, type Platform, PLATFORMS, type Variant} from './variant.ts';
+import {file as vfile, findVariants, sendable, type Platform, PLATFORMS, type Variant} from './variant.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 export type Paths = {state: string; content: string[]; out: string; recipes: string; channels: string; queue: string};
@@ -153,8 +153,8 @@ export const applyApproval = (raw: string, secret: string, opts: {now?: number; 
   repairFingerprints(p);
   const channel = readJson(path.join(p.channels, a.channel, 'channel.json'));
   if (!channel) throw new Error(`unknown channel ${a.channel}`);
-  // a publisher whose username is still pending (handle "pending_...") is not a target: nothing is sent there until it is claimed
-  const targets = [...new Set<Platform>(channel.publishers.filter((x: {handle: string}) => !x.handle.startsWith('pending')).map((x: {platform: Platform}) => x.platform))];
+  // a publisher whose username is still pending (handle "pending_...") is not a target until it is claimed (Facebook with a page_id is: studio/variant.ts sendable)
+  const targets = [...new Set<Platform>(channel.publishers.filter(sendable).map((x: {platform: Platform}) => x.platform))];
   const status = currentStatus(p);
   const at = new Date(now).toISOString();
   const written: LedgerEntry[] = [];

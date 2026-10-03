@@ -2,7 +2,7 @@
   "channel": "c1-automation",
   "platform": "youtube",
   "video_id": "style-c1",
-  "date": "2026-10-03",
+  "date": "2026-10-04",
   "style_version": "c1-night-signal-v1",
   "voice": "kokoro/af_heart/1.15",
   "cta_kind": "follow",
@@ -17,11 +17,11 @@
     "width": 1080,
     "height": 1920
   },
-  "video_sha256": "76a4331609195fdf663766663722f64224ce4b0d5ed14942c453d42bceee9261",
+  "video_sha256": "9598c62f2ec3d772435dacecdfca9bc08c15718fbac9eab0e161507482a295c6",
   "qa_status": "pass",
   "files": {
-    "video": "c1-automation-youtube-2026-10-03-style-c1.mp4",
-    "caption": "c1-automation-youtube-2026-10-03-style-c1.caption.txt",
-    "thumbnail": "c1-automation-youtube-2026-10-03-style-c1.thumbnail.png"
+    "video": "c1-automation-youtube-2026-10-04-style-c1.mp4",
+    "caption": "c1-automation-youtube-2026-10-04-style-c1.caption.txt",
+    "thumbnail": "c1-automation-youtube-2026-10-04-style-c1.thumbnail.png"
   }
 }

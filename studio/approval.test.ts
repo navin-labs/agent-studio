@@ -17,12 +17,17 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'approval-test-'));
 const secret = 'test-secret-0123456789';
 const url = 'https://n8n.example.com/webhook/approve';
 const now = Date.parse('2026-10-01T10:00:00Z');
-const p: Paths = {state: path.join(tmp, 'state'), content: [path.join(tmp, 'content')], out: path.join(tmp, 'out'), recipes: path.join(ROOT, 'studio/fixtures/recipes'), channels: path.join(ROOT, 'channels'), queue: path.join(tmp, 'queue')};
+const p: Paths = {state: path.join(tmp, 'state'), content: [path.join(tmp, 'content')], out: path.join(tmp, 'out'), recipes: path.join(ROOT, 'studio/fixtures/recipes'), channels: path.join(tmp, 'channels'), queue: path.join(tmp, 'queue')};
+// the real channel files, with C1's Facebook page_id taken out: a pending username with no page to post to is held, never a target
+fs.cpSync(path.join(ROOT, 'channels'), p.channels, {recursive: true});
+const c1File = path.join(p.channels, 'c1-automation', 'channel.json');
+const c1Json = JSON.parse(fs.readFileSync(c1File, 'utf8'));
+fs.writeFileSync(c1File, JSON.stringify({...c1Json, publishers: c1Json.publishers.map((q: {platform: string}) => (q.platform === 'facebook' ? {...q, page_id: undefined} : q))}));
 const ID = 'host-supplier-bills';
 const DATE = '2026-10-01';
 
 // one written board (caption carries markup Forge might produce by mistake), rendered as its three platform variants. The real
-// C1 channel file: its Facebook username is pending, so QA holds the Facebook variant (destination) and it is never a target.
+// C1 channel file (above): its Facebook username is pending with no page_id, so QA holds the Facebook variant (destination) and it is never a target.
 const board = JSON.parse(fs.readFileSync(path.join(ROOT, 'engine/test/boards/host-supplier-bills.json'), 'utf8'));
 board.caption = 'Bills <img src=x onerror=alert(1)> enter themselves.\n\nExample data.';
 fs.mkdirSync(path.join(tmp, 'content'), {recursive: true});

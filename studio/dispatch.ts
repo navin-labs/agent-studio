@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import {appendJsonl, currentStatus, findVideo, type LedgerEntry, ledgerFile, lkey, PATHS, type Paths, sha256} from './ledger.ts';
-import {ownWebhook, type Platform, PLATFORMS, queueDir, queueFile, ROUTE, type Variant, youtubeWebhookPath} from './variant.ts';
+import {ownWebhook, pending, sendable, type Platform, PLATFORMS, queueDir, queueFile, ROUTE, type Variant, youtubeWebhookPath} from './variant.ts';
 import {captionOf, categoryOf, seoCheck, youtubeMeta} from './seo.ts';
 
 // Posting times come from data: Learn (B6) writes the best hour per channel and platform to state/learn/posting-times.json,
@@ -78,7 +78,7 @@ export const plan = (p: Paths = PATHS, now = Date.now()): Plan => {
       : validate(loadSchema('manifest'), m).length ? `the ${e.platform} manifest is malformed (${validate(loadSchema('manifest'), m).join('; ')})`
       : m.channel !== e.channel || m.platform !== e.platform || m.video_id !== e.storyboard_id || r.variant.channel !== e.channel ? `the manifest says ${m.channel} ${m.platform} ${m.video_id}, the ledger says ${e.channel} ${e.platform} ${e.storyboard_id}: refused`
       : pubs.length !== 1 ? `${e.channel} has ${pubs.length ? 'more than one' : 'no'} ${e.platform} publisher`
-      : pub.handle.startsWith('pending') ? `${e.channel} ${e.platform} is still pending (${pub.handle})`
+      : !sendable(pub) ? `${e.channel} ${e.platform} is still pending (${pub.handle})`
       : pub.via !== ROUTE[e.platform] ? `${e.channel} sends ${e.platform} via ${pub.via}; ${e.platform} goes via ${ROUTE[e.platform]}: refused`
       : e.platform === 'youtube' && !ownWebhook(e.channel, pub.webhook) ? `${e.channel} has no YouTube upload webhook of its own (${youtubeWebhookPath(e.channel)} in channel.json): refused`
       : e.platform === 'facebook' && !pub.page_id ? `${e.channel} facebook has no page_id: refused`
@@ -88,7 +88,7 @@ export const plan = (p: Paths = PATHS, now = Date.now()): Plan => {
       : !mp4 ? 'video file missing'
       : !e.sha256 || sha256(mp4) !== e.sha256 || m.video_sha256 !== e.sha256 ? 'the video changed after it was approved: approve the new render again'
       : channel.live !== true ? `channel ${e.channel} is not live (set "live": true in its channel.json at go-live)`
-      : shown !== pub.handle ? `the video shows ${shown ?? 'no recorded handle'} but the ${e.platform} account is ${pub.handle}: render it again`
+      : (shown ?? null) !== (pending(pub) ? null : pub.handle) ? `the video shows ${shown ?? 'no recorded handle'} but the ${e.platform} account is ${pub.handle}: render it again`
       : queued ? `already in queue/${e.channel}/${e.platform}/ (${path.basename(queueFile(p.queue, r.variant, 'manifest.json'))}): not queued twice`
       : e.platform === 'youtube' ? seoCheck(youtubeMeta(v.doc, captionOf(r.file('caption.txt'))), v.doc).errors.join('; ') || null // the SEO preflight, again right before publishing
       : null;

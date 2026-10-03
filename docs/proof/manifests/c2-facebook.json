@@ -2,7 +2,7 @@
   "channel": "c2-reach",
   "platform": "facebook",
   "video_id": "style-c2",
-  "date": "2026-10-03",
+  "date": "2026-10-04",
   "style_version": "c2-archive-gold-v1",
   "voice": "kokoro/am_fenrir/1",
   "cta_kind": "follow",
@@ -11,16 +11,17 @@
   "end_card_handle": null,
   "destination": {
     "via": "forge-queue",
-    "handle": "pending_retry_2026-10-05"
+    "handle": "pending_retry_2026-10-05",
+    "page_id": "1320532171147125"
   },
   "size": {
     "width": 1080,
     "height": 1920
   },
-  "video_sha256": "55c664f8954d7e77f9a6274e17eb9e688d5e8971ad7ac49cbe468f6a8b032304",
-  "qa_status": "fail",
+  "video_sha256": "dd00b4171c7dcb3e15901ae597776352039e60a7de7d84f9c4635e2bb327c2c7",
+  "qa_status": "pass",
   "files": {
-    "video": "c2-reach-facebook-2026-10-03-style-c2.mp4",
-    "caption": "c2-reach-facebook-2026-10-03-style-c2.caption.txt"
+    "video": "c2-reach-facebook-2026-10-04-style-c2.mp4",
+    "caption": "c2-reach-facebook-2026-10-04-style-c2.caption.txt"
   }
 }

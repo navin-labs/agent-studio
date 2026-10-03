@@ -15,7 +15,7 @@ import {loadSchema, validate} from '../schemas/validate.ts';
 import {readFingerprints} from './ledger.ts';
 import {checkNovelty, type Fingerprint} from './novelty.ts';
 import {AI_VOICE, captionOf, seoCheck, youtubeMeta} from './seo.ts';
-import {ctaKind, file, findVariants, ownWebhook, type Platform, PLATFORMS, prefix, ROUTE, type Variant, variantDir, youtubeWebhookPath} from './variant.ts';
+import {ctaKind, file, findVariants, ownWebhook, pending, sendable, type Platform, PLATFORMS, prefix, ROUTE, type Variant, variantDir, youtubeWebhookPath} from './variant.ts';
 import {type Recipe, recipeDate, recipeHash} from './recipe.ts';
 
 export const CHECKS = ['schema', 'text-limits', 'audio', 'format', 'duration', 'safe-zones', 'fingerprint', 'naming', 'manifest', 'cta', 'destination', 'seo'] as const;
@@ -150,11 +150,11 @@ export const evaluate = (x: QaInputs): QaResult => {
   ]);
 
   // where it goes: this channel's own publisher for this platform, reached the way the platform is (studio/variant.ts ROUTE). A
-  // username still pending holds the variant (Navin claims it in channel.json); it is not the Writer's to fix.
+  // username still pending holds the variant (Navin claims it in channel.json; Facebook with a page_id posts without one); it is not the Writer's to fix.
   const d = m?.destination;
   add('destination', [
     ...(!pub ? [`${v.channel} has no ${v.platform} publisher in channel.json`]
-      : pub.handle.startsWith('pending') ? [`${v.platform} username is still pending (${pub.handle}): held until it is claimed in channels/${v.channel}/channel.json, then render again`]
+      : pending(pub) ? (sendable(pub) ? [] : [`${v.platform} username is still pending (${pub.handle}): held until it is claimed in channels/${v.channel}/channel.json, then render again`])
       : !REAL.test(pub.handle) ? [`${v.platform} handle "${pub.handle}" in channel.json is not an @handle`] : []),
     ...(pub && pub.via !== ROUTE[v.platform] ? [`channel.json sends ${v.platform} via ${pub.via}; it goes via ${ROUTE[v.platform]}`] : []),
     ...(x.spec && x.spec.destination !== ROUTE[v.platform] ? [`the preset sends ${v.platform} via ${x.spec.destination}; it goes via ${ROUTE[v.platform]}`] : []),

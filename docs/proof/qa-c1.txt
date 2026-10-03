@@ -1,4 +1,4 @@
-$ node studio/qa.ts engine/test/style-c1.json --out engine/test/out --recipes engine/test/recipes --date 2026-10-03
+$ node studio/qa.ts engine/test/style-c1.json --out engine/test/out --recipes engine/test/recipes --date 2026-10-04
 youtube:
   pass schema      
   pass text-limits 
@@ -36,8 +36,7 @@ facebook:
   pass naming      
   pass manifest    
   pass cta         
-  FAIL destination facebook username is still pending (pending_retry_2026-10-05): held until it is claimed in channels/c1-automation/channel.json, then render again
+  pass destination 
   pass seo         
-held for Navin, not a board error: facebook (facebook username is still pending (pending_retry_2026-10-05): held until it is claimed in channels/c1-automation/channel.json, then render again)
-QA passed: style-c1 (youtube, instagram)
+QA passed: style-c1 (youtube, instagram, facebook)
 exit 0

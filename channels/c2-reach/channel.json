@@ -45,7 +45,8 @@
     {
       "platform": "facebook",
       "handle": "pending_retry_2026-10-05",
-      "via": "forge-queue"
+      "via": "forge-queue",
+      "page_id": "1320532171147125"
     }
   ],
   "launch_gate": "C1 has run 14 days with no missed posts",

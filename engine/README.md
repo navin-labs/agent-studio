@@ -102,7 +102,7 @@ Voice clips are cached per platform in `public/vo/<id>/<platform>/` (the platfor
 | Problem | Fix |
 |---|---|
 | Forge saved a board but nothing rendered | `launchctl list \| grep studiowatch`. If nothing prints, run `npm run watch:install`. Then `tail -20 out/watch.log`. |
-| Status file says `failed` or `failed QA` | `cat content/storyboards/<id>.status.txt` shows the errors per platform. A board error is Forge's to fix; a variant "held for Navin" (for example a Facebook username still pending) is a channel.json setting. |
+| Status file says `failed` or `failed QA` | `cat content/storyboards/<id>.status.txt` shows the errors per platform. A board error is Forge's to fix; a variant "held for Navin" (for example an Instagram username still pending, or a Facebook page without its page_id) is a channel.json setting. |
 | `Voice engine ... not installed` | Run that engine's line under "Voice" setup. |
 | A render failed because the network dropped | Save the board again (even unchanged). The watcher only retries after a file changes. |
 | Files not appearing in Google Drive | `grep copied out/watch.log \| tail -3`. If it says `copy failed`, allow the macOS permission prompt, or set `RENDER_COPY_DIR` in `.env` and run `npm run watch:install`. |

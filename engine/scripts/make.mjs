@@ -520,7 +520,8 @@ const renderReel = async (script, place) => {
 // A platform variant of a channel board: the closing card's CTA, its spoken line and the caption's CTA line come from the style
 // preset for that platform (styles/<id>.json "platforms"). The CTA kind is read from the board's own closer.
 // The end card names the account the preset says (end_card.handle: this platform's own, from channel.json); a handle still pending
-// (pending_...) is never shown, so the card names none and QA holds that variant until the username is claimed.
+// (pending_...) is never shown, so the card names none; QA holds that variant until the username is claimed, except Facebook with a
+// page_id, which posts to the page by its ID (studio/variant.ts sendable).
 const variantOf = (doc, platform) => {
   const spec = doc.preset.platforms[platform];
   const publisher = doc.publishers.find((x) => x.platform === platform);

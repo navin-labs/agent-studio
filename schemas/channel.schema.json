@@ -163,7 +163,7 @@
           "handle": {
             "type": "string",
             "minLength": 1,
-            "description": "@name; \"pending_...\" while the username cannot be claimed yet: the channel renders, and nothing is sent to that platform"
+            "description": "@name; \"pending_...\" while the username cannot be claimed yet: the channel renders, and nothing is sent to that platform, except Facebook with a page_id, which posts to the page by its ID"
           },
           "via": {
             "enum": [

@@ -12,7 +12,7 @@ Why: grow an audience with business and tech history told in under a minute, the
 | Format | reach (studio/recipe.ts): its own storytelling grammar, no host, no automation flow |
 | Content | How an everyday business or tech object came to be (the barcode, the shipping container, the spreadsheet); the person and the problem behind an invention; one surprising sourced fact, told as a story |
 | Cadence | 7 a week (channel.json) |
-| Publisher | Three platform videos per approved video: Instagram @backstory.minute (Forge queue), YouTube @backstory.minute (its own n8n workflow, `agent-studio-youtube-c2-reach`), Facebook page (Forge queue; username and page ID pending, retry 2026-10-05: QA holds the Facebook video until both are in channel.json) |
+| Publisher | Three platform videos per approved video: Instagram @backstory.minute (Forge queue), YouTube @backstory.minute (its own n8n workflow, `agent-studio-youtube-c2-reach`), Facebook page 1320532171147125 (Forge queue, posted to the page by its ID; username pending, retry 2026-10-05: until then the end card names no account) |
 | Launch gate | C1 has run 14 days with no missed posts |
 
 ## Story grammar (25 to 45 s for now; 40 to 60 s arrives with the phase-2 history shots: archive photo pan, document reveal, timeline)

@@ -43,7 +43,7 @@ sequenceDiagram
 |---|---|
 | Novelty rule fails | Recipe redraws |
 | QA fails | Exact error per platform goes back to Forge; Forge fixes and resubmits; the variants that passed stay approvable. Max attempts TBD (owner: Navin) |
-| A variant's account is not set up (e.g. Facebook username pending) | That variant is held alone; the others go out |
+| A variant's account is not set up (e.g. an Instagram username pending, or a Facebook page without its page_id; a Facebook page with its page_id posts while its username is pending) | That variant is held alone; the others go out |
 | A variant is refused at dispatch (mismatch, missing manifest, changed video, wrong destination) | Nothing is sent for it; Telegram "agent-studio needs you" with the reason |
 | Mac asleep / missed render | Watcher retries; renders queue in Drive; missed day catches up |
 | Video not approved | Not dispatched. Replacement policy TBD (owner: Navin) |

@@ -2,7 +2,7 @@
   "channel": "c2-reach",
   "platform": "youtube",
   "video_id": "style-c2",
-  "date": "2026-10-03",
+  "date": "2026-10-04",
   "style_version": "c2-archive-gold-v1",
   "voice": "kokoro/am_fenrir/1",
   "cta_kind": "follow",
@@ -17,11 +17,11 @@
     "width": 1080,
     "height": 1920
   },
-  "video_sha256": "3fcf5ccd613af987eb361d2e3e1f7b02539a822e23fddda61c7115917be29406",
+  "video_sha256": "7cfa497824eb3588fe5f309ce74f3c5f7510334ce98f543ae75c3517592aea01",
   "qa_status": "pass",
   "files": {
-    "video": "c2-reach-youtube-2026-10-03-style-c2.mp4",
-    "caption": "c2-reach-youtube-2026-10-03-style-c2.caption.txt",
-    "thumbnail": "c2-reach-youtube-2026-10-03-style-c2.thumbnail.png"
+    "video": "c2-reach-youtube-2026-10-04-style-c2.mp4",
+    "caption": "c2-reach-youtube-2026-10-04-style-c2.caption.txt",
+    "thumbnail": "c2-reach-youtube-2026-10-04-style-c2.thumbnail.png"
   }
 }

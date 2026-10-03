@@ -11,7 +11,6 @@ import path from 'node:path';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import {handle} from './approve-server.ts';
 import {dispatch, markPublished, plan} from './dispatch.ts';
-import {renderVariants} from './fixtures/variants.ts';
 import {currentStatus, ledgerFile, lkey, type Paths} from './ledger.ts';
 import {onUpdate, send, type Tg} from './telegram.ts';
 import {file, findVariants, PLATFORMS, queueFile} from './variant.ts';
@@ -33,7 +32,9 @@ const setChannel = (c: string, patch: object = {}) => (fs.mkdirSync(path.dirname
 for (const m of MASTERS) setChannel(m.channel); // the real channel files, switched live in the sandbox only
 const report: [string, string][] = [];
 const ok = (what: string, detail = '') => report.push([what, detail]);
-const NOW = Date.parse('2026-10-03T08:00:00Z'); // 13:30 IST, before the 19:00 slot
+const DATE = findVariants(RENDERS, 'style-c1')[0].date; // the test boards' render date
+const NOW = Date.parse(`${DATE}T08:00:00Z`); // 13:30 IST, before the 19:00 slot
+const SLOT = `${DATE}T19:00:00+05:30`;
 
 // 1. renders: three distinct videos per master, canonical folders and names, manifests that describe them
 for (const m of MASTERS)
@@ -47,7 +48,8 @@ for (const m of MASTERS)
 const shas = MASTERS.flatMap((m) => findVariants(p.out, m.id).map((v) => JSON.parse(fs.readFileSync(file(p.out, v, 'manifest.json'), 'utf8')).video_sha256));
 assert.equal(new Set(shas).size, 6, 'six different videos: no variant is a copy of another');
 
-// 2. Telegram: one message per master listing its variants; one tap approves the ready ones, the held one stays held
+// 2. Telegram: one message per master listing its variants; one tap approves all three (Facebook posts to its page by page_id while
+//    its username is pending)
 const msgs: {method: string; body: any}[] = [];
 const tg: Tg = async (method, body) => (msgs.push({method, body}), true);
 const NAVIN = '111';
@@ -57,23 +59,28 @@ for (const msg of msgs.filter((x) => x.method === 'sendVideo')) {
   const text = String(msg.body.get('caption'));
   assert.match(text, /youtube: ready, CTA "Subscribe"/);
   assert.match(text, /instagram: ready, CTA "Follow"/);
-  assert.match(text, /facebook: HELD/);
+  assert.match(text, /facebook: ready, CTA "Follow"/);
   ok('telegram message', text.split('\n').filter((l) => /^(youtube|instagram|facebook):/.test(l)).join(' | ').slice(0, 160));
 }
 for (const m of MASTERS) {
   const reply = await onUpdate(tg, {update_id: 1, callback_query: {id: 'q', data: `a|${m.id}`, from: {id: 111}, message: {chat: {id: 111}}}}, {chatId: NAVIN, secret: SECRET, paths: p, now: NOW});
-  assert.equal(reply, `Approved: ${m.id} (instagram, youtube)`);
-  assert.equal(currentStatus(p).get(lkey(m.id, 'facebook')), undefined, 'the held Facebook variant is not approved');
+  assert.equal(reply, `Approved: ${m.id} (instagram, youtube, facebook)`);
   ok(`approve ${m.id}`, reply!);
 }
 
 // 3. dispatch plan: each variant to its own (channel, platform) destination, at its slot
 const pl = plan(p, NOW);
 assert.deepEqual(pl.youtube.map((j) => [j.storyboard_id, j.webhook, j.scheduled_for]), [
-  ['style-c1', 'http://localhost:5678/webhook/agent-studio-youtube-c1-automation', '2026-10-03T19:00:00+05:30'],
-  ['style-c2', 'http://localhost:5678/webhook/agent-studio-youtube-c2-reach', '2026-10-03T19:00:00+05:30'],
+  ['style-c1', 'http://localhost:5678/webhook/agent-studio-youtube-c1-automation', SLOT],
+  ['style-c2', 'http://localhost:5678/webhook/agent-studio-youtube-c2-reach', SLOT],
 ]);
-assert.deepEqual(pl.queue.map((q) => [q.storyboard_id, path.relative(p.queue, q.folder), q.handle]), [['style-c1', 'c1-automation/instagram', '@theautomationguynavin'], ['style-c2', 'c2-reach/instagram', '@backstory.minute']]);
+const page = (c: string) => real(c).publishers.find((x: {platform: string}) => x.platform === 'facebook').page_id;
+assert.deepEqual(pl.queue.map((q) => [q.storyboard_id, path.relative(p.queue, q.folder), q.handle, q.page_id ?? null]).sort(), [
+  ['style-c1', 'c1-automation/facebook', 'pending_retry_2026-10-05', page('c1-automation')],
+  ['style-c1', 'c1-automation/instagram', '@theautomationguynavin', null],
+  ['style-c2', 'c2-reach/facebook', 'pending_retry_2026-10-05', page('c2-reach')],
+  ['style-c2', 'c2-reach/instagram', '@backstory.minute', null],
+]);
 assert.deepEqual([pl.blocked, pl.stuck], [[], []]);
 ok('plan', `${pl.youtube.length} YouTube jobs (each to its own channel's webhook), ${pl.queue.length} queue items, 0 blocked`);
 
@@ -106,6 +113,7 @@ refuse('unknown platform', 'style-c1 tiktok', line({...approved, platform: 'tikt
 refuse('wrong channel/platform pair', 'style-c1 instagram', edit(v1('instagram', 'manifest.json'), (m) => (m.platform = 'facebook')), /the manifest says c1-automation facebook style-c1, the ledger says c1-automation instagram style-c1: refused/);
 refuse('wrong channel on the ledger line', 'style-c1 youtube', line({...approved, channel: 'c2-reach'}), /belongs to c1-automation, the ledger says c2-reach: refused/);
 refuse('wrong destination handle', 'style-c1 instagram', edit(v1('instagram', 'manifest.json'), (m) => (m.destination.handle = '@someone.else')), /rendered for forge-queue @someone.else/);
+refuse('facebook username pending and no page_id', 'style-c1 facebook', edit(chFile('c1-automation'), (c) => delete c.publishers.find((x: {platform: string}) => x.platform === 'facebook').page_id), /still pending \(pending_retry/);
 refuse('stale approval (video changed after approval)', 'style-c1 youtube', () => {
   const f = v1('youtube', 'mp4');
   const before = fs.readFileSync(f);
@@ -131,16 +139,16 @@ const n8n = async (url: string, init: {body: FormData}) => (calls.push({url, job
 const r = await dispatch(pl, {live: true, fetch: n8n, paths: p, now: NOW});
 assert.deepEqual(r.failed, []);
 assert.deepEqual(calls.map((c) => [c.url.split('/').pop(), c.job.channel, c.job.platform]), [['agent-studio-youtube-c1-automation', 'c1-automation', 'youtube'], ['agent-studio-youtube-c2-reach', 'c2-reach', 'youtube']]);
-for (const m of MASTERS) {
-  const v = findVariants(p.out, m.id).find((x) => x.platform === 'instagram')!;
-  const qm = JSON.parse(fs.readFileSync(queueFile(p.queue, v, 'manifest.json'), 'utf8'));
-  assert.deepEqual(validate(loadSchema('queue'), qm), []);
-  assert.deepEqual([qm.channel, qm.platform, qm.video_id, qm.scheduled_for], [m.channel, 'instagram', m.id, '2026-10-03T19:00:00+05:30']);
-  assert.ok(fs.existsSync(queueFile(p.queue, v, 'mp4')) && fs.existsSync(queueFile(p.queue, v, 'caption.txt')));
-  ok(`queue ${m.id}`, `queue/${m.channel}/instagram/: ${fs.readdirSync(path.dirname(queueFile(p.queue, v, 'mp4'))).join(', ')}; handle ${qm.handle}`);
-}
-assert.ok(!fs.existsSync(path.join(p.queue, 'c1-automation', 'facebook')) && !fs.existsSync(path.join(p.queue, 'c2-reach', 'facebook')), 'held Facebook variants never reach the queue');
-assert.equal([...currentStatus(p).values()].filter((e) => e.status === 'dispatched').length, 4);
+for (const m of MASTERS)
+  for (const pf of ['instagram', 'facebook'] as const) {
+    const v = findVariants(p.out, m.id).find((x) => x.platform === pf)!;
+    const qm = JSON.parse(fs.readFileSync(queueFile(p.queue, v, 'manifest.json'), 'utf8'));
+    assert.deepEqual(validate(loadSchema('queue'), qm), []);
+    assert.deepEqual([qm.channel, qm.platform, qm.video_id, qm.scheduled_for, qm.page_id ?? null], [m.channel, pf, m.id, SLOT, pf === 'facebook' ? page(m.channel) : null]);
+    assert.ok(fs.existsSync(queueFile(p.queue, v, 'mp4')) && fs.existsSync(queueFile(p.queue, v, 'caption.txt')));
+    ok(`queue ${m.id} ${pf}`, `queue/${m.channel}/${pf}/: ${fs.readdirSync(path.dirname(queueFile(p.queue, v, 'mp4'))).length} files; ${pf === 'facebook' ? `page ${qm.page_id}` : `handle ${qm.handle}`}`);
+  }
+assert.equal([...currentStatus(p).values()].filter((e) => e.status === 'dispatched').length, 6);
 ok('dispatch', r.sent.join('; '));
 
 // 6. duplicates: the next run sends nothing; n8n is told no; a hand-made second approval is not queued twice
@@ -150,26 +158,13 @@ assert.equal(check('id=style-c1&channel=c1-automation&platform=youtube'), 403);
 refuse('duplicate queue item', 'style-c1 instagram', line({...currentStatus(p).get(lkey('style-c1', 'instagram'))!, status: 'approved'}), /not queued twice/);
 ok('duplicates', 'second run: 0 uploads, 0 queue writes; dispatch-check 403 after dispatch');
 
-// 7. Facebook claimed (sandbox only, fixture render): the same tap queues it in queue/<channel>/facebook/ with its page ID
-setChannel('c1-automation', {publishers: real('c1-automation').publishers.map((x: {platform: string}) => (x.platform === 'facebook' ? {...x, handle: '@simulated.page'} : x))});
-const fb = {...JSON.parse(fs.readFileSync(path.join(p.content[0], 'style-c1.json'), 'utf8')), id: 'sim-fb'};
-fs.writeFileSync(path.join(p.content[0], 'sim-fb.json'), JSON.stringify(fb));
-renderVariants(p, fb, {date: '2026-10-03'});
-await onUpdate(tg, {update_id: 2, callback_query: {id: 'q', data: 'a|sim-fb', from: {id: 111}, message: {chat: {id: 111}}}}, {chatId: NAVIN, secret: SECRET, paths: p, now: NOW + 1000});
-assert.equal(currentStatus(p).get(lkey('sim-fb', 'facebook'))?.status, 'approved');
-const fbPlan = plan(p, NOW);
-await dispatch({...fbPlan, youtube: []}, {live: true, fetch: n8n, paths: p, now: NOW});
-const fbm = JSON.parse(fs.readFileSync(queueFile(p.queue, {channel: 'c1-automation', date: '2026-10-03', id: 'sim-fb', platform: 'facebook'}, 'manifest.json'), 'utf8'));
-assert.deepEqual([fbm.platform, fbm.handle, fbm.page_id], ['facebook', '@simulated.page', real('c1-automation').publishers.find((x: {platform: string}) => x.platform === 'facebook').page_id]);
-ok('facebook (claimed, sandbox)', `queue/c1-automation/facebook/ to page ${fbm.page_id}`);
-
-// 8. published: Forge's posted file marks one variant; YouTube once its publish time has passed
-fs.writeFileSync(queueFile(p.queue, findVariants(p.out, 'style-c1').find((v) => v.platform === 'instagram')!, 'posted.json'), JSON.stringify({posted_at: '2026-10-03T19:00:05+05:30', url: 'https://www.instagram.com/reel/SIM/'}));
-const pub = markPublished(p, Date.parse('2026-10-03T14:00:00Z'));
+// 7. published: Forge's posted file marks one variant; YouTube once its publish time has passed
+fs.writeFileSync(queueFile(p.queue, findVariants(p.out, 'style-c1').find((v) => v.platform === 'instagram')!, 'posted.json'), JSON.stringify({posted_at: `${DATE}T19:00:05+05:30`, url: 'https://www.instagram.com/reel/SIM/'}));
+const pub = markPublished(p, Date.parse(`${DATE}T14:00:00Z`));
 assert.deepEqual(pub.problems, []);
 ok('published', pub.published.join(', '));
 
 fs.rmSync(tmp, {recursive: true});
 const w = Math.max(...report.map(([a]) => a.length));
 console.log(report.map(([a, b]) => `${a.padEnd(w)}  ${b}`).join('\n'));
-console.log('\nsimulate ok: 2 masters x 3 platform variants; YouTube and Instagram approved and routed to their own channel; Facebook held (username pending); every refusal failed closed; nothing sent anywhere');
+console.log('\nsimulate ok: 2 masters x 3 platform variants; all three approved with one tap and routed to their own channel (Facebook to its page by page_id); every refusal failed closed; nothing sent anywhere');

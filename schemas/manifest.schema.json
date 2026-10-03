@@ -91,7 +91,7 @@
         "handle": {
           "type": "string",
           "minLength": 1,
-          "description": "@handle, or pending_... while the username is not claimed (QA holds the variant)"
+          "description": "@handle, or pending_... while the username is not claimed (QA holds the variant, except Facebook with a page_id)"
         },
         "page_id": {
           "type": "string",

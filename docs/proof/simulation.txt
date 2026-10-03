@@ -1,31 +1,33 @@
 $ node studio/simulate.ts
-style-c1 youtube                                          c1-automation/2026-10-03/style-c1/youtube/ CTA "Subscribe" ("Subscribe for one business automation every day."), end card @theautomationguynavin, QA pass
-style-c1 instagram                                        c1-automation/2026-10-03/style-c1/instagram/ CTA "Follow" ("Follow for one business automation every day."), end card @theautomationguynavin, QA pass
-style-c1 facebook                                         c1-automation/2026-10-03/style-c1/facebook/ CTA "Follow" ("Follow the page for one business automation every day."), end card no account, QA fail
-style-c2 youtube                                          c2-reach/2026-10-03/style-c2/youtube/ CTA "Subscribe" ("Subscribe for one backstory every day."), end card @backstory.minute, QA pass
-style-c2 instagram                                        c2-reach/2026-10-03/style-c2/instagram/ CTA "Follow" ("Follow for one backstory every day."), end card @backstory.minute, QA pass
-style-c2 facebook                                         c2-reach/2026-10-03/style-c2/facebook/ CTA "Follow" ("Follow the page for one backstory every day."), end card no account, QA fail
-telegram message                                          youtube: ready, CTA "Subscribe" | instagram: ready, CTA "Follow" | facebook: HELD (not approved by this tap): destination: facebook username is still pending (p
-telegram message                                          youtube: ready, CTA "Subscribe" | instagram: ready, CTA "Follow" | facebook: HELD (not approved by this tap): destination: facebook username is still pending (p
-approve style-c1                                          Approved: style-c1 (instagram, youtube)
-approve style-c2                                          Approved: style-c2 (instagram, youtube)
-plan                                                      2 YouTube jobs (each to its own channel's webhook), 2 queue items, 0 blocked
+style-c1 youtube                                          c1-automation/2026-10-04/style-c1/youtube/ CTA "Subscribe" ("Subscribe for one business automation every day."), end card @theautomationguynavin, QA pass
+style-c1 instagram                                        c1-automation/2026-10-04/style-c1/instagram/ CTA "Follow" ("Follow for one business automation every day."), end card @theautomationguynavin, QA pass
+style-c1 facebook                                         c1-automation/2026-10-04/style-c1/facebook/ CTA "Follow" ("Follow the page for one business automation every day."), end card no account, QA pass
+style-c2 youtube                                          c2-reach/2026-10-04/style-c2/youtube/ CTA "Subscribe" ("Subscribe for one backstory every day."), end card @backstory.minute, QA pass
+style-c2 instagram                                        c2-reach/2026-10-04/style-c2/instagram/ CTA "Follow" ("Follow for one backstory every day."), end card @backstory.minute, QA pass
+style-c2 facebook                                         c2-reach/2026-10-04/style-c2/facebook/ CTA "Follow" ("Follow the page for one backstory every day."), end card no account, QA pass
+telegram message                                          youtube: ready, CTA "Subscribe" | instagram: ready, CTA "Follow" | facebook: ready, CTA "Follow"
+telegram message                                          youtube: ready, CTA "Subscribe" | instagram: ready, CTA "Follow" | facebook: ready, CTA "Follow"
+approve style-c1                                          Approved: style-c1 (instagram, youtube, facebook)
+approve style-c2                                          Approved: style-c2 (instagram, youtube, facebook)
+plan                                                      2 YouTube jobs (each to its own channel's webhook), 4 queue items, 0 blocked
 refused: incorrect routing (C1 pointed at C2's workflow)  c1-automation has no YouTube upload webhook of its own (/webhook/agent-studio-youtube-c1-automation in channel.json): refused
 refused: missing manifest                                 no manifest for the instagram variant
 refused: unknown platform                                 ledger entry invalid ($.platform: must be one of youtube, instagram, facebook, got "tiktok")
 refused: wrong channel/platform pair                      the manifest says c1-automation facebook style-c1, the ledger says c1-automation instagram style-c1: refused
 refused: wrong channel on the ledger line                 the storyboard belongs to c1-automation, the ledger says c2-reach: refused
 refused: wrong destination handle                         the variant was rendered for forge-queue @someone.else, channel.json now says forge-queue @theautomationguynavin: render it again
+refused: facebook username pending and no page_id         c1-automation facebook is still pending (pending_retry_2026-10-05)
 refused: stale approval (video changed after approval)    the video changed after it was approved: approve the new render again
 refused: approval taken back                              style-c1 youtube: rejected (skipped, not sent)
 n8n dispatch-check                                        C1 workflow 200; C2 workflow asking for C1's video 403; wrong platform 403; no channel 403
-queue style-c1                                            queue/c1-automation/instagram/: c1-automation-instagram-2026-10-03-style-c1.caption.txt, c1-automation-instagram-2026-10-03-style-c1.manifest.json, c1-automation-instagram-2026-10-03-style-c1.mp4; handle @theautomationguynavin
-queue style-c2                                            queue/c2-reach/instagram/: c2-reach-instagram-2026-10-03-style-c2.caption.txt, c2-reach-instagram-2026-10-03-style-c2.manifest.json, c2-reach-instagram-2026-10-03-style-c2.mp4; handle @backstory.minute
-dispatch                                                  youtube style-c1 https://www.youtube.com/shorts/simvideo001; youtube style-c2 https://www.youtube.com/shorts/simvideo002; forge-queue style-c1 instagram -> queue/c1-automation/instagram; forge-queue style-c2 instagram -> queue/c2-reach/instagram
-refused: duplicate queue item                             already in queue/c1-automation/instagram/ (c1-automation-instagram-2026-10-03-style-c1.manifest.json): not queued twice
+queue style-c1 instagram                                  queue/c1-automation/instagram/: 3 files; handle @theautomationguynavin
+queue style-c1 facebook                                   queue/c1-automation/facebook/: 3 files; page 1429203763599559
+queue style-c2 instagram                                  queue/c2-reach/instagram/: 3 files; handle @backstory.minute
+queue style-c2 facebook                                   queue/c2-reach/facebook/: 3 files; page 1320532171147125
+dispatch                                                  youtube style-c1 https://www.youtube.com/shorts/simvideo001; youtube style-c2 https://www.youtube.com/shorts/simvideo002; forge-queue style-c1 instagram -> queue/c1-automation/instagram; forge-queue style-c1 facebook -> queue/c1-automation/facebook; forge-queue style-c2 instagram -> queue/c2-reach/instagram; forge-queue style-c2 facebook -> queue/c2-reach/facebook
+refused: duplicate queue item                             already in queue/c1-automation/instagram/ (c1-automation-instagram-2026-10-04-style-c1.manifest.json): not queued twice
 duplicates                                                second run: 0 uploads, 0 queue writes; dispatch-check 403 after dispatch
-facebook (claimed, sandbox)                               queue/c1-automation/facebook/ to page 1429203763599559
 published                                                 style-c1 instagram, style-c1 youtube, style-c2 youtube
 
-simulate ok: 2 masters x 3 platform variants; YouTube and Instagram approved and routed to their own channel; Facebook held (username pending); every refusal failed closed; nothing sent anywhere
+simulate ok: 2 masters x 3 platform variants; all three approved with one tap and routed to their own channel (Facebook to its page by page_id); every refusal failed closed; nothing sent anywhere
 exit 0

@@ -91,7 +91,7 @@ Include `"host"` and `"captionStyle"` only when the first shot is `host-hook`.
 
 ## Check
 For each board, read `STUDIO/engine/content/storyboards/<id>.status.txt`. It lists QA per platform (`youtube:`, `instagram:`, `facebook:`):
-- `ok`: every platform video that can be approved rendered and passed QA. Lines under "held for Navin, not a board error" (for example a Facebook page whose username is still pending) are not yours to fix. Done.
+- `ok`: every platform video that can be approved rendered and passed QA. Lines under "held for Navin, not a board error" (for example an Instagram account that is not set up yet) are not yours to fix. Done.
 - `failed`: the gate or the render stopped before any video was made; the exact errors are listed. Fix the JSON and save it again.
 - `failed QA`: at least one platform video failed a check (`FAIL <check> <error>` under that platform), or did not render. Fix the JSON and save it again; the passing platforms stay approvable meanwhile.
 - Never use `--force`; never edit `.status.txt`.

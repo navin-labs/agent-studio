@@ -19,6 +19,10 @@ export const FILENAME = '{channel}-{platform}-{date}-{id}';
 // Each YouTube channel has its own n8n upload workflow, at this webhook path (n8n/youtube-upload*.json); dispatch sends nowhere else
 export const youtubeWebhookPath = (channel: string) => `/webhook/agent-studio-youtube-${channel}`;
 export const ownWebhook = (channel: string, url: unknown) => typeof url === 'string' && URL.canParse(url) && new URL(url).pathname === youtubeWebhookPath(channel);
+// A username still being claimed is "pending_...": nothing goes to that platform, except Facebook, which posts to the page by its ID (the end card
+// then names no account). Navin, 2026-10-04.
+export const pending = (pub: {handle: string}) => pub.handle.startsWith('pending');
+export const sendable = (pub: {platform: string; handle: string; page_id?: string}) => !pending(pub) || (pub.platform === 'facebook' && !!pub.page_id);
 
 // The CTA kind a closer asks for (its text): follow (Subscribe on YouTube), dm-audit (an Instagram DM), send (share it).
 export const ctaKind = (text = '') => (/audit/i.test(text) ? 'dm-audit' : /send|share/i.test(text) ? 'send' : /follow|subscribe/i.test(text) ? 'follow' : null);

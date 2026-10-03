@@ -114,8 +114,11 @@ assert.deepEqual([pl.queue[0].folder, pl.queue[0].handle, pl.queue[1].page_id], 
 const why = (key: string) => plan(p, NOW).blocked.find((b) => b.startsWith(key)) ?? '';
 setChannel({live: false});
 assert.match(why('v-approved youtube'), /not live/);
-setChannel({publishers: c1.publishers});
+// a pending username: Facebook without a page_id and Instagram are held (Facebook with a page_id posts to the page: simulate.ts)
+setChannel({publishers: c1.publishers.map((q: {platform: string}) => (q.platform === 'facebook' ? {...q, page_id: undefined} : q))});
 assert.match(why('v-approved facebook'), /still pending \(pending_retry/);
+setChannel({publishers: c1.publishers.map((q: {platform: string}) => (q.platform === 'instagram' ? {...q, handle: 'pending_retry'} : q))});
+assert.match(why('v-approved instagram'), /still pending \(pending_retry/);
 setChannel(withYoutube({}));
 assert.match(why('v-approved youtube'), /no YouTube upload webhook of its own \(\/webhook\/agent-studio-youtube-c1-automation/, 'no shared default: a channel without its own webhook sends nothing');
 setChannel(withYoutube({webhook: 'http://localhost:5678/webhook/agent-studio-youtube-c2-reach'}));

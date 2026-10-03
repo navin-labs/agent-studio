@@ -142,7 +142,13 @@ assert.deepEqual(failing((x) => ((x.manifest!.end_card_handle = '@backstory.minu
 
 // the destination: this channel's own publisher for this platform, reached the way the platform is
 const pending = (x: QaInputs) => (x.channel = structuredClone(c1)); // the real C1: Facebook username still pending
-assert.deepEqual(failing((x) => (pending(x), (x.manifest!.destination = {via: 'forge-queue', handle: c1.publishers[2].handle, page_id: '1429203763599559'}), (x.manifest!.end_card_handle = null), (x.render!.handle = null)), 'facebook'), [`destination: facebook username is still pending (${c1.publishers[2].handle}): held until it is claimed in channels/c1-automation/channel.json, then render again`]);
+// a pending username: Facebook still posts to its page by page_id, with no account on the end card; without a page_id, or on any
+// other platform, the variant is held until the username is claimed
+const asPending = (x: QaInputs) => ((x.manifest!.destination = {via: 'forge-queue', handle: c1.publishers[2].handle, page_id: '1429203763599559'}), (x.manifest!.end_card_handle = null), (x.render!.handle = null));
+assert.deepEqual(failing((x) => (pending(x), asPending(x)), 'facebook'), []);
+assert.deepEqual(failing((x) => (pending(x), asPending(x), (x.channel!.publishers[2] = {...x.channel!.publishers[2], page_id: undefined}), delete x.manifest!.destination.page_id), 'facebook'), [`destination: facebook username is still pending (${c1.publishers[2].handle}): held until it is claimed in channels/c1-automation/channel.json, then render again; Facebook needs the page_id in channel.json`]);
+assert.match(failing((x) => ((x.channel!.publishers = x.channel!.publishers.map((q) => (q.platform === 'instagram' ? {...q, handle: 'pending_retry'} : q))), (x.manifest!.destination.handle = 'pending_retry')), 'instagram').join('\n'), /destination: instagram username is still pending \(pending_retry\): held/);
+
 assert.deepEqual(failing((x) => (x.channel!.publishers = x.channel!.publishers.map((q) => (q.platform === 'youtube' ? {...q, webhook: undefined} : q)))), ["destination: no YouTube upload webhook of c1-automation's own (channel.json webhook /webhook/agent-studio-youtube-c1-automation)"]);
 assert.deepEqual(failing((x) => (x.channel!.publishers = x.channel!.publishers.map((q) => (q.platform === 'youtube' ? {...q, webhook: 'http://localhost:5678/webhook/agent-studio-youtube-c2-reach'} : q)))), ["destination: no YouTube upload webhook of c1-automation's own (channel.json webhook /webhook/agent-studio-youtube-c1-automation)"]);
 assert.match(failing((x) => (x.channel!.publishers = x.channel!.publishers.filter((q) => q.platform !== 'instagram')), 'instagram').join('\n'), /^destination: c1-automation has no instagram publisher in channel.json$/m);
