@@ -111,7 +111,7 @@ export type Get = (url: string, init: {headers: Record<string, string>; signal: 
 export const pullFeed = async (url: string, o: {paths?: Paths; root?: string; today?: string; fetch?: Get} = {}) => {
   if (!feeds(o.paths).some((x) => x.url === url)) throw new Error(`${url} is not a feed of any channel (channels/*/channel.json "feeds")`);
   const get = o.fetch ?? (globalThis.fetch as unknown as Get);
-  const r = await get(url, {headers: {'User-Agent': 'Mozilla/5.0 (Macintosh) agent-studio-feed/1.0', Accept: 'application/rss+xml, application/atom+xml, text/xml'}, signal: AbortSignal.timeout(20_000)}).catch((e: Error) => {
+  const r = await get(url, {headers: {'User-Agent': 'agent-studio-feed/1.0 (+https://github.com/navin-labs/agent-studio)', Accept: 'application/rss+xml, application/atom+xml, text/xml'}, signal: AbortSignal.timeout(20_000)}).catch((e: Error) => {
     throw new Error(`could not fetch ${url}: ${e.message}`);
   });
   if (r.status !== 200) throw new Error(`${new URL(url).hostname} answered HTTP ${r.status}${r.status === 429 ? ' (rate limited, try later)' : r.status === 403 ? ' (blocked)' : ''}; nothing written`);

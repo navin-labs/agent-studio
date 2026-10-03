@@ -362,3 +362,7 @@ Did: cadence 4 a week for C1 and C2 (channel.json), spread every other day: reci
 Decisions: ADR 23.
 Next: Navin picks C1's launch look (c1-night-v0 or c1-night-signal-v1) before the first recipes are planned; then go-live (docs/SETUP.md step 5 and 6), C1 only.
 Open questions: Forge to reinstall Weekly Writer (now 114 lines) and Queue Publisher/Metrics Reporter unchanged.
+
+## 2026-10-04, session 28: launch look, posting times, feed fix
+Did: C1 style set to c1-night-signal-v1 (Navin); tests read the channel's preset theme. Posting times saved to state/learn/posting-times.json (IST, Forge's recommendations approved by Navin; Learn retunes with data): C1 YouTube 19:00, Instagram 20:30, Facebook 12:30; C2 YouTube 20:00, Instagram 21:00, Facebook 21:00. Feed: Reddit answered 403 "Blocked" to the browser-like User-Agent, so since 2026-10-02 only Google Trends added ideas (the studio correctly refused the block pages, 400); studio/feed.ts now sends a descriptive bot User-Agent, verified 200 with 25 entries; approve receiver restarted.
+Next: Forge shortlists launch ideas through the feed (plus YouTube-sourced ideas); Navin picks; plan C1 2026-W41; go-live.

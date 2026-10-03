@@ -124,7 +124,7 @@ assert.match(failing((x) => delete x.manifest!.destination).join(), /manifest: m
 assert.match(failing((x) => (x.manifest!.platform = 'instagram')).join(), /manifest: manifest platform is "instagram", the folder says youtube/);
 assert.match(failing((x) => (x.manifest!.channel = 'c2-reach')).join(), /manifest channel is "c2-reach", the folder says c1-automation/);
 assert.deepEqual(failing((x) => (x.render!.platform = 'instagram')), ['manifest: render.json says platform instagram: this is not the youtube render']);
-assert.deepEqual(failing((x) => (x.manifest!.style_version = 'c1-night-signal-v1')), ['manifest: manifest style_version c1-night-signal-v1, the board renders in c1-night-v0: render it again']);
+assert.deepEqual(failing((x) => (x.manifest!.style_version = 'c1-night-v0')), ['manifest: manifest style_version c1-night-v0, the board renders in c1-night-signal-v1: render it again']);
 assert.deepEqual(failing((x) => (x.sha256 = 'f'.repeat(64))), ['manifest: the video file is not the one the manifest describes (video_sha256): render it again']);
 assert.deepEqual(failing((x) => (x.siblings.instagram = SHA.youtube)), ['manifest: this video is the same file as the instagram variant: every platform is its own render']);
 assert.match(failing((x) => (x.manifest!.files.video = 'video.mp4')).join(), /manifest: manifest \$\.files\.video: must match/);
