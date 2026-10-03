@@ -4,7 +4,7 @@ Why: everything is built and tested; this is the one list for launch day. Do it 
 
 `STUDIO` = `~/Dev/projects/agent-studio`. Commands run in `STUDIO` unless noted.
 
-State on 2026-10-03: clean slate done (test approvals, renders, dry-run boards and recipes archived outside the repo, `out/` and `queue/` empty, nothing approved); every channel `"live": false`; `DISPATCH_LIVE=off`; nothing published. The first video dispatched after go-live is the first launch video.
+State: in production since Sun 4 Oct 2026. C1 (c1-automation) and C2 (c2-reach) are live, `DISPATCH_LIVE=on`, the three launchd services and the agent's four scheduled tasks run; each channel posts every other day from 4 Oct. C3 is not open. This file stays the checklist for setting up a new install or a new channel; installing from scratch is `docs/INSTALL.md`, daily operation is `docs/OPERATIONS.md`.
 
 ## How a video goes out (read once)
 Every approved video goes out as three platform variants, each its own render with its own call to action, end card, caption and (YouTube) thumbnail, from the channel's style preset:
@@ -31,7 +31,7 @@ For each channel you launch, fill its `channels/<id>/channel.json`:
 - Handles look like `@name` (letters, digits, `.` and `_`). The render step refuses a channel without a real Instagram handle, so an end card can never show the wrong account.
 - Facebook: `{"platform": "facebook", "handle": "@...", "via": "forge-queue", "page_id": "<digits>"}` in `publishers`. While the username is pending (`pending_...`) the Facebook variant renders with no account on its end card and still posts, to the page by its `page_id` (decided 2026-10-04); without a `page_id` QA holds it ("held for Navin") and nothing is sent to Facebook. After you claim the username: fill `handle`, then re-save the week's boards (or wait for the next week) so the Facebook variants render with the page's name.
 - YouTube: every YouTube publisher has `"via": "n8n"` and its own `"webhook": "http://localhost:5678/webhook/agent-studio-youtube-<channel id>"`. There is no shared default: a channel without its own webhook sends nothing to YouTube.
-- Leave `"live": false` for now.
+- A new channel starts with `"live": false`; set it to true at go-live (step 6).
 - Check: `npm run check` in `engine/` (validates every channel.json, every style preset, and that each publisher's route matches its platform).
 
 ## 2. Secrets (Navin, in `STUDIO/.env`, never shared in chat)

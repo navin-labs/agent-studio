@@ -1,6 +1,6 @@
 # n8n workflows for agent-studio
 
-n8n runs in Docker (`~/Dev/tools/n8n`, http://localhost:5678), so it cannot see this repo. It relays; the Mac decides.
+n8n runs in Docker (http://localhost:5678), so it cannot see this repo. It relays; the Mac decides.
 
 ## approval-webhook.json
 Approve link (GET `/webhook/agent-studio-approve`) -> forwards the signed query unchanged to the Mac receiver
@@ -9,7 +9,7 @@ Approve link (GET `/webhook/agent-studio-approve`) -> forwards the signed query 
 Setup (Navin):
 1. In `agent-studio/.env`: `APPROVAL_WEBHOOK_URL=http://localhost:5678/webhook/agent-studio-approve` and `APPROVAL_SECRET=<16+ random characters>`.
 2. Run the receiver: `node studio/approve-server.ts --install` (LaunchAgent com.theautomationguy.approve, starts at login, log state/approve.log). Remove: `launchctl unload ~/Library/LaunchAgents/com.theautomationguy.approve.plist`.
-3. n8n UI -> Import from file -> `n8n/approval-webhook.json` -> Activate. Copy the exported JSON to `~/Dev/tools/n8n/workflows/agent-studio/` if you keep workflows there.
+3. n8n UI -> Import from file -> `n8n/approval-webhook.json` -> Activate. Keep a copy of the exported JSON wherever you keep your n8n workflows.
 4. Check: open a link from `node studio/approval-page.ts c1-automation <week>`; the receiver log shows `GET /approve -> 200`.
 
 Verified 2026-10-01 on n8n 2.31.4: tampered link -> 403, signed link -> 200 through the receiver.
@@ -17,7 +17,7 @@ Verified 2026-10-01 on n8n 2.31.4: tampered link -> 403, signed link -> 200 thro
 ## youtube-upload.json (C1) and youtube-upload-c2.json (C2)
 Video job (POST `/webhook/agent-studio-youtube-<channel>`, multipart: `job` JSON with `channel` and `platform` + `video` file (+ `thumbnail`), sent by `studio/dispatch.ts --live` to the webhook in that channel's channel.json)
 -> Ask the Mac: the workflow first takes only its own channel's YouTube jobs (`job.channel` is its channel, `job.platform` is `youtube`); then `http://host.docker.internal:5680/dispatch-check?id=&channel=<its channel>&platform=youtube` (yes only if the dispatcher is sending exactly this video of this channel now: approved, QA still passing, the approved bytes)
--> Upload to YouTube: private, scheduled `publishAt`, category from the job (28, or 27 for C2), region IN, then thumbnail A -> answers `{uploaded, youtube_id}`; otherwise 403 `{uploaded: false}` and nothing is uploaded.
+-> Upload to YouTube: private, scheduled `publishAt`, category from the job (28, or 27 for C2), region IN, then thumbnail A -> answers `{uploaded, youtube_id}` (the id is the YouTube node's `uploadId`); otherwise 403 `{uploaded: false}` and nothing is uploaded.
 Live dispatch also needs `DISPATCH_LIVE=on`. There is no shared upload webhook: the old `agent-studio-youtube` path no longer exists.
 
 

@@ -4,11 +4,11 @@ $ cd engine && npm run check
 > tsc && node scripts/theme-gate.ts > /dev/null && node src/composer/textcheck.ts && node ../schemas/validate.ts > /dev/null && node ../studio/recipe.test.ts && node ../studio/qa.test.ts && node ../studio/approval.test.ts && node ../studio/dispatch.test.ts && node ../studio/learn.test.ts && node ../studio/telegram.test.ts && node ../studio/metrics.test.ts && node ../studio/run.test.ts && node ../studio/feed.test.ts && node ../studio/experiment.test.ts && node ../studio/improve.test.ts && node ../studio/loop.test.ts
 
 textcheck ok
-recipe ok: 120 recipes over 8 weeks, 0 rule breaks, every shot list can reach its length floor; C1 host share 21%
+recipe ok: 112 recipes over 8 weeks, 0 rule breaks, every shot list can reach its length floor; C1 host share 20%
 qa ok: a good variant passes on each platform; every broken fact (length, naming, manifest, CTA, end card, destination, recipe, SEO) fails with its exact error
 approval ok: one tap approves every QA-passed variant (one line each, with its video hash); a failed variant is held alone; replays (also after a rejection), tampering, expiry, a changed video and bad secrets write nothing; a lost fingerprint is repaired once; a re-render needs (and gets) a new approval
 dispatch ok: each platform variant goes only to its own (channel, platform) destination; mismatched, unmanifested, misdirected, changed or already-queued variants and unknown pairs are refused; refused uploads retry, unknown ones stick for Navin; a crashed queue write resumes; torn ledger lines are safe
-learn ok: 16 sample videos -> bench word-stack-slam, maze-to-line, conveyor, pile-drop, stamp-hit; proven 11 (used in 11 of 11 beats); YouTube best at 21:00; Recipe reads it
+learn ok: 28 sample videos -> bench before-after-split, flow-build, phone-buzz, split-flap, stamp-hit; proven 11 (used in 6 of 6 beats); YouTube best at 21:00; Recipe reads it
 telegram ok: only QA-passed videos are sent; only Navin's own taps approve, once; unknown uploads get Not uploaded / Uploaded buttons and never retry by themselves
 metrics ok: inbox rows land only for dispatched posts, bad files are set aside with the reason; YouTube due at 24h and 7d; views-only rows never dilute the KPI
 run ok: only live channels; Thursday plans next week once; each video shown once; problems reported without stopping

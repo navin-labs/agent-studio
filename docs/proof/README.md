@@ -1,32 +1,24 @@
-# Proof pack: reproducible pre-launch verification
+# Proof pack
 
-This folder is reproducible pre-launch verification of agent-studio. It is not proof of a production deployment: no channel is live and nothing has been published.
-
-Everything here was produced on 2026-10-04 by running the commands in [verification.md](verification.md) against the repository's code and its two test boards (`engine/test/style-c1.json`, `engine/test/style-c2.json`). The logs are unedited command output (terminal colour codes removed).
+Evidence that agent-studio works, in two parts: a reproducible verification of the code (anyone can rerun it), and the production state of the live install it runs. Logs are unedited command output (terminal colour codes removed). Produced on 2026-10-04.
 
 | File | Contents |
 |---|---|
-| [verification.md](verification.md) | What was run, the results, the six variants, PASS and HOLD states, the safety state |
-| `npm-check.txt` | `cd engine && npm run check` (types, theme gate, text QA, schemas, 12 test suites), then the theme gate and schema validation again with their output shown |
-| `simulation.txt` | `node studio/simulate.ts`: one production cycle on the real test renders in a temporary sandbox, with a fake Telegram and a fake n8n |
-| `qa-c1.txt`, `qa-c2.txt` | `node studio/qa.ts` on each test board: every check for every platform variant |
-| `manifests/c{1,2}-{youtube,instagram,facebook}.json` | The six render manifests written by the renderer and updated by QA (`qa_status`), unchanged |
-| `contact-sheets/c{1,2}-{youtube,instagram,facebook}.png` | Contact sheets made by the renderer for each variant: every scene at mid-shot |
+| [verification.md](verification.md) | What was run and what it returned: checks, QA per platform, the simulation, the six test variants, the live state |
+| [demo/demo.mp4](demo/demo.mp4) | A demo render (21.4 s, 1080x1920, voiced, 7.3 MB): a neutral board about the pipeline itself, no channel, no account (`engine/test/demo.json`) |
+| [demo/contact.png](demo/contact.png) | The demo's contact sheet: every scene at mid-shot |
+| `live.txt` | The production install: services, n8n workflows, live channels, the ledger and the queue on launch day |
+| `npm-check.txt` | `cd engine && npm run check` (types, theme gate, text QA, schemas, 12 test suites), then the theme gate and schema validation with their output shown |
+| `simulation.txt` | `node studio/simulate.ts`: a full production cycle on real renders in a temporary sandbox (fake Telegram, fake n8n) |
+| `qa-c1.txt`, `qa-c2.txt` | `node studio/qa.ts` on the two test boards: every check for every platform variant |
+| `manifests/c{1,2}-{youtube,instagram,facebook}.json` | The six render manifests, unchanged |
+| `contact-sheets/c{1,2}-{youtube,instagram,facebook}.png` | Contact sheets for each test variant |
 
-## Videos
-The six MP4 files are not committed (about 67 MB together). Each manifest's `video_sha256` identifies its file exactly. Reproduce them with:
+![Demo contact sheet](demo/contact.png)
+
+## Test videos
+The six test-board MP4s are not committed (about 65 MB). Each manifest's `video_sha256` identifies its file. Reproduce them with:
 ```bash
 cd engine && VOICE=on npm run make -- test/style-c1.json test/style-c2.json
 ```
-They render to `engine/test/out/<channel>/<date>/<board>/<platform>/` (ignored by git). The files verified here:
-
-| File | Size (bytes) |
-|---|---|
-| `engine/test/out/c1-automation/2026-10-04/style-c1/youtube/c1-automation-youtube-2026-10-04-style-c1.mp4` | 13456108 |
-| `engine/test/out/c1-automation/2026-10-04/style-c1/instagram/c1-automation-instagram-2026-10-04-style-c1.mp4` | 13436857 |
-| `engine/test/out/c1-automation/2026-10-04/style-c1/facebook/c1-automation-facebook-2026-10-04-style-c1.mp4` | 13428298 |
-| `engine/test/out/c2-reach/2026-10-04/style-c2/youtube/c2-reach-youtube-2026-10-04-style-c2.mp4` | 8890070 |
-| `engine/test/out/c2-reach/2026-10-04/style-c2/instagram/c2-reach-instagram-2026-10-04-style-c2.mp4` | 8870972 |
-| `engine/test/out/c2-reach/2026-10-04/style-c2/facebook/c2-reach-facebook-2026-10-04-style-c2.mp4` | 8855518 |
-
-A re-render produces new files with new hashes (QA then records the new hashes); the checks themselves are what is reproducible.
+They render to `engine/test/out/<channel>/<date>/<board>/<platform>/` (ignored by git). A re-render produces new files and new hashes; the checks are what is reproducible.

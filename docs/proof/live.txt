@@ -1,0 +1,42 @@
+# Production state, captured 2026-10-04 05:02 IST
+
+$ launchctl list | grep theautomationguy
+12110	-15	com.theautomationguy.approve
+15678	-15	com.theautomationguy.studiowatch
+-	0	com.theautomationguy.studio
+
+$ curl -s 127.0.0.1:5680/health
+ok
+
+$ n8n workflows (id: active)
+agStudioApprove1: true
+agStudioCredCheck: false
+agStudioFeed1: true
+agStudioPack1: true
+agStudioPack2: true
+agStudioYoutube1: true
+agStudioYoutube2: true
+agStudioYtStats1: true
+agStudioYtStats2: true
+
+$ channels (live, style, cadence)
+c1-automation live: true style: c1-night-signal-v1 cadence: {"posts_per_week":4,"every_days":2,"start":"2026-10-04"}
+c2-reach live: true style: c2-archive-gold-v1 cadence: {"posts_per_week":4,"every_days":2,"start":"2026-10-04"}
+c3-studio live: false style: undefined cadence: {"posts_per_week":7}
+
+$ ledger: current status per video and platform
+c1-2026-w40-1 facebook dispatched 2026-10-04T12:30:00+05:30 
+c1-2026-w40-1 youtube dispatched 2026-10-04T19:00:00+05:30 https://www.youtube.com/shorts/QL_4Qj5fCmo
+c2-2026-w40-1 youtube dispatched 2026-10-04T20:00:00+05:30 https://www.youtube.com/shorts/kTwfqVnlSgg
+c1-2026-w40-1 instagram dispatched 2026-10-04T20:30:00+05:30 
+c2-2026-w40-1 instagram dispatched 2026-10-04T21:00:00+05:30 
+c2-2026-w40-1 facebook dispatched 2026-10-04T21:00:00+05:30 
+
+$ queue (Instagram and Facebook items waiting for their time)
+queue/c1-automation/facebook/c1-automation-facebook-2026-10-04-c1-2026-w40-1.manifest.json
+queue/c1-automation/instagram/c1-automation-instagram-2026-10-04-c1-2026-w40-1.manifest.json
+queue/c2-reach/facebook/c2-reach-facebook-2026-10-04-c2-2026-w40-1.manifest.json
+queue/c2-reach/instagram/c2-reach-instagram-2026-10-04-c2-2026-w40-1.manifest.json
+
+$ node studio/dispatch.ts --live
+LIVE: 0 YouTube, 0 Forge queue (Instagram, Facebook)
