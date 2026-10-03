@@ -18,10 +18,11 @@ import path from 'node:path';
 import {dispatch, markPublished, plan} from './dispatch.ts';
 import {learnFile, runLearn} from './learn.ts';
 import {propose, proposals, proposalsFile, proposalText, weeklyNote} from './improve.ts';
-import {appendJsonl, PATHS, type Paths, repairFingerprints} from './ledger.ts';
+import {appendJsonl, currentStatus, lkey, PATHS, type Paths, repairFingerprints} from './ledger.ts';
 import {ingest} from './metrics.ts';
 import {addDays, isoWeek} from './novelty.ts';
-import {planWeek} from './recipe.ts';
+import {planWeek, type Recipe, recipeDate} from './recipe.ts';
+import type {Platform} from './variant.ts';
 import {askResolve, notify, send, type Tg, telegram} from './telegram.ts';
 
 export const PLAN_DAY = 4; // Thursday (IST): recipes for next week, so Forge writes Thu-Fri and Navin approves over the weekend
@@ -53,7 +54,51 @@ export const watcherProblem = (o: {agents?: string; loaded?: () => string} = {})
   return null;
 };
 
-export type TickOpts = {experiments?: boolean; packaging?: Parameters<typeof applyArm>[1]; watcher?: () => string | null; fetch?: Parameters<typeof dispatch>[1]['fetch']; now?: number; paths?: Paths; tg?: Tg | null; chatId?: string; live?: boolean; plan?: (ch: string, week: string) => {recipes: unknown[]}; inbox?: string};
+// What posts today or tomorrow (IST) and is not on its way: no board yet (Forge's), a board that does not pass (its first error),
+// or a passing video still waiting for Navin's Approve tap. Navin's only daily job is approving; everything else announces itself.
+export const readiness = (p: Paths, now: number, channels: string[]): string[] => {
+  const {date} = ist(now);
+  const soon = [date, addDays(date, 1)];
+  const status = currentStatus(p);
+  const out: string[] = [];
+  // boards link to their recipe by meta.recipe_id (the Writer names the file after it); the ledger is keyed by the board's own id
+  const boards = new Map<string, {file: string; id: string}>();
+  for (const d of p.content)
+    for (const n of fs.existsSync(d) ? fs.readdirSync(d).filter((x) => x.endsWith('.json')) : []) {
+      const doc = JSON.parse(fs.readFileSync(path.join(d, n), 'utf8'));
+      boards.set(doc.meta?.recipe_id ?? doc.id, {file: path.join(d, n), id: doc.id});
+    }
+  for (const ch of channels)
+    for (const week of new Set(soon.map(isoWeek))) {
+      const f = path.join(p.recipes, ch, `${week}.json`);
+      const recipes: Recipe[] = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : [];
+      for (const r of recipes.filter((x) => soon.includes(recipeDate(x)))) {
+        const at = `${r.id} (${recipeDate(r)})`;
+        const found = boards.get(r.id);
+        if (!found) {
+          out.push(`${at}: not written yet (Forge, Weekly Writer)`);
+          continue;
+        }
+        const sf = found.file.replace(/\.json$/, '.status.txt');
+        const st = fs.existsSync(sf) ? fs.readFileSync(sf, 'utf8') : '';
+        if (st.startsWith('failed')) out.push(`${at}: ${st.startsWith('failed QA') ? 'fails QA' : 'did not render'}: ${(st.match(/^\s*(?:FAIL \S+\s+|error: )(.+)$/m)?.[1] ?? st.split('\n')[0]).trim()}`);
+        else if (st.startsWith('ok') && !['youtube', 'instagram', 'facebook'].some((pf) => status.get(lkey(found.id, pf as Platform))?.status && status.get(lkey(found.id, pf as Platform))!.status !== 'rejected'))
+          out.push(`${at}: ready, waiting for your Approve on Telegram`);
+      }
+    }
+  return out;
+};
+
+// The same alert at most every 6 hours (a problem that persists is not news every hour); a changed alert goes out at once.
+export const alertDue = (p: Paths, text: string, now: number) => {
+  const f = path.join(p.state, 'alert-last.json');
+  const last = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null;
+  if (last?.text === text && now - last.at < 6 * 3600_000) return false;
+  fs.writeFileSync(f, JSON.stringify({text, at: now}));
+  return true;
+};
+
+export type TickOpts ={experiments?: boolean; packaging?: Parameters<typeof applyArm>[1]; watcher?: () => string | null; fetch?: Parameters<typeof dispatch>[1]['fetch']; now?: number; paths?: Paths; tg?: Tg | null; chatId?: string; live?: boolean; plan?: (ch: string, week: string) => {recipes: unknown[]}; inbox?: string};
 
 // One tick at a time: the hourly job and the watcher (after a video passes QA) both start ticks, and two at once could send or
 // dispatch the same video twice. A second tick skips; a lock left by a tick whose process is gone is taken over.
@@ -188,7 +233,9 @@ const runTick = async (o: TickOpts = {}) => {
       return done.join(', ');
     });
 
-  if (problems.length) await say(`agent-studio needs you:\n${problems.join('\n')}`).catch(() => {});
+  if (channels.length) problems.push(...readiness(p, now, channels));
+  const alert = `agent-studio needs you:\n${problems.join('\n')}`;
+  if (problems.length && alertDue(p, alert, now)) await say(alert).catch(() => {});
   return {log, problems, channels};
 };
 

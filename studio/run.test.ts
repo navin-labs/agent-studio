@@ -7,7 +7,7 @@ import path from 'node:path';
 import {renderVariants} from './fixtures/variants.ts';
 import {ledgerFile, type Paths, sha256} from './ledger.ts';
 import {file} from './variant.ts';
-import {OLD_WATCH_LABEL, tick, WATCH_LABEL, watcherProblem} from './run.ts';
+import {alertDue, OLD_WATCH_LABEL, readiness, tick, WATCH_LABEL, watcherProblem} from './run.ts';
 import type {Tg} from './telegram.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
@@ -105,6 +105,26 @@ for (const c of ['c1-automation']) {
 calls.length = 0;
 r = await tick({...o, now: THU});
 assert.deepEqual([r.channels, calls.length, r.problems], [[], 0, []]);
+
+// readiness: what posts today or tomorrow and is not on its way is announced (Navin only approves); the same alert waits 6 hours
+{
+  const q: Paths = {...p, recipes: path.join(tmp, 'r2'), content: [path.join(tmp, 'c2')], state: path.join(tmp, 's2')};
+  for (const d of [path.join(q.recipes, 'c1-automation'), q.content[0], q.state]) fs.mkdirSync(d, {recursive: true});
+  const NOW = Date.parse('2026-10-04T02:00:00Z'); // Sun 07:30 IST
+  fs.writeFileSync(path.join(q.recipes, 'c1-automation', '2026-W40.json'), JSON.stringify([{id: 'c1-2026-w40-1', channel: 'c1-automation', week: '2026-W40', slot: 1, date: '2026-10-04'}]));
+  fs.writeFileSync(path.join(q.recipes, 'c1-automation', '2026-W41.json'), JSON.stringify([{id: 'c1-2026-w41-1', channel: 'c1-automation', week: '2026-W41', slot: 1, date: '2026-10-06'}]));
+  const due = () => readiness(q, NOW, ['c1-automation']);
+  assert.deepEqual(due(), ['c1-2026-w40-1 (2026-10-04): not written yet (Forge, Weekly Writer)'], 'tomorrow is Mon 5: nothing posts then, so only today counts');
+  const board = path.join(q.content[0], 'c1-2026-w40-1.json');
+  fs.writeFileSync(board, JSON.stringify({id: 'c1-2026-w40-1', meta: {recipe_id: 'c1-2026-w40-1'}}));
+  fs.writeFileSync(board.replace('.json', '.status.txt'), 'failed QA 2026-10-04T01:00:00Z\n\nyoutube:\n  pass schema\n  FAIL duration    c1 video is 38.8s, needs 40 to 60s\n');
+  assert.deepEqual(due(), ['c1-2026-w40-1 (2026-10-04): fails QA: c1 video is 38.8s, needs 40 to 60s']);
+  fs.writeFileSync(board.replace('.json', '.status.txt'), 'ok 2026-10-04T01:00:00Z\n');
+  assert.deepEqual(due(), ['c1-2026-w40-1 (2026-10-04): ready, waiting for your Approve on Telegram']);
+  fs.writeFileSync(ledgerFile(q), JSON.stringify({storyboard_id: 'c1-2026-w40-1', platform: 'youtube', status: 'approved'}) + '\n');
+  assert.deepEqual(due(), [], 'approved: on its way');
+  assert.deepEqual([alertDue(q, 'x', NOW), alertDue(q, 'x', NOW + 3600_000), alertDue(q, 'y', NOW + 3600_000), alertDue(q, 'y', NOW + 7 * 3600_000)], [true, false, true, true]);
+}
 
 // one tick at a time: while another tick's process is alive a second one skips; a lock left by a dead process is taken over
 const lock = path.join(p.state, 'run.lock');

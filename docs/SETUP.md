@@ -98,7 +98,7 @@ The old "Instagram Growth Pipeline" skill (reel-engine) is replaced by these thr
 C1 and C2 launch together on Sun 4 Oct 2026 (Navin): both channels live in step 2; 2026-W40 (the launch, 4 Oct) and 2026-W41 (6, 8, 10 Oct) planned for both in step 3. C3 once it has a style preset and 20 approved videos exist (D2).
 
 ## Daily life
-- Telegram is the control panel: videos to approve (one message per video, its variants listed), "recipes ready", and "agent-studio needs you" when something fails or a variant is refused at dispatch (with the exact reason).
+- Telegram is the control panel: videos to approve (one message per video, its variants listed), "recipes ready", and "agent-studio needs you" when something fails, a variant is refused at dispatch, or anything posting today or tomorrow is not on its way: not written yet, failing QA (with its first error), or ready and waiting for your Approve. The same alert repeats at most every 6 hours.
 - Every render is copied to Google Drive: My Drive > Reel Engine > <channel> > <date> > <video id> > youtube | instagram | facebook.
 - `state/learn/<channel>/scoreboard.md`: what works, what is benched, best posting hours.
 - Nothing posts without your Approve tap. A channel stops at once with `"live": false`; all dispatch stops with `DISPATCH_LIVE=off`.
