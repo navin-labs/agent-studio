@@ -203,7 +203,7 @@ export const runQa = async (boardPath: string, opts: {out?: string; date?: strin
       file: path.basename(boardPath),
       variant: v,
       outDir: out,
-      files: fs.readdirSync(dir),
+      files: fs.readdirSync(dir).filter((f) => !f.startsWith('.')), // Finder and editor dotfiles are not part of the render
       manifest,
       caption: captionOf(file(out, v, 'caption.txt')),
       spec: style?.platforms?.[v.platform] ?? null,

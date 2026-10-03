@@ -22,7 +22,7 @@ export const ideasFile = (channel: string, root = ROOT) => path.join(root, 'idea
 // Every feed and the channels that list it.
 export const feeds = (p: Paths = PATHS) => {
   const out = new Map<string, Feed & {channels: string[]}>();
-  for (const c of fs.readdirSync(p.channels)) {
+  for (const c of fs.readdirSync(p.channels).filter((c) => fs.existsSync(path.join(p.channels, c, 'channel.json')))) {
     const ch = JSON.parse(fs.readFileSync(path.join(p.channels, c, 'channel.json'), 'utf8'));
     for (const f of (ch.feeds ?? []) as Feed[]) {
       const e = out.get(f.url) ?? {...f, channels: []};

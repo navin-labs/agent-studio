@@ -60,7 +60,7 @@ const read = (f: string) => JSON.parse(fs.readFileSync(path.resolve(ROOT, f), 'u
 
 // One sample per schema (paths from the repo root). Real files where they exist, so the contract is tested on what runs.
 const SAMPLES: Record<string, string[]> = {
-  channel: fs.readdirSync(path.join(ROOT, 'channels')).map((c) => `channels/${c}/channel.json`), // every channel, not one sample
+  channel: fs.readdirSync(path.join(ROOT, 'channels')).filter((c) => !c.startsWith('.')).map((c) => `channels/${c}/channel.json`), // every channel, not one sample
   idea: ['schemas/samples/idea.json'],
   recipe: ['schemas/samples/recipe.json'],
   storyboard: fs.readdirSync(path.join(ROOT, 'engine/test/boards')).filter((f) => f.endsWith('.json')).map((f) => `engine/test/boards/${f}`), // sample boards (the watch folder starts empty)
@@ -70,7 +70,7 @@ const SAMPLES: Record<string, string[]> = {
   metrics: ['schemas/samples/metrics.json'],
   manifest: ['schemas/samples/manifest.json'],
   queue: ['schemas/samples/queue.json'],
-  style: fs.readdirSync(path.join(ROOT, 'styles')).map((f) => `styles/${f}`), // every preset
+  style: fs.readdirSync(path.join(ROOT, 'styles')).filter((f) => f.endsWith('.json')).map((f) => `styles/${f}`), // every preset
 };
 
 // Every enum in the schemas that mirrors an engine list must equal it, and repeated enums must agree across schemas.

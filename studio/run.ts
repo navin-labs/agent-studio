@@ -28,7 +28,7 @@ export const PLAN_DAY = 4; // Thursday (IST): recipes for next week, so Forge wr
 const ROOT = path.join(import.meta.dirname, '..');
 
 export const liveChannels = (p: Paths = PATHS): string[] =>
-  fs.readdirSync(p.channels).filter((c) => JSON.parse(fs.readFileSync(path.join(p.channels, c, 'channel.json'), 'utf8')).live === true);
+  fs.readdirSync(p.channels).filter((c) => fs.existsSync(path.join(p.channels, c, 'channel.json')) && JSON.parse(fs.readFileSync(path.join(p.channels, c, 'channel.json'), 'utf8')).live === true);
 
 // IST calendar date and weekday for a moment
 const ist = (now: number) => {

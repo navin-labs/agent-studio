@@ -27,6 +27,9 @@ for (const c of ['c1-automation', 'c2-reach', 'c3-studio']) {
   fs.writeFileSync(path.join(p.channels, c, 'channel.json'), JSON.stringify({...ch, live: c === 'c1-automation', feeds: [{source: 'google-trends', url: TRENDS}]}));
 }
 for (const d of [p.state, p.content[0], p.out]) fs.mkdirSync(d, {recursive: true});
+// Finder litter in scanned folders never breaks a scan
+fs.mkdirSync(path.join(p.queue, 'c1-automation'), {recursive: true});
+for (const d of [p.channels, path.join(p.queue, 'c1-automation')]) fs.writeFileSync(path.join(d, '.DS_Store'), '');
 const HANDLE = '@theautomationguynavin';
 const NAVIN = '111';
 const msgs: {method: string; body: any}[] = [];

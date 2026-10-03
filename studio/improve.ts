@@ -44,7 +44,7 @@ export const propose = (p: Paths, ch: string, now = Date.now(), stylesDir = STYL
     const cur = loadStyle(active, stylesDir);
     const base = row(active);
     // a newer version of the channel's style: proposed once the current one has a baseline to compare against afterwards
-    const newer = fs.readdirSync(stylesDir).map((f) => loadStyle(f.replace(/\.json$/, ''), stylesDir)).filter((s: Style) => s.channel === ch && s.version > cur.version).sort((a, b) => b.version - a.version)[0];
+    const newer = fs.readdirSync(stylesDir).filter((f) => f.endsWith('.json')).map((f) => loadStyle(f.replace(/\.json$/, ''), stylesDir)).filter((s: Style) => s.channel === ch && s.version > cur.version).sort((a, b) => b.version - a.version)[0];
     if (newer && base && base.n >= MIN_N)
       add({id: `style:${ch}:${newer.id}`, kind: 'style', style: newer.id, title: `Switch ${ch} to ${newer.id}`, before: `${active}: ${pct(base.kpi)} over ${base.n} videos`, after: newer.about, expect: newer.expect ?? 'a clearer, more recognisable video'});
     // another version that has scored clearly better (10% over at least 2 x MIN_N videos each): switch back to it

@@ -223,7 +223,7 @@ export const markPublished = (p: Paths = PATHS, now = Date.now()) => {
   const status = currentStatus(p);
   const host = {instagram: /^https:\/\/(www\.)?instagram\.com\//, facebook: /^https:\/\/(www\.|m\.)?facebook\.com\//} as Record<string, RegExp>;
   for (const channel of fs.existsSync(p.queue) ? fs.readdirSync(p.queue) : [])
-    for (const platform of fs.existsSync(path.join(p.queue, channel)) && fs.statSync(path.join(p.queue, channel)).isDirectory() ? fs.readdirSync(path.join(p.queue, channel)) : [])
+    for (const platform of fs.existsSync(path.join(p.queue, channel)) && fs.statSync(path.join(p.queue, channel)).isDirectory() ? fs.readdirSync(path.join(p.queue, channel)).filter((x) => fs.statSync(path.join(p.queue, channel, x)).isDirectory()) : [])
       for (const f of fs.readdirSync(path.join(p.queue, channel, platform)).filter((x) => x.endsWith('.posted.json'))) {
         const dir = path.join(p.queue, channel, platform);
         try {
