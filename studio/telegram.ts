@@ -6,6 +6,7 @@
 //
 // node studio/telegram.ts <channel> <YYYY-Www> [--again]   send the week's QA-passed videos (each once; --again resends)
 // polling runs inside approve-server.ts when TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are set
+import {spawn} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {decide} from './experiment.ts';
@@ -191,7 +192,13 @@ export const poll = async (tg: Tg, o: {chatId: string; secret: string}, p: Paths
       for (const u of await tg('getUpdates', {offset, timeout: 50, allowed_updates: ['callback_query', 'message']})) {
         offset = u.update_id + 1;
         fs.writeFileSync(f, String(offset));
-        console.log(`telegram: ${(await onUpdate(tg, u, o)) ?? 'ignored'}`.replace(/\n/g, '; '));
+        const reply = await onUpdate(tg, u, o);
+        console.log(`telegram: ${reply ?? 'ignored'}`.replace(/\n/g, '; '));
+        // an approval goes out now, not at the next hourly tick (studio/run.ts takes a lock: never two ticks at once)
+        if (reply?.startsWith('Approved')) {
+          const out = fs.openSync(path.join(p.state, 'run.log'), 'a');
+          spawn(process.execPath, [path.join(import.meta.dirname, 'run.ts'), 'tick'], {cwd: path.join(import.meta.dirname, '..'), detached: true, stdio: ['ignore', out, out]}).unref();
+        }
       }
     } catch (e) {
       console.error((e as Error).message);
