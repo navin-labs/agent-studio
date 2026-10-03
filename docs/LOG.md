@@ -343,3 +343,10 @@ Open-source audit: no credentials in the working tree or any of the 27 commits (
 Next: P5 go-live (docs/SETUP.md): Facebook usernames (retry 2026-10-05) and C2 page_id; install the updated Forge skills; watcher handover; hourly loop install.
 Open questions: engine/.env.example still lists empty SARVAM_* lines (Sarvam removed; not edited by Claude per the standing rule); history rewrite for the old README emails before going public; a licence.
 Commit: 3ea7a92 feat: finalize multi-platform production pipeline
+
+## 2026-10-03, session 25: open-source README, MIT license, dotfile-safe scans
+Did: README rewritten for open source with freshly run verification evidence; MIT LICENSE; folder scans skip dotfiles (a Finder .DS_Store in channels/ crashed schema validation, feed and the live-channel scan), regression check in studio/loop.test.ts.
+Decisions: C2 stays 25 to 45 s until the phase-2 history shots (the current 6-beat pool tops out at 34 s, so 40 s is unreachable). No history rewrite: the only personal data in old commits is the author's own email (already public as the commit author on every commit) and a home path in old engine/README.md versions; the other address found is the VT323 font author's, required by its OFL licence.
+Next: P5 go-live (docs/SETUP.md).
+Open questions: none blocking.
+Commit: 73b35d5 docs: open-source README, MIT license; fix: skip dotfiles in folder scans
