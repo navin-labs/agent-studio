@@ -21,6 +21,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
 import {HOOK_PATTERNS, lengthIssue, probeFrames, validateStoryboard} from '../src/composer/storyboard.ts';
+import {probeVideo} from './probe.ts';
 import {ctaKind, file as variantFile, PLATFORMS, ROUTE, variantDir} from '../../studio/variant.ts';
 import {recipeDate} from '../../studio/recipe.ts';
 import {checkTextBoxes} from '../src/composer/textcheck.ts';
@@ -503,7 +504,7 @@ const renderReel = async (script, place) => {
   const errs = issues.filter((i) => i.level === 'error').length;
   console.log((errs ? c.red : c.green)(`  text boxes: ${frames.length} frames measured, ${errs} error(s) -> text-boxes.json`));
   // length: an error only when every vo line was measured; an estimate is never final
-  const long = lengthIssue(script, composition.durationInFrames / composition.fps);
+  const long = lengthIssue(script, (await probeVideo(name('mp4'))).seconds); // measured on the file, exactly as QA measures it
   const voiced = script.scenes.every((s, i) => !s.vo || durations[i] != null);
   if (long) console.log((voiced ? c.red : c.yellow)(`  ${voiced ? 'error' : 'warn'}: ${long}${voiced ? '' : ' (estimated, no voice)'}`));
   // the variant's manifest, written last: what it is, for whom, and where its files are (QA fills in its status)
