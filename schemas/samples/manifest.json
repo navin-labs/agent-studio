@@ -7,7 +7,7 @@
   "voice": "kokoro/af_heart/1.15",
   "cta_kind": "follow",
   "cta_text": "Follow",
-  "cta_say": "Follow for one business automation every day.",
+  "cta_say": "Follow for more business automations.",
   "end_card_handle": "@theautomationguynavin",
   "destination": {
     "via": "forge-queue",

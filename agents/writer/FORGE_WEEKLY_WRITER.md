@@ -7,10 +7,10 @@ All paths are absolute. The project is `~/Dev/projects/agent-studio` (below: `ST
 ---
 
 ## When
-Once a week per live channel. Every Thursday the studio writes `recipes/<channel>/<next week>.json` and Telegram says "<channel> <week>: 7 recipes are ready". Run this skill for that channel and week (or when Navin says "write week <YYYY-Www> for <channel>"). Channels: `c1-automation`, `c2-reach`. (`c3-studio` is not open yet: it has no style preset, so its boards cannot render. Do not write C3 boards until Navin opens it.)
+Once a week per live channel. Every Thursday the studio writes `recipes/<channel>/<next week>.json` and Telegram says "<channel> <week>: N recipes are ready" (N is the channel's `cadence.posts_per_week`: 4 at launch, one every other day: Mon, Wed, Fri, Sun; each recipe has its posting `date`). Run this skill for that channel and week (or when Navin says "write week <YYYY-Www> for <channel>"). Channels: `c1-automation`, `c2-reach`. (`c3-studio` is not open yet: it has no style preset, so its boards cannot render. Do not write C3 boards until Navin opens it.)
 
 ## Read (in this order, nothing else)
-1. `STUDIO/recipes/<channel>/<week>.json`: 7 recipes. Each fixes `id`, `theme`, `style`, `hook_pattern`, the shot list (`primitives`) and `transitions`. **Never change any of them.**
+1. `STUDIO/recipes/<channel>/<week>.json`: the week's recipes (4 at launch). Each fixes `id`, `theme`, `style`, `hook_pattern`, the shot list (`primitives`) and `transitions`. **Never change any of them.**
 2. `STUDIO/ideas/<channel>.jsonl`: the idea list, one JSON per line. The feed adds new ideas every morning (each with its source link); newest are at the bottom.
 3. `STUDIO/state/learn/<channel>/scoreboard.md` if it exists: what worked. Lean on proven topics and hook words; avoid the bench.
 4. `STUDIO/channels/<channel>/RULEBOOK.md`: honesty, CTA and hashtag rules.
@@ -19,7 +19,7 @@ Once a week per live channel. Every Thursday the studio writes `recipes/<channel
 
 ## Ideas
 - One idea per recipe, never reused. Copy its `source_url` into `meta.source` and its `id` into `meta.idea_id`.
-- If fewer than 7 unused ideas exist, first add new lines to the idea file. Each needs a real link you opened (Reddit thread, Google Trends India, YouTube search, an Instagram question reply), and must match `STUDIO/schemas/idea.schema.json`: `id`, `channel`, `title`, `summary`, `source` (reddit, google-trends, youtube, ig-question), `source_url`, `date`. No link, no idea.
+- If there are fewer unused ideas than recipes, first add new lines to the idea file. Each needs a real link you opened (Reddit thread, Google Trends India, YouTube search, an Instagram question reply), and must match `STUDIO/schemas/idea.schema.json`: `id`, `channel`, `title`, `summary`, `source` (reddit, google-trends, youtube, ig-question), `source_url`, `date`. No link, no idea.
 - The idea must pass the send test: name the exact person a viewer would DM it to.
 - What counts as an idea depends on the channel (next section).
 
@@ -37,15 +37,20 @@ You choose the CTA **kind** by what you put in the closer's `text` (the last sho
 
 | Kind | YouTube video says | Instagram video says | Facebook video says |
 |---|---|---|---|
-| follow (C1) | **Subscribe**: "Subscribe for one business automation every day." | **Follow**: "Follow for one business automation every day." | **Follow the page**: "Follow the page for one business automation every day." |
+| follow (C1) | **Subscribe**: "Subscribe for more business automations." | **Follow**: "Follow for more business automations." | **Follow the page**: "Follow the page for more business automations." |
 | dm-audit (C1) | **DM AUDIT on Instagram** @handle: "Send me the word audit on Instagram." | **DM AUDIT**: "Send me the word audit, and I will look at it for free." | **DM AUDIT on Instagram** @handle: "Send me the word audit on Instagram." |
-| follow (C2) | **Subscribe**: "Subscribe for one backstory every day." | **Follow**: "Follow for one backstory every day." | **Follow the page**: "Follow the page for one backstory every day." |
+| follow (C2) | **Subscribe**: "Subscribe for more backstories." | **Follow**: "Follow for more backstories." | **Follow the page**: "Follow the page for more backstories." |
 | send (C2) | **Share it**: "Share this with someone curious." | **Send it**: "Send this to someone curious." | **Share it**: "Share this with someone curious." |
 
 The rules behind the table (QA fails a variant that breaks them):
 - "Subscribe" belongs to YouTube only; "Follow" never appears on YouTube.
 - A CTA that sends people to Instagram from anywhere else (the DM AUDIT funnel on YouTube and Facebook) says "Instagram" out loud and on screen.
 - No CTA words anywhere else: not in the caption body, not in any other shot's text or `vo`. Leave the closer's `vo` out; the platform's spoken line replaces it.
+
+## Launch video (a recipe with `"launch": true`)
+A channel's very first recipe carries `"launch": true`. It posts first, on YouTube, Instagram and Facebook together. Same recipe rules (shots, theme, hook pattern, CTA kind `follow`); only the content differs:
+- C1: the channel promise. One boring task an Indian SME still does by hand, shown running by itself, then what the viewer gets here: one such task at a time, how it can run itself. No idea line needed: set `meta.idea_id` to `launch` and `meta.source` to the channel's own Instagram profile URL. Never promise a posting frequency ("every day") in text, voice or caption.
+- C2: no intro. Write the single strongest story available (the one most people would send to a friend), held to every C2 sourcing rule.
 
 ## Write: one storyboard per recipe
 Save to `STUDIO/engine/content/storyboards/<recipe id>.json` (file name = `id` = the recipe's `id`, e.g. `c1-2026-w42-3.json`). The watcher renders it within a minute, once per platform.
@@ -96,7 +101,7 @@ For each board, read `STUDIO/engine/content/storyboards/<id>.status.txt`. It lis
 - `failed QA`: at least one platform video failed a check (`FAIL <check> <error>` under that platform), or did not render. Fix the JSON and save it again; the passing platforms stay approvable meanwhile.
 - Never use `--force`; never edit `.status.txt`.
 
-Stop when all 7 say `ok`. Then tell Navin: "Week <week> for <channel> is ready for approval", with one line per video: id, topic, hook, CTA kind.
+Stop when every board of the week says `ok`. Then tell Navin: "Week <week> for <channel> is ready for approval", with one line per video: id, topic, hook, CTA kind.
 
 ## Approve and publish (other skills)
 Navin approves each video once on Telegram; one tap approves its YouTube, Instagram and Facebook versions that passed QA (a version that failed is held alone). Approved videos go out through the dispatcher: YouTube through that channel's own n8n workflow, Instagram and Facebook through the queue (`STUDIO/queue/<channel>/<platform>/`) that the **Queue Publisher** skill posts from. Post results come back through the **Metrics Reporter** skill. This skill only writes.

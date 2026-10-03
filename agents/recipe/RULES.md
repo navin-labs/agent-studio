@@ -6,7 +6,7 @@ Why: uniqueness is guaranteed by code, not by asking an AI to be creative.
 |---|---|
 | Runs | Code, weekly per channel |
 | Input | `channel.json`, past fingerprints, bench list, 70/30 split from Learn |
-| Output | `recipes/<channel>/<week>.json`, 7 recipes (schemas/recipe.schema.json) + fingerprints |
+| Output | `recipes/<channel>/<week>.json`, one recipe per posting day (`cadence.posts_per_week`: 4 at launch, spread Mon, Wed, Fri, Sun; each with its `date`; a channel's first recipe is `"launch": true`) (schemas/recipe.schema.json) + fingerprints |
 | Tokens | 0 |
 
 ## Must

@@ -1,10 +1,10 @@
 $ node studio/simulate.ts
-style-c1 youtube                                          c1-automation/2026-10-04/style-c1/youtube/ CTA "Subscribe" ("Subscribe for one business automation every day."), end card @theautomationguynavin, QA pass
-style-c1 instagram                                        c1-automation/2026-10-04/style-c1/instagram/ CTA "Follow" ("Follow for one business automation every day."), end card @theautomationguynavin, QA pass
-style-c1 facebook                                         c1-automation/2026-10-04/style-c1/facebook/ CTA "Follow" ("Follow the page for one business automation every day."), end card no account, QA pass
-style-c2 youtube                                          c2-reach/2026-10-04/style-c2/youtube/ CTA "Subscribe" ("Subscribe for one backstory every day."), end card @backstory.minute, QA pass
-style-c2 instagram                                        c2-reach/2026-10-04/style-c2/instagram/ CTA "Follow" ("Follow for one backstory every day."), end card @backstory.minute, QA pass
-style-c2 facebook                                         c2-reach/2026-10-04/style-c2/facebook/ CTA "Follow" ("Follow the page for one backstory every day."), end card no account, QA pass
+style-c1 youtube                                          c1-automation/2026-10-04/style-c1/youtube/ CTA "Subscribe" ("Subscribe for more business automations."), end card @theautomationguynavin, QA pass
+style-c1 instagram                                        c1-automation/2026-10-04/style-c1/instagram/ CTA "Follow" ("Follow for more business automations."), end card @theautomationguynavin, QA pass
+style-c1 facebook                                         c1-automation/2026-10-04/style-c1/facebook/ CTA "Follow" ("Follow the page for more business automations."), end card no account, QA pass
+style-c2 youtube                                          c2-reach/2026-10-04/style-c2/youtube/ CTA "Subscribe" ("Subscribe for more backstories."), end card @backstory.minute, QA pass
+style-c2 instagram                                        c2-reach/2026-10-04/style-c2/instagram/ CTA "Follow" ("Follow for more backstories."), end card @backstory.minute, QA pass
+style-c2 facebook                                         c2-reach/2026-10-04/style-c2/facebook/ CTA "Follow" ("Follow the page for more backstories."), end card no account, QA pass
 telegram message                                          youtube: ready, CTA "Subscribe" | instagram: ready, CTA "Follow" | facebook: ready, CTA "Follow"
 telegram message                                          youtube: ready, CTA "Subscribe" | instagram: ready, CTA "Follow" | facebook: ready, CTA "Follow"
 approve style-c1                                          Approved: style-c1 (instagram, youtube, facebook)

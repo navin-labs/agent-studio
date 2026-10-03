@@ -29,6 +29,8 @@ export type Recipe = {
   hook_pattern: string;
   fingerprint: string;
   experiment: boolean;
+  date?: string; // the posting day; older recipes without it post on consecutive days from Monday
+  launch?: true; // the channel's first video (agents/writer/FORGE_WEEKLY_WRITER.md "Launch video")
   style?: string;
   guidance?: Guidance;
 };
@@ -88,7 +90,9 @@ export const rng = (seed: string) => {
 const pick = <T,>(r: () => number, xs: readonly T[]) => xs[Math.floor(r() * xs.length)];
 
 export const recipeHash = (theme: string, primitives: string[], hook: string) => createHash('sha1').update(`${theme}|${primitives.join('>')}|${hook}`).digest('hex').slice(0, 12);
-export const recipeDate = (r: Pick<Recipe, 'week' | 'slot'>) => addDays(weekStart(r.week), r.slot - 1);
+// Posting days spread over the week: 7 a week is every day, 4 is Mon, Wed, Fri, Sun (alternate days), 3 is Mon, Thu, Sun.
+export const slotDay = (slot: number, perWeek: number) => (perWeek > 1 ? Math.round(((slot - 1) * 6) / (perWeek - 1)) : 0);
+export const recipeDate = (r: Pick<Recipe, 'week' | 'slot' | 'date'>) => r.date ?? addDays(weekStart(r.week), r.slot - 1);
 export const toFingerprint = (r: Recipe): Fingerprint => ({id: r.id, channel: r.channel, date: recipeDate(r), primitives: r.primitives, opening: r.opening, theme: r.theme, hook_pattern: r.hook_pattern, hash: r.fingerprint});
 
 // A preset narrows each format's transitions to its own (fold is a signature: only a preset that lists it gets it).
@@ -113,6 +117,7 @@ export const generateWeek = (ch: Channel, week: string, history: Fingerprint[], 
   const experiments = new Set<number>();
   while (experiments.size < Math.round(n * EXPERIMENT_SHARE)) experiments.add(1 + Math.floor(r() * n));
   const short = ch.id.split('-')[0];
+  const launch = !history.some((h) => h.channel === ch.id); // no earlier recipe for this channel: its first video is the launch video
   const out: Recipe[] = [];
   for (let slot = 1; slot <= n; slot++) {
     let last: Violation[] = [];
@@ -141,6 +146,7 @@ export const generateWeek = (ch: Channel, week: string, history: Fingerprint[], 
         channel: ch.id,
         week,
         slot,
+        date: addDays(weekStart(week), slotDay(slot, n)),
         theme,
         opening: primitives[0],
         primitives,
@@ -149,6 +155,7 @@ export const generateWeek = (ch: Channel, week: string, history: Fingerprint[], 
         hook_pattern: hook,
         fingerprint: recipeHash(theme, primitives, hook),
         experiment: experiments.has(slot),
+        ...(launch && slot === 1 ? {launch: true as const} : {}),
         ...(style ? {style: style.id} : {}),
         ...(opts.guidance ? {guidance: opts.guidance} : {}),
       };

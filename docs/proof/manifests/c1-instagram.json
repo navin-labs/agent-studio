@@ -7,7 +7,7 @@
   "voice": "kokoro/af_heart/1.15",
   "cta_kind": "follow",
   "cta_text": "Follow",
-  "cta_say": "Follow for one business automation every day.",
+  "cta_say": "Follow for more business automations.",
   "end_card_handle": "@theautomationguynavin",
   "destination": {
     "via": "forge-queue",
@@ -17,7 +17,7 @@
     "width": 1080,
     "height": 1920
   },
-  "video_sha256": "e1827736907962989808a64f8ec2671e3824077f233c34c25eb92ada51383905",
+  "video_sha256": "21e6e2cbbae2563ef0fbbe278ea0a70f6b958e52e303485e1e8ce5a1e5f04baf",
   "qa_status": "pass",
   "files": {
     "video": "c1-automation-instagram-2026-10-04-style-c1.mp4",

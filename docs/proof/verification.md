@@ -19,12 +19,12 @@ Measured on the rendered MP4 with `engine/scripts/probe.ts`: every file is mp4, 
 
 | Variant | Length | Allowed | CTA | End card | Destination | QA |
 |---|---|---|---|---|---|---|
-| C1 YouTube | 46.36 s | 40 to 60 s | Subscribe | @theautomationguynavin | n8n, the channel's own upload workflow | PASS |
-| C1 Instagram | 46.08 s | 40 to 60 s | Follow | @theautomationguynavin | `queue/c1-automation/instagram/` | PASS |
-| C1 Facebook | 46.49 s | 40 to 60 s | Follow (the page) | no account (username pending) | `queue/c1-automation/facebook/`, page 1429203763599559 | PASS |
-| C2 YouTube | 31.00 s | 25 to 45 s | Subscribe | @backstory.minute | n8n, the channel's own upload workflow | PASS |
-| C2 Instagram | 30.78 s | 25 to 45 s | Follow | @backstory.minute | `queue/c2-reach/instagram/` | PASS |
-| C2 Facebook | 31.15 s | 25 to 45 s | Follow (the page) | no account (username pending) | `queue/c2-reach/facebook/`, page 1320532171147125 | PASS |
+| C1 YouTube | 45.78 s | 40 to 60 s | Subscribe | @theautomationguynavin | n8n, the channel's own upload workflow | PASS |
+| C1 Instagram | 45.59 s | 40 to 60 s | Follow | @theautomationguynavin | `queue/c1-automation/instagram/` | PASS |
+| C1 Facebook | 45.95 s | 40 to 60 s | Follow (the page) | no account (username pending) | `queue/c1-automation/facebook/`, page 1429203763599559 | PASS |
+| C2 YouTube | 30.59 s | 25 to 45 s | Subscribe | @backstory.minute | n8n, the channel's own upload workflow | PASS |
+| C2 Instagram | 30.61 s | 25 to 45 s | Follow | @backstory.minute | `queue/c2-reach/instagram/` | PASS |
+| C2 Facebook | 30.66 s | 25 to 45 s | Follow (the page) | no account (username pending) | `queue/c2-reach/facebook/`, page 1320532171147125 | PASS |
 
 C2's range stays 25 to 45 s until its phase-2 history shots exist (docs/DECISIONS.md, ADR 21).
 

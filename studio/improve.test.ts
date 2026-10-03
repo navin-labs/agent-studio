@@ -26,7 +26,7 @@ const lines = (f: string, rows: unknown[]) => fs.writeFileSync(f, rows.map((r) =
 
 // 4 weeks of published C1 videos in style v0, each with a caption kind, a CTA and a length (independent of each other)
 let history: Fingerprint[] = [];
-for (const w of ['2026-W37', '2026-W38', '2026-W39', '2026-W40']) history = [...history, ...generateWeek(real, w, history).map(toFingerprint)];
+for (const w of ['2026-W37', '2026-W38', '2026-W39', '2026-W40']) history = [...history, ...generateWeek({...real, cadence: {posts_per_week: 7}}, w, history).map(toFingerprint)]; // sample history: 7 a week
 const fps = history.map((f, i) => ({...f, topic_text: `task ${i}`, caption_opener: i % 2 ? 'Still typing bills?' : 'Bills get typed by hand.', cta: i % 3 === 0 ? 'DM AUDIT' : 'Follow', seconds: i % 5 < 2 ? 22 : 38, style: 'c1-night-v0'}));
 lines(fingerprintFile(p), fps);
 lines(ledgerFile(p), fps.map((f) => ({storyboard_id: f.id, channel: f.channel, platform: 'instagram', status: 'published', approved_by: 'navin', approved_at: '2026-09-01T10:00:00Z', sha256: '0'.repeat(64), scheduled_for: `${f.date}T19:00:00+05:30`, style: f.style, updated_at: '2026-09-01T10:00:00Z'})));

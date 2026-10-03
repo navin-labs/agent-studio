@@ -11,7 +11,7 @@ Why: grow an audience with business and tech history told in under a minute, the
 | Theme | archive (Archive Gold) only. Never C1's lime or flow blue, never night, paper, ink, mono or studio |
 | Format | reach (studio/recipe.ts): its own storytelling grammar, no host, no automation flow |
 | Content | How an everyday business or tech object came to be (the barcode, the shipping container, the spreadsheet); the person and the problem behind an invention; one surprising sourced fact, told as a story |
-| Cadence | 7 a week (channel.json) |
+| Cadence | 4 a week at launch (every other day; channel.json `cadence.posts_per_week`). The first video is the strongest story available, no intro |
 | Publisher | Three platform videos per approved video: Instagram @backstory.minute (Forge queue), YouTube @backstory.minute (its own n8n workflow, `agent-studio-youtube-c2-reach`), Facebook page 1320532171147125 (Forge queue, posted to the page by its ID; username pending, retry 2026-10-05: until then the end card names no account) |
 | Launch gate | C1 has run 14 days with no missed posts |
 

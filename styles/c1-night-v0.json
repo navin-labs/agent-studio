@@ -27,9 +27,9 @@
       "cta": {
         "follow": {
           "text": "*Subscribe*",
-          "sub": "One business automation, every day.",
-          "say": "Subscribe for one business automation every day.",
-          "line": "Subscribe for one business automation every day."
+          "sub": "More business automations.",
+          "say": "Subscribe for more business automations.",
+          "line": "Subscribe for more business automations."
         },
         "dm-audit": {
           "text": "DM *AUDIT*",
@@ -54,9 +54,9 @@
       "cta": {
         "follow": {
           "text": "*Follow*",
-          "sub": "One business automation, every day.",
-          "say": "Follow for one business automation every day.",
-          "line": "Follow {ig} for one business automation every day."
+          "sub": "More business automations.",
+          "say": "Follow for more business automations.",
+          "line": "Follow {ig} for more business automations."
         },
         "dm-audit": {
           "text": "DM *AUDIT*",
@@ -81,9 +81,9 @@
       "cta": {
         "follow": {
           "text": "*Follow*",
-          "sub": "One business automation, every day.",
-          "say": "Follow the page for one business automation every day.",
-          "line": "Follow the page for one business automation every day."
+          "sub": "More business automations.",
+          "say": "Follow the page for more business automations.",
+          "line": "Follow the page for more business automations."
         },
         "dm-audit": {
           "text": "DM *AUDIT*",

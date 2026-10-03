@@ -148,6 +148,15 @@
       "type": "boolean",
       "description": "true = part of the 30% experiments"
     },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "the posting day (cadence.posts_per_week spread over the week); absent in older recipes: consecutive days from Monday"
+    },
+    "launch": {
+      "const": true,
+      "description": "the channel's first video: the Writer writes the launch video (agents/writer/FORGE_WEEKLY_WRITER.md)"
+    },
     "style": {
       "type": "string",
       "pattern": "^c[0-9]-[a-z0-9-]+-v[0-9]+$",

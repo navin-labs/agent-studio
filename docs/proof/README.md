@@ -22,11 +22,11 @@ They render to `engine/test/out/<channel>/<date>/<board>/<platform>/` (ignored b
 
 | File | Size (bytes) |
 |---|---|
-| `engine/test/out/c1-automation/2026-10-04/style-c1/youtube/c1-automation-youtube-2026-10-04-style-c1.mp4` | 13486402 |
-| `engine/test/out/c1-automation/2026-10-04/style-c1/instagram/c1-automation-instagram-2026-10-04-style-c1.mp4` | 13458440 |
-| `engine/test/out/c1-automation/2026-10-04/style-c1/facebook/c1-automation-facebook-2026-10-04-style-c1.mp4` | 13448974 |
-| `engine/test/out/c2-reach/2026-10-04/style-c2/youtube/c2-reach-youtube-2026-10-04-style-c2.mp4` | 8916649 |
-| `engine/test/out/c2-reach/2026-10-04/style-c2/instagram/c2-reach-instagram-2026-10-04-style-c2.mp4` | 8885680 |
-| `engine/test/out/c2-reach/2026-10-04/style-c2/facebook/c2-reach-facebook-2026-10-04-style-c2.mp4` | 8888301 |
+| `engine/test/out/c1-automation/2026-10-04/style-c1/youtube/c1-automation-youtube-2026-10-04-style-c1.mp4` | 13456108 |
+| `engine/test/out/c1-automation/2026-10-04/style-c1/instagram/c1-automation-instagram-2026-10-04-style-c1.mp4` | 13436857 |
+| `engine/test/out/c1-automation/2026-10-04/style-c1/facebook/c1-automation-facebook-2026-10-04-style-c1.mp4` | 13428298 |
+| `engine/test/out/c2-reach/2026-10-04/style-c2/youtube/c2-reach-youtube-2026-10-04-style-c2.mp4` | 8890070 |
+| `engine/test/out/c2-reach/2026-10-04/style-c2/instagram/c2-reach-instagram-2026-10-04-style-c2.mp4` | 8870972 |
+| `engine/test/out/c2-reach/2026-10-04/style-c2/facebook/c2-reach-facebook-2026-10-04-style-c2.mp4` | 8855518 |
 
 A re-render produces new files with new hashes (QA then records the new hashes); the checks themselves are what is reproducible.

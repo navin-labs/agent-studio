@@ -142,8 +142,8 @@ Measured test renders (all mp4, 1080x1920, 30 fps, with audio):
 
 | Board | YouTube | Instagram | Facebook | Allowed |
 |---|---|---|---|---|
-| style-c1 | 46.36 s | 46.08 s | 46.49 s | 40 to 60 s |
-| style-c2 | 31.00 s | 30.78 s | 31.15 s | 25 to 45 s |
+| style-c1 | 45.78 s | 45.59 s | 45.95 s | 40 to 60 s |
+| style-c2 | 30.59 s | 30.61 s | 30.66 s | 25 to 45 s |
 
 The simulation's refusal cases: a channel pointed at another channel's workflow, missing manifest, unknown platform, wrong channel/platform pair, wrong channel on the ledger line, changed destination handle, Facebook username pending with no page ID, video changed after approval, approval taken back, duplicate queue item.
 

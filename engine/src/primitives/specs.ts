@@ -274,7 +274,7 @@ export const SPECS: Record<string, Spec> = {
     captions: false,
     closer: true,
     params: {text: text(20), sub: text(60, true)},
-    example: {text: '*Follow*', sub: 'One business automation, every day.'},
+    example: {text: '*Follow*', sub: 'More business automations.'},
   },
 };
 

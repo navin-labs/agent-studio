@@ -24,7 +24,7 @@ const TRENDS = 'https://trends.google.com/trending/rss?geo=IN';
 for (const c of ['c1-automation', 'c2-reach', 'c3-studio']) {
   const ch = JSON.parse(fs.readFileSync(path.join(ROOT, 'channels', c, 'channel.json'), 'utf8'));
   fs.mkdirSync(path.join(p.channels, c), {recursive: true});
-  fs.writeFileSync(path.join(p.channels, c, 'channel.json'), JSON.stringify({...ch, live: c === 'c1-automation', feeds: [{source: 'google-trends', url: TRENDS}]}));
+  fs.writeFileSync(path.join(p.channels, c, 'channel.json'), JSON.stringify({...ch, live: c === 'c1-automation', feeds: [{source: 'google-trends', url: TRENDS}], cadence: {posts_per_week: 7}}) /* volume for Learn; the real cadence is in recipe.test.ts */);
 }
 for (const d of [p.state, p.content[0], p.out]) fs.mkdirSync(d, {recursive: true});
 // Finder litter in scanned folders never breaks a scan

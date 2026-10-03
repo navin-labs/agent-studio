@@ -9,6 +9,8 @@ State on 2026-10-03: clean slate done (test approvals, renders, dry-run boards a
 ## How a video goes out (read once)
 Every approved video goes out as three platform variants, each its own render with its own call to action, end card, caption and (YouTube) thumbnail, from the channel's style preset:
 
+Cadence at launch: 4 videos a week per channel, every other day (Mon, Wed, Fri, Sun); `cadence.posts_per_week` in channel.json, 7 for daily once a channel has run 14 clean days. A channel's first video is its launch video.
+
 | Platform | Says | Goes to |
 |---|---|---|
 | YouTube | Subscribe (C1's audit funnel: "DM AUDIT on Instagram") | that channel's own n8n upload workflow (`http://localhost:5678/webhook/agent-studio-youtube-<channel>`), private with a scheduled publish time |
@@ -87,9 +89,9 @@ The old "Instagram Growth Pipeline" skill (reel-engine) is replaced by these thr
 ## 6. Go live, one channel at a time
 1. Turn dispatch on: add a last line `DISPATCH_LIVE=on` to `agent-studio/.env` (the last DISPATCH_LIVE line wins): `echo 'DISPATCH_LIVE=on' >> .env` in `STUDIO`. Check: `node studio/dispatch.ts --live` no longer says "--live ignored".
 2. Set `"live": true` in `channels/c1-automation/channel.json`.
-3. Wait for (or run) Thursday's tick: `node studio/run.ts tick`. Telegram: "c1-automation <week>: 7 recipes are ready".
+3. Plan the first week. Starting mid-week: `node studio/recipe.ts c1-automation <this ISO week, e.g. 2026-W41>` writes 4 recipes (Mon, Wed, Fri, Sun); the first is the launch video (`"launch": true`, posted first on all three platforms). Then tell Forge: "Run Weekly Writer for c1-automation, week <week>". From then on the Thursday tick plans next week by itself (Telegram: "c1-automation <week>: 4 recipes are ready").
 4. Forge writes the week; each board renders three platform videos and QA checks each; each video arrives on Telegram once, listing its variants (ready with its CTA, or held with why) and an **Approve** button.
-5. Approve. Within the hour the loop dispatches each approved variant: YouTube scheduled through C1's own n8n workflow, Instagram (and Facebook once claimed) into `queue/c1-automation/<platform>/` for Forge at the posting time.
+5. Approve. Within the hour the loop dispatches each approved variant: YouTube scheduled through C1's own n8n workflow, Instagram and Facebook (to the page by its ID) into `queue/c1-automation/<platform>/` for Forge at the posting time (19:00 IST until Learn has data).
 6. Forge posts, writes `<item>.posted.json`; the loop marks that variant published (YouTube once its scheduled time has passed). Forge reports metrics at 24h and 7d; n8n reads YouTube views; Learn uses them from the next Thursday.
 
 C2 after C1 has run 14 days with no missed posts (Phase D1). C3 once it has a style preset and 20 approved videos exist (D2).

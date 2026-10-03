@@ -14,9 +14,9 @@ sequenceDiagram
   participant LN as Learn (code)
   N8N->>N8N: Feed: pull topics into ideas/<channel>.jsonl
   LN->>REC: scoreboard, bench list, 70/30 split
-  REC->>REC: 7 recipes per channel, redraw until novelty rules pass
+  REC->>REC: one recipe per posting day (4 a week at launch), redraw until novelty rules pass
   REC->>FG: recipes + top 20 ideas + RULEBOOK + scoreboard
-  FG->>RE: 7 storyboards (engine/content/storyboards/)
+  FG->>RE: one storyboard per recipe (engine/content/storyboards/)
   RE->>RE: render 3 platform variants each, QA each, contact sheets
   alt QA fails
     RE->>FG: exact error

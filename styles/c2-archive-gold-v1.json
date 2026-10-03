@@ -31,9 +31,9 @@
       "cta": {
         "follow": {
           "text": "*Subscribe*",
-          "sub": "One backstory, every day.",
-          "say": "Subscribe for one backstory every day.",
-          "line": "Subscribe for one backstory every day."
+          "sub": "More backstories.",
+          "say": "Subscribe for more backstories.",
+          "line": "Subscribe for more backstories."
         },
         "send": {
           "text": "*Share* it",
@@ -58,9 +58,9 @@
       "cta": {
         "follow": {
           "text": "*Follow*",
-          "sub": "One backstory, every day.",
-          "say": "Follow for one backstory every day.",
-          "line": "Follow {ig} for one backstory every day."
+          "sub": "More backstories.",
+          "say": "Follow for more backstories.",
+          "line": "Follow {ig} for more backstories."
         },
         "send": {
           "text": "*Send* it",
@@ -85,9 +85,9 @@
       "cta": {
         "follow": {
           "text": "*Follow*",
-          "sub": "One backstory, every day.",
-          "say": "Follow the page for one backstory every day.",
-          "line": "Follow the page for one backstory every day."
+          "sub": "More backstories.",
+          "say": "Follow the page for more backstories.",
+          "line": "Follow the page for more backstories."
         },
         "send": {
           "text": "*Share* it",

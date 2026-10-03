@@ -7,7 +7,7 @@
   "voice": "kokoro/am_fenrir/1",
   "cta_kind": "follow",
   "cta_text": "Follow",
-  "cta_say": "Follow for one backstory every day.",
+  "cta_say": "Follow for more backstories.",
   "end_card_handle": "@backstory.minute",
   "destination": {
     "via": "forge-queue",
@@ -17,7 +17,7 @@
     "width": 1080,
     "height": 1920
   },
-  "video_sha256": "6617dd5ab878c1acbab8a594638ed4797cd972c9b1184b631d28823249890a82",
+  "video_sha256": "69e4d10fe4a2017b969e7315777cc12c6ed2c62704f339bdcb782721699c184b",
   "qa_status": "pass",
   "files": {
     "video": "c2-reach-instagram-2026-10-04-style-c2.mp4",

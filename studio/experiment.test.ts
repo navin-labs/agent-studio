@@ -45,7 +45,7 @@ fs.writeFileSync(path.join(p.content[0], `${id}.json`), JSON.stringify(board));
 // its YouTube variant (the experiment's arms are YouTube's thumbnails; the description is that variant's caption)
 const yv = {channel: 'c2-reach', date: '2026-10-10', id, platform: 'youtube' as const};
 fs.mkdirSync(variantDir(p.out, yv), {recursive: true});
-for (const [k, body] of [['thumbnail.png', 'arm a'], ['thumbnail-b.png', 'arm b'], ['caption.txt', `${board.caption}\n\nSubscribe for one backstory every day.\n`]]) fs.writeFileSync(file(p.out, yv, k), body);
+for (const [k, body] of [['thumbnail.png', 'arm a'], ['thumbnail-b.png', 'arm b'], ['caption.txt', `${board.caption}\n\nSubscribe for more backstories.\n`]]) fs.writeFileSync(file(p.out, yv, k), body);
 const pub = '2026-10-10T19:00:00+05:30';
 fs.writeFileSync(ledgerFile(p), JSON.stringify({storyboard_id: id, channel: 'c2-reach', platform: 'youtube', status: 'published', approved_by: 'navin', approved_at: pub, sha256: '0'.repeat(64), scheduled_for: pub, post_urls: ['https://www.youtube.com/shorts/Q8sNfIm_PMU'], updated_at: pub}) + '\n');
 const [x] = experiments(p);

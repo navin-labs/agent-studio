@@ -356,3 +356,9 @@ Did: Forge installed the three skills (Weekly Writer 109 lines, Queue Publisher 
 Decisions: ADR 22.
 Next: go-live (docs/SETUP.md step 5 then 6): watcher handover, hourly loop, C1 live, this week's recipes (2026-W41) by hand.
 Open questions: none blocking. Reinstall the Weekly Writer skill in Forge (one example line changed).
+
+## 2026-10-04, session 27: launch cadence and launch video
+Did: cadence 4 a week for C1 and C2 (channel.json), spread every other day: recipes now carry their posting `date` (studio/recipe.ts slotDay: 4 a week = Mon, Wed, Fri, Sun; 7 = daily; older recipes keep consecutive days). A channel's first recipe is `"launch": true` (recipe.schema.json); Telegram's "recipes are ready" says so; Writer skill has a "Launch video" section (C1: the channel promise; C2: its strongest story, no intro) and no fixed "7". Spoken and caption CTAs no longer promise a frequency ("Follow for more business automations", "... more backstories") in all four presets. Tests: real cadence checked in recipe.test.ts (dates and launch flag); improve and loop sandboxes pinned to 7 a week for Learn volume. Test boards re-rendered: all six variants pass QA (36 of 36 per board); proof pack refreshed.
+Decisions: ADR 23.
+Next: Navin picks C1's launch look (c1-night-v0 or c1-night-signal-v1) before the first recipes are planned; then go-live (docs/SETUP.md step 5 and 6), C1 only.
+Open questions: Forge to reinstall Weekly Writer (now 114 lines) and Queue Publisher/Metrics Reporter unchanged.

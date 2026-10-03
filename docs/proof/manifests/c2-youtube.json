@@ -7,7 +7,7 @@
   "voice": "kokoro/am_fenrir/1",
   "cta_kind": "follow",
   "cta_text": "Subscribe",
-  "cta_say": "Subscribe for one backstory every day.",
+  "cta_say": "Subscribe for more backstories.",
   "end_card_handle": "@backstory.minute",
   "destination": {
     "via": "n8n",
@@ -17,7 +17,7 @@
     "width": 1080,
     "height": 1920
   },
-  "video_sha256": "7cfa497824eb3588fe5f309ce74f3c5f7510334ce98f543ae75c3517592aea01",
+  "video_sha256": "86088ce8ff7280bcadeff144ae0a1038b02639ee843e83e2fc57ea14e04de93a",
   "qa_status": "pass",
   "files": {
     "video": "c2-reach-youtube-2026-10-04-style-c2.mp4",

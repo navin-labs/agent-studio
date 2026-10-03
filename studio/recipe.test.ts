@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import {addDays, checkNovelty, type Fingerprint, isoWeek, structureDistance, topicSimilarity, weekStart} from './novelty.ts';
-import {channelThemes, generateWeek, reachable, type Recipe, recipeDate, toFingerprint} from './recipe.ts';
+import {channelThemes, generateWeek, reachable, type Recipe, recipeDate, slotDay, toFingerprint} from './recipe.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 const c1 = JSON.parse(fs.readFileSync(path.join(ROOT, 'channels/c1-automation/channel.json'), 'utf8'));
@@ -26,8 +26,8 @@ const all: Recipe[] = [];
 for (const w of weeks)
   for (const ch of [c1, c2, c3]) {
     const rs = generateWeek(ch, w, history);
-    assert.equal(rs.length, 7);
-    assert.equal(rs.filter((r) => r.experiment).length, 2, '30% of 7 slots are experiments');
+    assert.equal(rs.length, ch.cadence.posts_per_week, 'one recipe per posting day (C1, C2: 4 a week; C3: 7)');
+    assert.equal(rs.filter((r) => r.experiment).length, Math.round(ch.cadence.posts_per_week * 0.3), '30% of the slots are experiments');
     for (const r of rs) {
       assert.deepEqual(validate(schema, r), [], `${r.id} breaks recipe.schema.json`);
       assert.equal(r.transitions.length, r.primitives.length);
@@ -76,6 +76,15 @@ assert.deepEqual(rules({...base, hash: 'abc'}, [h(7, {channel: 'c3-studio', hash
 assert.deepEqual(rules({...base, hash: 'abc'}, [{...h(0, {channel: 'c3-studio', hash: 'abc'}), date: addDays(base.date, 1)}]), ['cross-channel'], 'later in the same week counts too');
 assert.deepEqual(rules(base, [h(1, {channel: 'c3-studio', opening: 'pile-drop', theme: 'paper'})]), [], 'other channels do not count for channel rules');
 assert.equal(recipeDate({week: '2026-W40', slot: 7}), '2026-10-04');
+// posting days spread over the week (alternate days at 4 a week); a channel's first-ever recipe is its launch video, and only that one
+assert.deepEqual([1, 2, 3, 4].map((s) => slotDay(s, 4)), [0, 2, 4, 6]);
+assert.deepEqual([1, 2, 3, 4, 5, 6, 7].map((s) => slotDay(s, 7)), [0, 1, 2, 3, 4, 5, 6]);
+{
+  const c1 = {...JSON.parse(fs.readFileSync(path.join(ROOT, 'channels', 'c1-automation', 'channel.json'), 'utf8')), cadence: {posts_per_week: 4}};
+  const first = generateWeek(c1, '2026-W41', []);
+  assert.deepEqual(first.map((x) => [recipeDate(x), x.launch ?? false]), [['2026-10-05', true], ['2026-10-07', false], ['2026-10-09', false], ['2026-10-11', false]]);
+  assert.ok(generateWeek(c1, '2026-W42', first.map(toFingerprint)).every((x) => !x.launch), 'only the first week has a launch video');
+}
 
 // style presets: one setting switches the look (theme, transitions) and is recorded on every recipe; setting it back rolls back
 const v1 = generateWeek({...c1, style: 'c1-night-signal-v1'}, '2026-W45', []);

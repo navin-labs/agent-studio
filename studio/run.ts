@@ -112,7 +112,7 @@ export const tick = async (o: TickOpts = {}) => {
       await step(`plan ${ch} ${nextWeek}`, async () => {
         runLearn(ch, nextWeek, p, now);
         const r = o.plan ? o.plan(ch, nextWeek) : planWeek(ch, nextWeek, {recipes: p.recipes, state: p.state, channels: p.channels});
-        await say(`${ch} ${nextWeek}: ${r.recipes.length} recipes are ready. Forge: write the week (Weekly Writer skill).\n\n${weeklyNote(p, ch, nextWeek, r.recipes as Parameters<typeof weeklyNote>[3], now)}`);
+        await say(`${ch} ${nextWeek}: ${r.recipes.length} recipes are ready${(r.recipes as {launch?: true}[]).some((x) => x.launch) ? " (the first is the channel's launch video)" : ""}. Forge: write the week (Weekly Writer skill).\n\n${weeklyNote(p, ch, nextWeek, r.recipes as Parameters<typeof weeklyNote>[3], now)}`);
         return `${r.recipes.length} recipes`;
       });
     if (o.tg && o.chatId)
