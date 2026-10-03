@@ -61,7 +61,7 @@ Custom thumbnails need each YouTube channel phone-verified at youtube.com/verify
 
 The old "Instagram Growth Pipeline" skill (reel-engine) is replaced by these three: remove it from Forge. If an older copy of these skills is installed, install these versions again (the queue layout changed on 2026-10-03).
 
-## 5. The Mac (Claude can run these with Navin)
+## 5. The Mac
 1. Watcher handover (finishes B4b). Do it in this order, so Forge never writes into a folder nothing renders:
    1. Install the three Forge skills (step 4). Forge now writes to `engine/content/storyboards/`.
    2. Stop the old v1 watcher (reel-engine):

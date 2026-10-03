@@ -1,0 +1,27 @@
+{
+  "channel": "c1-automation",
+  "platform": "facebook",
+  "video_id": "style-c1",
+  "date": "2026-10-03",
+  "style_version": "c1-night-signal-v1",
+  "voice": "kokoro/af_heart/1.15",
+  "cta_kind": "follow",
+  "cta_text": "Follow",
+  "cta_say": "Follow the page for one business automation every day.",
+  "end_card_handle": null,
+  "destination": {
+    "via": "forge-queue",
+    "handle": "pending_retry_2026-10-05",
+    "page_id": "1429203763599559"
+  },
+  "size": {
+    "width": 1080,
+    "height": 1920
+  },
+  "video_sha256": "e5ba08c2e2a7220727f394df1d0a98d73c75538e41abdcbe2f497e7b912018a7",
+  "qa_status": "fail",
+  "files": {
+    "video": "c1-automation-facebook-2026-10-03-style-c1.mp4",
+    "caption": "c1-automation-facebook-2026-10-03-style-c1.caption.txt"
+  }
+}

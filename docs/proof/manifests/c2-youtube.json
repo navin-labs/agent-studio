@@ -1,0 +1,27 @@
+{
+  "channel": "c2-reach",
+  "platform": "youtube",
+  "video_id": "style-c2",
+  "date": "2026-10-03",
+  "style_version": "c2-archive-gold-v1",
+  "voice": "kokoro/am_fenrir/1",
+  "cta_kind": "follow",
+  "cta_text": "Subscribe",
+  "cta_say": "Subscribe for one backstory every day.",
+  "end_card_handle": "@backstory.minute",
+  "destination": {
+    "via": "n8n",
+    "handle": "@backstory.minute"
+  },
+  "size": {
+    "width": 1080,
+    "height": 1920
+  },
+  "video_sha256": "3fcf5ccd613af987eb361d2e3e1f7b02539a822e23fddda61c7115917be29406",
+  "qa_status": "pass",
+  "files": {
+    "video": "c2-reach-youtube-2026-10-03-style-c2.mp4",
+    "caption": "c2-reach-youtube-2026-10-03-style-c2.caption.txt",
+    "thumbnail": "c2-reach-youtube-2026-10-03-style-c2.thumbnail.png"
+  }
+}

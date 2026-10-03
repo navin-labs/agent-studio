@@ -35,7 +35,7 @@ sequenceDiagram
 |---|---|---|
 | Weekly approval | Navin | Once a week per channel, about 5 minutes |
 | New theme | Navin | Once per theme |
-| Commit + push | Navin ("approve commit") | End of each Claude Code session |
+| Commit + push | Navin | After `npm run check` passes |
 | Channel launch | Navin | C2 after C1 runs 14 days with no missed posts; C3 after 20 approved videos |
 
 ## Failure paths

@@ -148,12 +148,12 @@ Not taken, on purpose: its AI video-generation core (our composed brand formats 
 ## Security
 | Rule | Enforced by |
 |---|---|
-| Never read or print `.env` | `.claude/settings.json` deny rules; CLAUDE.md |
+| `.env` files are never committed or printed | `.gitignore` (`.env`, `.env.*`, credential file patterns); code and docs refer to variables by name only |
 | No publish without ledger status "approved" for that platform variant | Dispatcher refuses otherwise |
 | Only the approved bytes go out | The ledger line carries the approved video's SHA-256; dispatch refuses a changed file and sends the bytes it hashed |
 | One channel's video never reaches another channel's account | Per-channel YouTube webhook (`/webhook/agent-studio-youtube-<channel>`, no shared default); each n8n workflow takes only its own channel's jobs and asks `/dispatch-check` with its channel and platform; queue folders per channel and platform; manifest destination re-checked against channel.json |
 | An approval link approves once | The link's signature id is recorded on the ledger line; a replay (also after a rejection) is refused |
-| Claude never publishes; never force-pushes | CLAUDE.md; force push denied |
+| Nothing publishes outside Dispatch | Only `studio/dispatch.ts` sends, behind the live switches and the ledger checks above |
 | Forge writes only JSON into content folders and its own queue/inbox files; never edits engine code | Forge skill standing rules |
 | Ideas only from feeds with a source link | Writer rules; `meta.source` required by storyboard schema |
 

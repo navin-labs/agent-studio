@@ -1,0 +1,26 @@
+{
+  "channel": "c1-automation",
+  "platform": "instagram",
+  "video_id": "style-c1",
+  "date": "2026-10-03",
+  "style_version": "c1-night-signal-v1",
+  "voice": "kokoro/af_heart/1.15",
+  "cta_kind": "follow",
+  "cta_text": "Follow",
+  "cta_say": "Follow for one business automation every day.",
+  "end_card_handle": "@theautomationguynavin",
+  "destination": {
+    "via": "forge-queue",
+    "handle": "@theautomationguynavin"
+  },
+  "size": {
+    "width": 1080,
+    "height": 1920
+  },
+  "video_sha256": "7b108780af00965cbd9099e3ac28aeb8be6d5157468f05ea7d90f48836c7385e",
+  "qa_status": "pass",
+  "files": {
+    "video": "c1-automation-instagram-2026-10-03-style-c1.mp4",
+    "caption": "c1-automation-instagram-2026-10-03-style-c1.caption.txt"
+  }
+}

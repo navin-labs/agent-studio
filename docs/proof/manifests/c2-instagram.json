@@ -1,0 +1,26 @@
+{
+  "channel": "c2-reach",
+  "platform": "instagram",
+  "video_id": "style-c2",
+  "date": "2026-10-03",
+  "style_version": "c2-archive-gold-v1",
+  "voice": "kokoro/am_fenrir/1",
+  "cta_kind": "follow",
+  "cta_text": "Follow",
+  "cta_say": "Follow for one backstory every day.",
+  "end_card_handle": "@backstory.minute",
+  "destination": {
+    "via": "forge-queue",
+    "handle": "@backstory.minute"
+  },
+  "size": {
+    "width": 1080,
+    "height": 1920
+  },
+  "video_sha256": "a80a8d52e10611a4996b3092b62551d983f1e27741a540f727c71290b6d7a0b5",
+  "qa_status": "pass",
+  "files": {
+    "video": "c2-reach-instagram-2026-10-03-style-c2.mp4",
+    "caption": "c2-reach-instagram-2026-10-03-style-c2.caption.txt"
+  }
+}

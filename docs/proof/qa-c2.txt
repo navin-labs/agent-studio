@@ -1,0 +1,43 @@
+$ node studio/qa.ts engine/test/style-c2.json --out engine/test/out --recipes engine/test/recipes --date 2026-10-03
+youtube:
+  pass schema      
+  pass text-limits 
+  pass audio       
+  pass format      
+  pass duration    
+  pass safe-zones  
+  pass fingerprint 
+  pass naming      
+  pass manifest    
+  pass cta         
+  pass destination 
+  pass seo         
+instagram:
+  pass schema      
+  pass text-limits 
+  pass audio       
+  pass format      
+  pass duration    
+  pass safe-zones  
+  pass fingerprint 
+  pass naming      
+  pass manifest    
+  pass cta         
+  pass destination 
+  pass seo         
+facebook:
+  pass schema      
+  pass text-limits 
+  pass audio       
+  pass format      
+  pass duration    
+  pass safe-zones  
+  pass fingerprint 
+  pass naming      
+  pass manifest    
+  pass cta         
+  FAIL destination facebook username is still pending (pending_retry_2026-10-05): held until it is claimed in channels/c2-reach/channel.json, then render again; Facebook needs the page_id in channel.json
+  pass seo         
+held for Navin, not a board error: facebook (facebook username is still pending (pending_retry_2026-10-05): held until it is claimed in channels/c2-reach/channel.json, then render again; Facebook needs the page_id in channel.json)
+QA passed: style-c2 (youtube, instagram)
+exit 0

@@ -1,0 +1,26 @@
+{
+  "channel": "c2-reach",
+  "platform": "facebook",
+  "video_id": "style-c2",
+  "date": "2026-10-03",
+  "style_version": "c2-archive-gold-v1",
+  "voice": "kokoro/am_fenrir/1",
+  "cta_kind": "follow",
+  "cta_text": "Follow",
+  "cta_say": "Follow the page for one backstory every day.",
+  "end_card_handle": null,
+  "destination": {
+    "via": "forge-queue",
+    "handle": "pending_retry_2026-10-05"
+  },
+  "size": {
+    "width": 1080,
+    "height": 1920
+  },
+  "video_sha256": "55c664f8954d7e77f9a6274e17eb9e688d5e8971ad7ac49cbe468f6a8b032304",
+  "qa_status": "fail",
+  "files": {
+    "video": "c2-reach-facebook-2026-10-03-style-c2.mp4",
+    "caption": "c2-reach-facebook-2026-10-03-style-c2.caption.txt"
+  }
+}

@@ -18,3 +18,8 @@ token*.json
 queue/
 ideas/*.jsonl
 recipes/*/
+# local development and agent instructions (not part of the project)
+/CLAUDE.md
+/AGENTS.md
+/.claude/
+/docs/BUILD_PLAN.md

@@ -22,7 +22,7 @@ Why: every actor has one job, a fixed input and output, and a hard never-do list
 | Render + QA | Measure text boxes at compose time; report the exact error | Use vision models; pass a file that fails any check; use `--force` |
 | Dispatch | Act only on ledger status "approved" for that platform variant; route by (channel, platform); refuse any mismatch | Publish anything else; send one channel's video to another's account; retry a publish blind |
 | Learn | Bench bottom quartile for 2 weeks | Change rules itself (the monthly audit suggests; Navin decides) |
-| Navin | Approve weekly; reply "approve commit" to commit | Skip the approval page |
+| Navin | Approve weekly; review and commit changes | Skip the approval page |
 | n8n | Run on schedule; take only its own channel's jobs; ask the Mac before every upload | Publish to Instagram or Facebook |
 
 Full contracts: `agents/<name>/RULES.md`.

@@ -1,0 +1,27 @@
+{
+  "channel": "c1-automation",
+  "platform": "youtube",
+  "video_id": "style-c1",
+  "date": "2026-10-03",
+  "style_version": "c1-night-signal-v1",
+  "voice": "kokoro/af_heart/1.15",
+  "cta_kind": "follow",
+  "cta_text": "Subscribe",
+  "cta_say": "Subscribe for one business automation every day.",
+  "end_card_handle": "@theautomationguynavin",
+  "destination": {
+    "via": "n8n",
+    "handle": "@theautomationguynavin"
+  },
+  "size": {
+    "width": 1080,
+    "height": 1920
+  },
+  "video_sha256": "76a4331609195fdf663766663722f64224ce4b0d5ed14942c453d42bceee9261",
+  "qa_status": "pass",
+  "files": {
+    "video": "c1-automation-youtube-2026-10-03-style-c1.mp4",
+    "caption": "c1-automation-youtube-2026-10-03-style-c1.caption.txt",
+    "thumbnail": "c1-automation-youtube-2026-10-03-style-c1.thumbnail.png"
+  }
+}

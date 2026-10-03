@@ -43,7 +43,7 @@ flowchart LR
 | `agents/` | Contract (`RULES.md`) for each stage, and the writer, queue publisher and metrics reporter skills |
 | `n8n/` | Exported n8n workflows (feed, approval webhook, YouTube upload, stats and packaging per channel) |
 | `brand/` | Brand assets used by the end cards |
-| `docs/` | Setup, technical design, decisions, motion rules, build plan, log |
+| `docs/` | Setup, technical design, decisions, motion rules, log, pre-launch verification proof (`docs/proof/`) |
 | `state/`, `recipes/`, `ideas/`, `queue/` | Runtime data; ignored by git |
 
 ## Quickstart
@@ -128,7 +128,7 @@ Metrics (YouTube stats from n8n, Instagram and Facebook from the metrics reporte
 - `cd engine && npm run stress` and `npm run primitives`: text stress renders and contact sheets for every primitive.
 
 ## Verification
-Fresh runs on 2026-10-03, Node 26.0.0, on this commit's code.
+Reproducible pre-launch verification, run on 2026-10-03 with Node 26.0.0. Commands, raw logs, the six variant manifests and contact sheets: [docs/proof](docs/proof/README.md).
 
 | Check | Result |
 |---|---|

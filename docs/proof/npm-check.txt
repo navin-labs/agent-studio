@@ -1,0 +1,89 @@
+$ cd engine && npm run check
+
+> reel-engine@1.0.0 check
+> tsc && node scripts/theme-gate.ts > /dev/null && node src/composer/textcheck.ts && node ../schemas/validate.ts > /dev/null && node ../studio/recipe.test.ts && node ../studio/qa.test.ts && node ../studio/approval.test.ts && node ../studio/dispatch.test.ts && node ../studio/learn.test.ts && node ../studio/telegram.test.ts && node ../studio/metrics.test.ts && node ../studio/run.test.ts && node ../studio/feed.test.ts && node ../studio/experiment.test.ts && node ../studio/improve.test.ts && node ../studio/loop.test.ts
+
+textcheck ok
+recipe ok: 168 recipes over 8 weeks, 0 rule breaks, every shot list can reach its length floor; C1 host share 27%
+qa ok: a good variant passes on each platform; every broken fact (length, naming, manifest, CTA, end card, destination, recipe, SEO) fails with its exact error
+approval ok: one tap approves every QA-passed variant (one line each, with its video hash); a failed variant is held alone; replays (also after a rejection), tampering, expiry, a changed video and bad secrets write nothing; a lost fingerprint is repaired once; a re-render needs (and gets) a new approval
+dispatch ok: each platform variant goes only to its own (channel, platform) destination; mismatched, unmanifested, misdirected, changed or already-queued variants and unknown pairs are refused; refused uploads retry, unknown ones stick for Navin; a crashed queue write resumes; torn ledger lines are safe
+learn ok: 28 sample videos -> bench before-after-split, flow-build, phone-buzz, split-flap, stamp-hit; proven 11 (used in 16 of 16 beats); YouTube best at 21:00; Recipe reads it
+telegram ok: only QA-passed videos are sent; only Navin's own taps approve, once; unknown uploads get Not uploaded / Uploaded buttons and never retry by themselves
+metrics ok: inbox rows land only for dispatched posts, bad files are set aside with the reason; YouTube due at 24h and 7d; views-only rows never dilute the KPI
+run ok: only live channels; Thursday plans next week once; each video shown once; problems reported without stopping
+feed ok: RSS and Atom items become schema-valid ideas with their own links, per channel, once; the Mac fetches listed feeds only; blocked, unknown and junk feeds write nothing
+experiment ok: ABBAAB by Pacific day, control restored, CTR evidence (views plainly labelled otherwise), result once, B adopted only on Navin's tap; off unless EXPERIMENTS=on
+improve ok: Learn scores primitives, style versions, captions, CTAs and lengths; Tier 1 changes logged once with evidence and carried to the Writer; Tier 2 proposals sent once and applied only by Navin's tap, one setting; guarded things refused; rollback is one setting
+loop ok: feed -> recipe -> forge -> QA -> Telegram approval -> ledger -> dispatch -> published -> metrics -> learn (bench counter-drop, zoom-dive, proven 6) -> next week's recipe
+exit 0
+
+# npm run check runs these two with output discarded; run here separately so their results are visible
+$ node engine/scripts/theme-gate.ts
+pass paper  ink on bg             16.74
+pass paper  ink on surface        18.88
+pass paper  onAccent on accent    14.74
+pass paper  muted on bg           6.11
+pass paper  muted on surface      6.89
+pass ink    ink on bg             17.11
+pass ink    ink on surface        15.43
+pass ink    onAccent on accent    15.06
+pass ink    muted on bg           7.85
+pass ink    muted on surface      7.08
+pass mono   ink on bg             14.09
+pass mono   ink on surface        16.43
+pass mono   onAccent on accent    14.12
+pass mono   muted on bg           5.91
+pass mono   muted on surface      6.89
+pass studio ink on bg             19.68
+pass studio ink on surface        18.21
+pass studio onAccent on accent    5.91
+pass studio muted on bg           6.48
+pass studio muted on surface      6.00
+pass night  ink on bg             17.41
+pass night  ink on surface        16.11
+pass night  onAccent on accent    15.32
+pass night  muted on bg           6.98
+pass night  muted on surface      6.46
+pass archive ink on bg            15.50
+pass archive ink on surface       13.82
+pass archive onAccent on accent   7.89
+pass archive muted on bg          7.11
+pass archive muted on surface     6.34
+pass night-signal ink on bg       17.41
+pass night-signal ink on surface  16.11
+pass night-signal onAccent on accent17.41
+pass night-signal muted on bg     6.98
+pass night-signal muted on surface6.46
+pass archive-gold ink on bg       15.50
+pass archive-gold ink on surface  13.82
+pass archive-gold onAccent on accent15.50
+pass archive-gold muted on bg     7.11
+pass archive-gold muted on surface6.34
+pass archive-gold onAccent on reveal7.89
+
+all themes pass WCAG AA; no raw colours outside themes.ts
+exit 0
+
+$ node schemas/validate.ts
+ok   channel     channels/c1-automation/channel.json
+ok   channel     channels/c2-reach/channel.json
+ok   channel     channels/c3-studio/channel.json
+ok   idea        schemas/samples/idea.json
+ok   recipe      schemas/samples/recipe.json
+ok   storyboard  engine/test/boards/dispatch-lr.json
+ok   storyboard  engine/test/boards/host-supplier-bills.json
+ok   storyboard  engine/test/boards/invoice-chase.json
+ok   storyboard  engine/test/boards/order-emails.json
+ok   fingerprint schemas/samples/fingerprint.json
+ok   qa          schemas/samples/qa.json
+ok   ledger      schemas/samples/ledger.json
+ok   metrics     schemas/samples/metrics.json
+ok   manifest    schemas/samples/manifest.json
+ok   queue       schemas/samples/queue.json
+ok   style       styles/c1-night-signal-v1.json
+ok   style       styles/c1-night-v0.json
+ok   style       styles/c2-archive-gold-v1.json
+ok   style       styles/c2-archive-v0.json
+schemas ok
+exit 0
