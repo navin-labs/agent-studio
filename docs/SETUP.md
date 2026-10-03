@@ -76,7 +76,8 @@ The old "Instagram Growth Pipeline" skill (reel-engine) is replaced by these thr
       ```
    Once any channel is live, the hourly loop alerts on Telegram if this watcher is missing, stopped or pointing at another engine, and "two watchers" if the old one is still loaded.
 2. The hourly loop: `node studio/run.ts --install` (LaunchAgent com.theautomationguy.studio, log `state/run.log`). With no channel live it does nothing.
-3. Already running: the approve receiver with Telegram polling (`com.theautomationguy.approve`, log `state/approve.log`). Check: `curl -s 127.0.0.1:5680/health` says ok. After a code update: `launchctl kickstart -k gui/$(id -u)/com.theautomationguy.approve`.
+3. The watcher starts a tick itself whenever a video passes QA, so videos reach Telegram within a minute; the hourly loop covers everything else (dispatch, published, metrics, Thursday planning). Running `node studio/run.ts tick` by hand is never required.
+4. Already running: the approve receiver with Telegram polling (`com.theautomationguy.approve`, log `state/approve.log`). Check: `curl -s 127.0.0.1:5680/health` says ok. After a code update: `launchctl kickstart -k gui/$(id -u)/com.theautomationguy.approve`.
 4. Keep the Mac on power and awake (rendering, n8n, the loop and Telegram all run on it).
 5. Optional rehearsal, any time: render the two test boards and run the production simulation (sandbox only, nothing sent):
    ```

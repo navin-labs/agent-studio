@@ -106,5 +106,13 @@ calls.length = 0;
 r = await tick({...o, now: THU});
 assert.deepEqual([r.channels, calls.length, r.problems], [[], 0, []]);
 
+// one tick at a time: while another tick's process is alive a second one skips; a lock left by a dead process is taken over
+const lock = path.join(p.state, 'run.lock');
+fs.writeFileSync(lock, String(process.ppid));
+assert.match((await tick({...o, now: THU})).log[0], /^skipped: tick \d+ is running$/);
+fs.writeFileSync(lock, '999999');
+assert.ok(!(await tick({...o, now: THU})).log.some((l) => l.startsWith('skipped')), 'a stale lock is taken over');
+assert.ok(!fs.existsSync(lock), 'the lock is released after the tick');
+
 fs.rmSync(tmp, {recursive: true});
 console.log('run ok: only live channels; Thursday plans next week once; each video shown once; problems reported without stopping');

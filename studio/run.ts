@@ -55,7 +55,35 @@ export const watcherProblem = (o: {agents?: string; loaded?: () => string} = {})
 
 export type TickOpts = {experiments?: boolean; packaging?: Parameters<typeof applyArm>[1]; watcher?: () => string | null; fetch?: Parameters<typeof dispatch>[1]['fetch']; now?: number; paths?: Paths; tg?: Tg | null; chatId?: string; live?: boolean; plan?: (ch: string, week: string) => {recipes: unknown[]}; inbox?: string};
 
+// One tick at a time: the hourly job and the watcher (after a video passes QA) both start ticks, and two at once could send or
+// dispatch the same video twice. A second tick skips; a lock left by a tick whose process is gone is taken over.
+const alive = (pid: number) => {
+  try {
+    return process.kill(pid, 0);
+  } catch {
+    return false;
+  }
+};
 export const tick = async (o: TickOpts = {}) => {
+  const p = o.paths ?? PATHS;
+  fs.mkdirSync(p.state, {recursive: true});
+  const lock = path.join(p.state, 'run.lock');
+  for (;;)
+    try {
+      fs.writeFileSync(lock, String(process.pid), {flag: 'wx'});
+      break;
+    } catch {
+      const pid = Number(fs.readFileSync(lock, 'utf8'));
+      if (pid && pid !== process.pid && alive(pid)) return {log: [`skipped: tick ${pid} is running`], problems: [] as string[], channels: [] as string[]};
+      fs.rmSync(lock, {force: true});
+    }
+  try {
+    return await runTick(o);
+  } finally {
+    fs.rmSync(lock, {force: true});
+  }
+};
+const runTick = async (o: TickOpts = {}) => {
   const p = o.paths ?? PATHS;
   const now = o.now ?? Date.now();
   const log: string[] = [];

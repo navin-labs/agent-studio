@@ -104,6 +104,10 @@ function next() {
     if (code === 0 && qa?.status === 0) {
       fs.writeFileSync(statusFile, `ok ${new Date().toISOString()}${copied}\n\n${qa.stdout}`);
       log(`done ${path.relative(ROOT, f)}${copied}`);
+      // a passing video reaches Telegram now, not at the next hourly tick (studio/run.ts takes a lock: never two ticks at once)
+      const studio = path.join(ROOT, '..');
+      const out = fs.openSync(path.join(studio, 'state', 'run.log'), 'a');
+      spawn(process.execPath, [path.join(studio, 'studio', 'run.ts'), 'tick'], {cwd: studio, detached: true, stdio: ['ignore', out, out]}).unref();
     } else if (qa) {
       fs.writeFileSync(statusFile, `failed QA ${new Date().toISOString()}${copied}\n\n${qa.stdout}${qa.stderr}${code === 0 ? '' : `\n\nrender log:\n${text.slice(-3000)}`}`);
       log(`failed QA ${path.relative(ROOT, f)} (see ${path.basename(statusFile)})`);
