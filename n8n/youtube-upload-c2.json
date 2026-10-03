@@ -97,7 +97,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ uploaded: true, youtube_id: $('Upload to YouTube (private, scheduled)').item.json.id }) }}",
+        "responseBody": "={{ JSON.stringify({ uploaded: true, youtube_id: ($('Upload to YouTube (private, scheduled)').item.json.uploadId || $('Upload to YouTube (private, scheduled)').item.json.id) }) }}",
         "options": {}
       },
       "name": "Uploaded",
@@ -147,7 +147,7 @@
       "onError": "continueRegularOutput",
       "parameters": {
         "method": "POST",
-        "url": "=https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={{ $('Upload to YouTube (private, scheduled)').item.json.id }}",
+        "url": "=https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={{ ($('Upload to YouTube (private, scheduled)').item.json.uploadId || $('Upload to YouTube (private, scheduled)').item.json.id) }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "youTubeOAuth2Api",
         "sendBody": true,

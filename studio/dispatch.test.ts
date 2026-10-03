@@ -190,6 +190,13 @@ for (const fetch of [reply(502, ''), reply(200, 'garbage'), async () => { throw 
   resolve('v-approved', 'none', p); // "not in YouTube Studio": back to approved
   assert.equal(status('v-approved'), 'approved');
 }
+// the claim records the slot, so an unknown upload resolved by Navin keeps its publish time (needed to mark it published)
+{
+  const slot = ytOnly().youtube[0].scheduled_for;
+  await dispatch(ytOnly(), {live: true, fetch: reply(200, 'garbage'), paths: p});
+  assert.deepEqual([status('v-approved'), currentStatus(p).get(lkey('v-approved', 'youtube'))!.scheduled_for], ['dispatching', slot]);
+  resolve('v-approved', 'none', p);
+}
 assert.throws(() => resolve('v-approved', 'none', p), /not stuck/);
 
 // the file changed between plan and send: nothing is sent, nothing is claimed

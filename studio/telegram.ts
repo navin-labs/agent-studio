@@ -16,7 +16,9 @@ import type {Platform} from './variant.ts';
 
 export type Tg = (method: string, body: Record<string, unknown> | FormData) => Promise<any>;
 export const telegram = (token: string): Tg => async (method, body) => {
-  const r = await fetch(`https://api.telegram.org/bot${token}/${method}`, body instanceof FormData ? {method: 'POST', body} : {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(body)});
+  // a timeout on every call: a connection that dies mid long-poll would otherwise hang the poller and lose every tap after it
+  const signal = AbortSignal.timeout(method === 'getUpdates' ? 80_000 : 120_000);
+  const r = await fetch(`https://api.telegram.org/bot${token}/${method}`, body instanceof FormData ? {method: 'POST', body, signal} : {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(body), signal});
   const j = await r.json().catch(() => ({}));
   if (!j.ok) throw new Error(`telegram ${method}: ${j.description ?? `HTTP ${r.status}`}`); // never includes the token
   return j.result;

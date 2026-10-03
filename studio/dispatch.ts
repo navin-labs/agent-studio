@@ -176,7 +176,9 @@ export const dispatch = async (pl: Plan, opts: {live: boolean; hold?: boolean; f
       failed.push(`${e.platform} ${id}: the video changed after it was approved; not sent`); // changed since plan(): never send unapproved bytes
       continue;
     }
-    if (e.status === 'approved') write((e = {...e, status: 'dispatching'})); // the claim: from here on, never a blind retry
+    // the claim: from here on, never a blind retry; it records the slot, so a resolved unknown upload keeps its publish time
+    const slot = opts.hold ? undefined : (j ?? q)?.scheduled_for;
+    if (e.status === 'approved') write((e = {...e, status: 'dispatching', ...(slot ? {scheduled_for: slot} : {})}));
     if (j) {
       // the video travels with the job (n8n in Docker cannot read the Mac's files); n8n asks the Mac receiver before uploading
       const form = new FormData();
@@ -203,7 +205,7 @@ export const dispatch = async (pl: Plan, opts: {live: boolean; hold?: boolean; f
         writeQueue(post, r, p);
         sent.push(`forge-queue ${id} ${post.platform} -> ${path.relative(path.dirname(p.queue), post.folder)}`);
       }
-      const scheduled = opts.hold ? undefined : (j ?? post)?.scheduled_for; // hold: nothing is scheduled
+      const scheduled = opts.hold ? undefined : ((j ?? post)?.scheduled_for ?? e.scheduled_for); // hold: nothing is scheduled
       write({...e, status: 'dispatched', ...(scheduled ? {scheduled_for: scheduled} : {})});
     } catch (err) {
       failed.push(`forge-queue ${id} ${e.platform}: ${(err as Error).message} (the next run finishes it)`);
