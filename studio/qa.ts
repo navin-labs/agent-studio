@@ -33,7 +33,7 @@ export type QaInputs = {
   caption: string; // <prefix>.caption.txt
   spec: PlatformSpec | null; // the style preset's spec for this platform (styles/<id>.json "platforms")
   style: string | null; // the style preset the board renders in (its own "style", else the channel's)
-  channel: {publishers: Publisher[]} | null; // channels/<channel>/channel.json
+  channel: {publishers: Publisher[]; voice?: unknown} | null; // channels/<channel>/channel.json
   render: {handle?: string | null; platform?: string | null; style?: string | null} | null; // <prefix>.render.json
   sha256: string | null; // of the video file
   siblings: Partial<Record<Platform, string>>; // video_sha256 of the video's other platform variants (none may be the same file)
@@ -75,7 +75,8 @@ export const evaluate = (x: QaInputs): QaResult => {
 
   add('schema', validate(loadSchema('storyboard'), x.doc));
   add('text-limits', validateStoryboard(x.doc).errors);
-  add('audio', !p ? ['no video file'] : p.audio ? [] : ['the video has no audio stream']);
+  // a channel with a voice never ships silent (sound effects alone pass the stream check): not a board error, the render setting is off
+  add('audio', !p ? ['no video file'] : [...(p.audio ? [] : ['the video has no audio stream']), ...(x.channel?.voice && !x.voice ? ['rendered without its voiceover (not a board error): set VOICE=on in engine/.env, then render again'] : [])]);
   add('format', !p ? ['no video file'] : [
     ...(p.container === 'mp4' ? [] : [`container is ${p.container}, needs mp4`]),
     ...(!x.spec ? [`the style preset has no ${x.variant.platform} spec`] : p.width === x.spec.size.width && p.height === x.spec.size.height ? [] : [`frame is ${p.width}x${p.height}, the ${x.variant.platform} preset needs ${x.spec.size.width}x${x.spec.size.height}`]),

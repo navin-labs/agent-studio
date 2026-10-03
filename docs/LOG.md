@@ -377,3 +377,4 @@ Did: launch moved to Sun 4 Oct 2026 for C1 and C2. New cadence option (channel.j
 Decisions: ADR 25.
 Next: Forge reinstalls the Writer skill and writes W40 then W41; DISPATCH_LIVE on (Navin); both channels live and the hourly loop installed; approvals on Telegram before 12:30 IST (C1 Facebook slot).
 - Learn no longer erases hand-set posting times (found on the first live tick; regression test in learn.test.ts).
+- Launch renders came out silent: the watcher reads VOICE from engine/.env and it was not set there (SETUP step 2). QA now fails a voiced channel's render that has no voiceover (audio check; test in qa.test.ts); all 8 silent renders re-QA'd and held, nothing approved.

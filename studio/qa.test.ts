@@ -85,6 +85,7 @@ const tooLong = failing((x) => ((x.doc.scenes[0].params as {text: string}).text 
 assert.equal(tooLong.length, 1);
 assert.match(tooLong[0], /^text-limits: scene 1 \(host-hook\): host-hook.text: max 40 characters, got 41/);
 assert.deepEqual(failing((x) => (x.probe!.audio = false)), ['audio: the video has no audio stream']);
+assert.match(failing((x) => (x.voice = null)).join('\n'), /^audio: rendered without its voiceover \(not a board error\): set VOICE=on in engine\/.env/m, 'a voiced channel never passes silent (sound effects only)');
 assert.deepEqual(failing((x) => Object.assign(x.probe!, {width: 720, height: 1280, fps: 25})), ['format: frame is 720x1280, the youtube preset needs 1080x1920; 25.00 fps, needs 30']);
 assert.deepEqual(failing((x) => (x.probe = null)), ['audio: no video file', 'format: no video file', 'duration: no video file']);
 assert.deepEqual(failing((x) => (x.textBoxes = null)), ['safe-zones: no text-boxes.json: the render did not measure text']);
