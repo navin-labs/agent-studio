@@ -37,7 +37,7 @@ export const EndCard: React.FC<PrimitiveProps<{text: string; sub?: string}>> = (
         {p.sub ? (
           <div data-tb="sub" style={{position: 'absolute', top: 1000, left: SIDE, right: SIDE, textAlign: 'center', fontFamily: FONT, fontSize: 44, fontWeight: 700, lineHeight: 1.25, color: th.bg, opacity: subP * 0.85, transform: `translateY(${(1 - subP) * 16}px)`}}>{p.sub}</div>
         ) : null}
-        <div data-tb="byline" style={{position: 'absolute', top: 1160, left: 0, right: 0, textAlign: 'center', fontFamily: TYPE.data, fontSize: 28, fontWeight: 600, color: th.bg, opacity: byP * 0.75}}>Made by Navin Rana · {handle}</div>
+        <div data-tb="byline" style={{position: 'absolute', top: 1160, left: 0, right: 0, textAlign: 'center', fontFamily: TYPE.data, fontSize: 28, fontWeight: 600, color: th.bg, opacity: byP * 0.75}}>Made by Navin Rana{handle ? ` · ${handle}` : ''}</div>
       </AbsoluteFill>
       <Sfx at={0} name="whoosh" volume={0.35} />
       <Sfx at={14} name="pop" />

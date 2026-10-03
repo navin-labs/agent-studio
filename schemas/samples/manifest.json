@@ -1,0 +1,26 @@
+{
+  "channel": "c1-automation",
+  "platform": "instagram",
+  "video_id": "c1-2026-w42-3",
+  "date": "2026-10-14",
+  "style_version": "c1-night-v0",
+  "voice": "kokoro/af_heart/1.15",
+  "cta_kind": "follow",
+  "cta_text": "Follow",
+  "cta_say": "Follow for one business automation every day.",
+  "end_card_handle": "@theautomationguynavin",
+  "destination": {
+    "via": "forge-queue",
+    "handle": "@theautomationguynavin"
+  },
+  "size": {
+    "width": 1080,
+    "height": 1920
+  },
+  "video_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "qa_status": "pass",
+  "files": {
+    "video": "c1-automation-instagram-2026-10-14-c1-2026-w42-3.mp4",
+    "caption": "c1-automation-instagram-2026-10-14-c1-2026-w42-3.caption.txt"
+  }
+}

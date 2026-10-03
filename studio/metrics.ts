@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import {metricsFile, type Metric} from './learn.ts';
-import {appendJsonl, currentStatus, PATHS, type Paths, readJsonl} from './ledger.ts';
+import {appendJsonl, currentStatus, lkey, PATHS, type Paths, readJsonl} from './ledger.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 export const INBOX = path.join(ROOT, 'inbox', 'metrics');
@@ -25,10 +25,9 @@ export const problem = (m: unknown, p: Paths = PATHS): string | null => {
   const bad = validate(loadSchema('metrics'), m);
   if (bad.length) return bad.join('; ');
   const r = m as Metric;
-  const e = currentStatus(p).get(r.storyboard_id);
-  if (!e || !['dispatched', 'published'].includes(e.status)) return `${r.storyboard_id} was never dispatched`;
+  const e = currentStatus(p).get(lkey(r.storyboard_id, r.platform)); // the variant for that platform
+  if (!e || !['dispatched', 'published'].includes(e.status)) return `${r.storyboard_id} was never dispatched to ${r.platform}`;
   if (e.channel !== r.channel) return `${r.storyboard_id} belongs to ${e.channel}, not ${r.channel}`;
-  if (!e.targets?.includes(r.platform)) return `${r.storyboard_id} was not sent to ${r.platform}`;
   return null;
 };
 
@@ -72,7 +71,7 @@ export const due = (p: Paths = PATHS, now = Date.now()) => {
   return [...currentStatus(p).values()].flatMap((e) => {
     const id = e.post_urls?.map((u) => u.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/)?.[1]).find(Boolean);
     const at = Date.parse(e.scheduled_for ?? e.updated_at);
-    if (!['dispatched', 'published'].includes(e.status) || !id) return [];
+    if (e.platform !== 'youtube' || !['dispatched', 'published'].includes(e.status) || !id) return [];
     return (Object.keys(WINDOWS) as (keyof typeof WINDOWS)[])
       .filter((w) => now >= at + WINDOWS[w] && !have.has(key({storyboard_id: e.storyboard_id, platform: 'youtube', window: w})))
       .map((window) => ({storyboard_id: e.storyboard_id, channel: e.channel, platform: 'youtube', window, video_id: id}));

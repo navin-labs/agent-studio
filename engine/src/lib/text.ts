@@ -74,21 +74,3 @@ export const chunkWords = (words: string[], maxWords = 3, maxChars = 18): Chunk[
   if (cur.length) chunks.push({words: cur, startIdx});
   return chunks;
 };
-
-export const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? '')
-    .join('');
-
-// Auto font size for hero text by length.
-export const heroSize = (text: string) => {
-  const n = plain(text).length;
-  if (n <= 18) return 128;
-  if (n <= 30) return 112;
-  if (n <= 46) return 96;
-  if (n <= 64) return 84;
-  return 74;
-};

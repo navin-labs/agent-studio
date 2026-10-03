@@ -26,9 +26,7 @@
     "the person and the problem behind an invention",
     "one surprising sourced fact, told as a sixty-second story"
   ],
-  "themes": [
-    "archive"
-  ],
+  "style": "c2-archive-v0",
   "cadence": {
     "posts_per_week": 7
   },
@@ -52,6 +50,11 @@
   ],
   "launch_gate": "C1 has run 14 days with no missed posts",
   "live": false,
+  "voice": {
+    "engine": "kokoro",
+    "voice": "am_fenrir",
+    "speed": 1.0
+  },
   "feeds": [
     {
       "source": "google-trends",

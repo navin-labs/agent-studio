@@ -1,0 +1,439 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "style",
+  "description": "A channel style preset (styles/<id>.json, docs/MOTION.md). Look and motion only: no voice, no colour values (themes.ts), no captions or disclosure.",
+  "type": "object",
+  "required": [
+    "id",
+    "channel",
+    "version",
+    "about",
+    "theme",
+    "transitions",
+    "opener",
+    "overlay",
+    "strike",
+    "platforms"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^c[0-9]-[a-z0-9-]+-v[0-9]+$",
+      "description": "<channel short>-<name>-v<version>, the file name"
+    },
+    "channel": {
+      "enum": [
+        "c1-automation",
+        "c2-reach",
+        "c3-studio"
+      ]
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "about": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expect": {
+      "type": "string",
+      "minLength": 1,
+      "description": "what this version should improve; shown with the Tier 2 proposal"
+    },
+    "theme": {
+      "enum": [
+        "paper",
+        "ink",
+        "mono",
+        "studio",
+        "night",
+        "archive",
+        "night-signal",
+        "archive-gold"
+      ]
+    },
+    "transitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "cut",
+          "whip-pan",
+          "ink-wipe",
+          "pixel-wipe",
+          "fold"
+        ]
+      }
+    },
+    "opener": {
+      "enum": [
+        "none",
+        "arrow-fold",
+        "year-flap"
+      ]
+    },
+    "overlay": {
+      "enum": [
+        "none",
+        "thread",
+        "thread-paper"
+      ]
+    },
+    "camera": {
+      "type": "object",
+      "description": "camera move per shot role (engine/src/composer/style.ts); left out: the legacy slow drift",
+      "required": [
+        "pain",
+        "result",
+        "other"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "pain": {
+          "type": "number",
+          "minimum": -0.1,
+          "maximum": 0.1
+        },
+        "result": {
+          "type": "number",
+          "minimum": -0.1,
+          "maximum": 0.1
+        },
+        "other": {
+          "type": "number",
+          "minimum": -0.1,
+          "maximum": 0.1
+        }
+      }
+    },
+    "strike": {
+      "type": "boolean"
+    },
+    "platforms": {
+      "type": "object",
+      "required": [
+        "youtube",
+        "instagram",
+        "facebook"
+      ],
+      "additionalProperties": false,
+      "description": "one render per platform (studio/variant.ts): what that platform's variant says, shows and where it goes",
+      "properties": {
+        "youtube": {
+          "type": "object",
+          "required": [
+            "size",
+            "thumbnail",
+            "end_card",
+            "caption",
+            "cta",
+            "filename",
+            "destination"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "size": {
+              "type": "object",
+              "required": [
+                "width",
+                "height"
+              ],
+              "additionalProperties": false,
+              "description": "render size in pixels: 9:16, the size the engine renders (QA checks the video against it)",
+              "properties": {
+                "width": {
+                  "const": 1080
+                },
+                "height": {
+                  "const": 1920
+                }
+              }
+            },
+            "thumbnail": {
+              "const": true,
+              "description": "YouTube needs its thumbnail (arm A, and B when the board has meta.thumb_b)"
+            },
+            "end_card": {
+              "type": "object",
+              "required": [
+                "handle"
+              ],
+              "additionalProperties": false,
+              "description": "what the closing card shows besides the CTA",
+              "properties": {
+                "handle": {
+                  "enum": [
+                    "youtube",
+                    "none"
+                  ],
+                  "description": "the account named on the end card byline: this platform's own handle from channel.json (none while it is pending), or none"
+                }
+              }
+            },
+            "caption": {
+              "type": "string",
+              "minLength": 1,
+              "description": "caption / description template: {body} the board's caption, {cta} the CTA line, {voice} the AI-voiceover disclosure when voiced, {hashtags}"
+            },
+            "cta": {
+              "type": "object",
+              "description": "per CTA kind (follow, dm-audit, send): what this platform says",
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "text",
+                  "say",
+                  "line"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20,
+                    "description": "the closing card's CTA (end-card text, host-cta text)"
+                  },
+                  "sub": {
+                    "type": "string",
+                    "maxLength": 60,
+                    "description": "the line under it; {ig} = the channel's Instagram handle"
+                  },
+                  "say": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80,
+                    "description": "the spoken CTA line on the closing card"
+                  },
+                  "line": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160,
+                    "description": "the caption's CTA line ({cta} in the caption template)"
+                  }
+                }
+              }
+            },
+            "filename": {
+              "const": "{channel}-{platform}-{date}-{id}",
+              "description": "every file of the variant is named <channel>-<platform>-<date>-<id>.<kind> (studio/variant.ts)"
+            },
+            "destination": {
+              "const": "n8n",
+              "description": "how the variant leaves the Mac; must equal the channel's publisher \"via\" (n8n: that channel's own YouTube upload workflow; forge-queue: queue/<channel>/<platform>/)"
+            }
+          }
+        },
+        "instagram": {
+          "type": "object",
+          "required": [
+            "size",
+            "thumbnail",
+            "end_card",
+            "caption",
+            "cta",
+            "filename",
+            "destination"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "size": {
+              "type": "object",
+              "required": [
+                "width",
+                "height"
+              ],
+              "additionalProperties": false,
+              "description": "render size in pixels: 9:16, the size the engine renders (QA checks the video against it)",
+              "properties": {
+                "width": {
+                  "const": 1080
+                },
+                "height": {
+                  "const": 1920
+                }
+              }
+            },
+            "thumbnail": {
+              "type": "boolean",
+              "description": "render a YouTube-style thumbnail for this platform too"
+            },
+            "end_card": {
+              "type": "object",
+              "required": [
+                "handle"
+              ],
+              "additionalProperties": false,
+              "description": "what the closing card shows besides the CTA",
+              "properties": {
+                "handle": {
+                  "enum": [
+                    "instagram",
+                    "none"
+                  ],
+                  "description": "the account named on the end card byline: this platform's own handle from channel.json (none while it is pending), or none"
+                }
+              }
+            },
+            "caption": {
+              "type": "string",
+              "minLength": 1,
+              "description": "caption / description template: {body} the board's caption, {cta} the CTA line, {voice} the AI-voiceover disclosure when voiced, {hashtags}"
+            },
+            "cta": {
+              "type": "object",
+              "description": "per CTA kind (follow, dm-audit, send): what this platform says",
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "text",
+                  "say",
+                  "line"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20,
+                    "description": "the closing card's CTA (end-card text, host-cta text)"
+                  },
+                  "sub": {
+                    "type": "string",
+                    "maxLength": 60,
+                    "description": "the line under it; {ig} = the channel's Instagram handle"
+                  },
+                  "say": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80,
+                    "description": "the spoken CTA line on the closing card"
+                  },
+                  "line": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160,
+                    "description": "the caption's CTA line ({cta} in the caption template)"
+                  }
+                }
+              }
+            },
+            "filename": {
+              "const": "{channel}-{platform}-{date}-{id}",
+              "description": "every file of the variant is named <channel>-<platform>-<date>-<id>.<kind> (studio/variant.ts)"
+            },
+            "destination": {
+              "const": "forge-queue",
+              "description": "how the variant leaves the Mac; must equal the channel's publisher \"via\" (n8n: that channel's own YouTube upload workflow; forge-queue: queue/<channel>/<platform>/)"
+            }
+          }
+        },
+        "facebook": {
+          "type": "object",
+          "required": [
+            "size",
+            "thumbnail",
+            "end_card",
+            "caption",
+            "cta",
+            "filename",
+            "destination"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "size": {
+              "type": "object",
+              "required": [
+                "width",
+                "height"
+              ],
+              "additionalProperties": false,
+              "description": "render size in pixels: 9:16, the size the engine renders (QA checks the video against it)",
+              "properties": {
+                "width": {
+                  "const": 1080
+                },
+                "height": {
+                  "const": 1920
+                }
+              }
+            },
+            "thumbnail": {
+              "type": "boolean",
+              "description": "render a YouTube-style thumbnail for this platform too"
+            },
+            "end_card": {
+              "type": "object",
+              "required": [
+                "handle"
+              ],
+              "additionalProperties": false,
+              "description": "what the closing card shows besides the CTA",
+              "properties": {
+                "handle": {
+                  "enum": [
+                    "facebook",
+                    "none"
+                  ],
+                  "description": "the account named on the end card byline: this platform's own handle from channel.json (none while it is pending), or none"
+                }
+              }
+            },
+            "caption": {
+              "type": "string",
+              "minLength": 1,
+              "description": "caption / description template: {body} the board's caption, {cta} the CTA line, {voice} the AI-voiceover disclosure when voiced, {hashtags}"
+            },
+            "cta": {
+              "type": "object",
+              "description": "per CTA kind (follow, dm-audit, send): what this platform says",
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "text",
+                  "say",
+                  "line"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20,
+                    "description": "the closing card's CTA (end-card text, host-cta text)"
+                  },
+                  "sub": {
+                    "type": "string",
+                    "maxLength": 60,
+                    "description": "the line under it; {ig} = the channel's Instagram handle"
+                  },
+                  "say": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80,
+                    "description": "the spoken CTA line on the closing card"
+                  },
+                  "line": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160,
+                    "description": "the caption's CTA line ({cta} in the caption template)"
+                  }
+                }
+              }
+            },
+            "filename": {
+              "const": "{channel}-{platform}-{date}-{id}",
+              "description": "every file of the variant is named <channel>-<platform>-<date>-<id>.<kind> (studio/variant.ts)"
+            },
+            "destination": {
+              "const": "forge-queue",
+              "description": "how the variant leaves the Mac; must equal the channel's publisher \"via\" (n8n: that channel's own YouTube upload workflow; forge-queue: queue/<channel>/<platform>/)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

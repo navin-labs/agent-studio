@@ -12,6 +12,9 @@ export type Fingerprint = {
   hook_pattern: string;
   topic_text?: string;
   hero_metaphor?: string;
+  style?: string; // style preset rendered in
+  cta?: string; // the closer's CTA text
+  seconds?: number; // rendered length
   caption_opener?: string;
   hash?: string; // recipe fingerprint: theme + shot sequence + hook pattern
 };

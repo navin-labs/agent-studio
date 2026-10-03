@@ -1,10 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "qa",
-  "description": "Result of Render + QA for one storyboard.",
+  "description": "Result of Render + QA for one platform variant of a storyboard.",
   "type": "object",
   "required": [
     "storyboard_id",
+    "platform",
     "pass",
     "checks"
   ],
@@ -13,6 +14,13 @@
     "storyboard_id": {
       "type": "string",
       "minLength": 1
+    },
+    "platform": {
+      "enum": [
+        "youtube",
+        "instagram",
+        "facebook"
+      ]
     },
     "pass": {
       "type": "boolean"
@@ -49,7 +57,11 @@
               "duration",
               "safe-zones",
               "fingerprint",
-              "naming"
+              "naming",
+              "manifest",
+              "cta",
+              "destination",
+              "seo"
             ]
           },
           "pass": {
@@ -59,6 +71,11 @@
             "type": "string",
             "minLength": 1,
             "description": "Exact error sent back to Forge; required when pass is false"
+          },
+          "warning": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Advice for Navin, shown with the approval; never fails QA"
           }
         }
       }
@@ -74,6 +91,11 @@
       "items": {
         "type": "object"
       }
+    },
+    "video_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the video file QA checked; approval and dispatch accept the result only for exactly that file"
     }
   }
 }

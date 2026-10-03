@@ -1,5 +1,6 @@
 // Composer: storyboard -> one video. Each scene is a primitive shot in its own Sequence, with its vo as captions,
-// its *accent* words as cue frames, and a transition into it (cut, whip-pan or ink-wipe).
+// its *accent* words as cue frames, and a transition into it (cut, whip-pan, ink-wipe, pixel-wipe or fold).
+// Look and motion beyond the theme come from the style preset (`preset`, styles/<id>.json via make.mjs; docs/MOTION.md).
 import {CameraMotionBlur} from '@remotion/motion-blur';
 import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {AbsoluteFill, Artifact, Audio, continueRender, delayRender, Easing, getRemotionEnvironment, Sequence, staticFile, useCurrentFrame} from 'remotion';
@@ -7,12 +8,14 @@ import {ensureFonts} from '../fonts';
 import {Sfx, SfxEnabled} from '../lib/frame';
 import {pixelWipePath} from '../lib/pixels';
 import {LEAD} from '../lib/timing';
-import {prog} from '../primitives/atoms';
+import {cuesOr, prog, SceneCtx} from '../primitives/atoms';
 import {PRIMITIVES} from '../primitives/index';
 import {HostCtx, KaraokeCaptions, VoiceCtx} from '../host/Host';
 import {Captions} from '../story/Captions';
 import {HANDLE} from '../theme';
 import {HandleCtx, MarkCtx, THEMES, ThemeCtx, useTheme} from '../themes';
+import {ArrowFold, FoldBand, foldClip, Thread, YearFlap} from './Signature';
+import {NO_STYLE} from './style';
 import type {TextBox} from './textcheck';
 import {captionsOn, probeFrames, sceneCues, sceneFrames, type Storyboard, type StoryboardScene, type Timing, TRANSITION_FRAMES as T, type Transition, voWordStarts} from './storyboard';
 
@@ -36,10 +39,14 @@ const Moving: React.FC<{sb: Storyboard; sc: StoryboardScene; i: number; dur: num
       ? {clipPath: `inset(${(1 - e) * 100}% 0 0 0)`}
       : enter === 'pixel-wipe' && e < 1
         ? {clipPath: `path('${pixelWipePath(e)}')`}
+        : enter === 'fold' && e < 1
+          ? {clipPath: foldClip(e)}
         : {transform: `translateX(${(enter === 'whip-pan' ? 1080 * (1 - e) : 0) - 1080 * x}px)`};
   return (
     <AbsoluteFill style={style} data-scene={i} data-primitive={sc.primitive}>
-      <Shot p={sc.params} dur={dur} cues={sceneCues(sc, i, timing)} />
+      <SceneCtx.Provider value={{camera: (sb.preset ?? NO_STYLE).camera, strike: (sb.preset ?? NO_STYLE).strike, primitive: sc.primitive}}>
+        <Shot p={sc.params} dur={dur} cues={sceneCues(sc, i, timing)} />
+      </SceneCtx.Provider>
       {sc.vo && captionsOn(sc, sb) ? (sb.captionStyle === 'karaoke' ? <KaraokeCaptions vo={sc.vo} starts={voWordStarts(sc, i, timing)} /> : <Captions vo={sc.vo} starts={voWordStarts(sc, i, timing)} top={CAPTION_TOP} />) : null}
       {enter === 'ink-wipe' && e < 1 ? <div style={{position: 'absolute', left: 0, right: 0, top: (1 - e) * 1920, height: 40, background: th.ink}} /> : null}
     </AbsoluteFill>
@@ -62,6 +69,7 @@ const Scene: React.FC<{sb: Storyboard; sc: StoryboardScene; i: number; dur: numb
       ) : (
         <Moving {...props} />
       )}
+      {enter === 'fold' && f < T ? <FoldBand e={prog(f, 0, T, WHIP)} /> : null}
       {enter !== 'cut' ? <Sfx at={0} name="whoosh" volume={0.35} /> : null}
       {audio ? (
         <Sequence from={LEAD} layout="none">
@@ -148,10 +156,20 @@ const TextProbe: React.FC<{frames: Set<number>}> = ({frames}) => {
   return on && data?.frame === f ? <Artifact filename={`text-boxes-${f}.json`} content={data.json} /> : null;
 };
 
+// Archive Gold's reveal frames: the year landing (split-flap, cue 0 or 20 frames before the cut) and each highlighted name.
+const reveals = (sb: Storyboard, frames: number[], starts: number[], timing?: Timing) =>
+  sb.scenes.flatMap((sc, i) => {
+    const cues = sceneCues(sc, i, timing);
+    if (sc.primitive === 'split-flap') return [starts[i] + Math.min(cues[0] ?? frames[i] - 20, frames[i] - 8)];
+    if (sc.primitive === 'highlighter-swipe') return cuesOr(cues, Math.max(1, cues.length), 12, frames[i] - 10).map((c) => starts[i] + c);
+    return [];
+  });
+
 export const Composer: React.FC<ComposerProps> = ({script, timing, frames: given}) => {
   const th = THEMES[script.theme ?? 'paper'];
   if (!th) throw new Error(`Unknown theme "${script.theme}". Use one of: ${Object.keys(THEMES).join(', ')}`);
   const frames = given ?? sceneFrames(script, timing);
+  const style = script.preset ?? NO_STYLE;
   const starts = frames.map((_, i) => frames.slice(0, i).reduce((a, b) => a + b, 0));
   return (
     <ThemeCtx.Provider value={th}>
@@ -169,6 +187,9 @@ export const Composer: React.FC<ComposerProps> = ({script, timing, frames: given
               </Sequence>
             );
           })}
+          {style.overlay !== 'none' ? <Thread total={starts.at(-1)!} beats={starts} reveals={reveals(script, frames, starts, timing)} paper={style.overlay === 'thread-paper'} /> : null}
+          {style.opener === 'arrow-fold' ? <ArrowFold /> : null}
+          {style.opener === 'year-flap' ? <YearFlap year={script.meta?.year ?? ''} /> : null}
           <TextProbe frames={probeFrames(script, frames, starts)} />
         </AbsoluteFill>
       </SfxEnabled.Provider>

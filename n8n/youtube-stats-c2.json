@@ -1,0 +1,274 @@
+{
+  "id": "agStudioYtStats2",
+  "name": "agent-studio: YouTube stats (C2 Backstory)",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata"
+  },
+  "nodes": [
+    {
+      "name": "Every day 10:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Readings due",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Ask the Mac which of c2-reach's YouTube readings are due (24h and 7d after publishing). The Mac decides; n8n only relays.\nconst due = await this.helpers.httpRequest({ url: 'http://host.docker.internal:5680/metrics-due?channel=c2-reach', json: true });\nreturn due.map((d) => ({ json: d }));"
+      }
+    },
+    {
+      "name": "Video statistics",
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        440,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "resource": "video",
+        "operation": "get",
+        "videoId": "={{ $json.video_id }}",
+        "part": [
+          "statistics"
+        ],
+        "options": {}
+      },
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "XFDCox9vmhXJenuh",
+          "name": "YouTube C2 Backstory"
+        }
+      }
+    },
+    {
+      "name": "Retention curve",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "url": "https://youtubeanalytics.googleapis.com/v2/reports",
+        "authentication": "predefinedCredentialType",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ids",
+              "value": "channel==MINE"
+            },
+            {
+              "name": "startDate",
+              "value": "2020-01-01"
+            },
+            {
+              "name": "endDate",
+              "value": "={{ $now.toFormat('yyyy-MM-dd') }}"
+            },
+            {
+              "name": "metrics",
+              "value": "audienceWatchRatio"
+            },
+            {
+              "name": "dimensions",
+              "value": "elapsedVideoTimeRatio"
+            },
+            {
+              "name": "filters",
+              "value": "=video=={{ $('Readings due').item.json.video_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "nodeCredentialType": "googleOAuth2Api"
+      },
+      "credentials": {
+        "googleOAuth2Api": {
+          "id": "iZwr5UedprP27Epd",
+          "name": "YouTube Analytics C2"
+        }
+      }
+    },
+    {
+      "name": "Send to the Mac",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// One metrics row per reading: views (reach = views on Shorts) and, when YouTube Analytics has it, the retention curve\n// (audienceWatchRatio at 1%..100% of the video). Learn maps the curve onto the scenes.\nconst due = $('Readings due').all();\nconst stats = $('Video statistics').all();\nconst curves = $input.all();\nconst rows = stats.flatMap((item, i) => {\n  if (!item.json.statistics) return []; // video gone or not readable: skip, it stays due\n  const d = due[i].json;\n  const views = Number(item.json.statistics?.viewCount ?? 0);\n  const curve = (curves[i]?.json?.rows ?? []).map((r) => Number(r[1]));\n  return [{ storyboard_id: d.storyboard_id, channel: d.channel, platform: 'youtube', window: d.window, reach: views, views, ...(curve.length >= 20 ? { retention: curve.slice(0, 100) } : {}) }];\n});\nif (!rows.length) return [{ json: { recorded: 0 } }];\nconst r = await this.helpers.httpRequest({ method: 'POST', url: 'http://host.docker.internal:5680/metrics', body: rows, json: true });\nreturn [{ json: r }];"
+      }
+    },
+    {
+      "name": "Experiment days due",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        220
+      ],
+      "parameters": {
+        "jsCode": "// Title/thumbnail experiments: which complete Pacific days still need numbers (one item per video and day).\nconst due = await this.helpers.httpRequest({ url: 'http://host.docker.internal:5680/experiment-days-due?channel=c2-reach', json: true });\nreturn due.flatMap((x) => x.dates.map((date) => ({ json: { storyboard_id: x.storyboard_id, video_id: x.video_id, date } })));"
+      }
+    },
+    {
+      "name": "Day numbers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        220
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "url": "https://youtubeanalytics.googleapis.com/v2/reports",
+        "authentication": "predefinedCredentialType",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ids",
+              "value": "channel==MINE"
+            },
+            {
+              "name": "startDate",
+              "value": "={{ $json.date }}"
+            },
+            {
+              "name": "endDate",
+              "value": "={{ $json.date }}"
+            },
+            {
+              "name": "metrics",
+              "value": "views,averageViewPercentage"
+            },
+            {
+              "name": "filters",
+              "value": "=video=={{ $json.video_id }}"
+            }
+          ]
+        },
+        "options": {},
+        "nodeCredentialType": "googleOAuth2Api"
+      },
+      "credentials": {
+        "googleOAuth2Api": {
+          "id": "iZwr5UedprP27Epd",
+          "name": "YouTube Analytics C2"
+        }
+      }
+    },
+    {
+      "name": "Send days",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        220
+      ],
+      "parameters": {
+        "jsCode": "// One row per video and day. A day YouTube has not filled yet is skipped and asked again tomorrow.\nconst due = $('Experiment days due').all();\nconst rows = $input.all().flatMap((item, i) => {\n  const r = item.json.rows?.[0];\n  if (!r) return [];\n  const d = due[i].json;\n  return [{ storyboard_id: d.storyboard_id, date: d.date, views: Number(r[0]), avg_view_pct: Number(r[1]) }];\n});\nif (!rows.length) return [{ json: { recorded: 0 } }];\nconst r = await this.helpers.httpRequest({ method: 'POST', url: 'http://host.docker.internal:5680/experiment-days', body: rows, json: true });\nreturn [{ json: r }];"
+      }
+    }
+  ],
+  "connections": {
+    "Every day 10:00": {
+      "main": [
+        [
+          {
+            "node": "Readings due",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Experiment days due",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Readings due": {
+      "main": [
+        [
+          {
+            "node": "Video statistics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video statistics": {
+      "main": [
+        [
+          {
+            "node": "Retention curve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retention curve": {
+      "main": [
+        [
+          {
+            "node": "Send to the Mac",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Experiment days due": {
+      "main": [
+        [
+          {
+            "node": "Day numbers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Day numbers": {
+      "main": [
+        [
+          {
+            "node": "Send days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -37,8 +37,8 @@ for (const [name, t] of Object.entries(THEMES)) {
     console.log(`FAIL ${name}: every token must be #RRGGBB`);
     fails++;
   }
-  for (const [fg, bg] of PAIRS) {
-    const r = ratio(t[fg], t[bg]);
+  for (const [fg, bg] of [...PAIRS, ...(t.reveal ? [['onAccent', 'reveal'] as [keyof Theme, keyof Theme]] : [])]) {
+    const r = ratio(t[fg]!, t[bg]!);
     const ok = r >= AA;
     if (!ok) fails++;
     console.log(`${ok ? 'pass' : 'FAIL'} ${name.padEnd(6)} ${fg} on ${bg}`.padEnd(34) + r.toFixed(2));

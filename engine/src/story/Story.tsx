@@ -9,7 +9,7 @@ import React from 'react';
 import {AbsoluteFill, Audio, Easing, Img, interpolate, random, Sequence, spring, staticFile, useCurrentFrame} from 'remotion';
 import {ensureFonts} from '../fonts';
 import {Sfx, SfxEnabled} from '../lib/frame';
-import {parseAccent, splitWords, wordStarts} from '../lib/text';
+import {parseAccent, wordStarts} from '../lib/text';
 import {computeFrames, LEAD, voSpanFrames} from '../lib/timing';
 import {Captions} from './Captions';
 import {FONT, HANDLE, TYPE} from '../theme';

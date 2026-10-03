@@ -1,0 +1,98 @@
+{
+  "id": "c2-archive-v0",
+  "channel": "c2-reach",
+  "version": 0,
+  "about": "Archive Gold before signatures: archive theme, gold as the general accent, the slow camera drift, the format's own transitions.",
+  "theme": "archive",
+  "transitions": [
+    "cut",
+    "whip-pan",
+    "ink-wipe"
+  ],
+  "opener": "none",
+  "overlay": "none",
+  "strike": false,
+  "platforms": {
+    "youtube": {
+      "size": {
+        "width": 1080,
+        "height": 1920
+      },
+      "thumbnail": true,
+      "end_card": {
+        "handle": "youtube"
+      },
+      "caption": "{body}\n\n{cta}\n\n{voice}\n\n{hashtags}",
+      "cta": {
+        "follow": {
+          "text": "*Subscribe*",
+          "sub": "One backstory, every day.",
+          "say": "Subscribe for one backstory every day.",
+          "line": "Subscribe for one backstory every day."
+        },
+        "send": {
+          "text": "*Share* it",
+          "sub": "Send it to someone curious.",
+          "say": "Share this with someone curious.",
+          "line": "Share this with someone who would love the story."
+        }
+      },
+      "filename": "{channel}-{platform}-{date}-{id}",
+      "destination": "n8n"
+    },
+    "instagram": {
+      "size": {
+        "width": 1080,
+        "height": 1920
+      },
+      "thumbnail": false,
+      "end_card": {
+        "handle": "instagram"
+      },
+      "caption": "{body}\n\n{cta}\n\n{voice}\n\n{hashtags}",
+      "cta": {
+        "follow": {
+          "text": "*Follow*",
+          "sub": "One backstory, every day.",
+          "say": "Follow for one backstory every day.",
+          "line": "Follow {ig} for one backstory every day."
+        },
+        "send": {
+          "text": "*Send* it",
+          "sub": "Send it to someone curious.",
+          "say": "Send this to someone curious.",
+          "line": "Send this to someone who would love the story."
+        }
+      },
+      "filename": "{channel}-{platform}-{date}-{id}",
+      "destination": "forge-queue"
+    },
+    "facebook": {
+      "size": {
+        "width": 1080,
+        "height": 1920
+      },
+      "thumbnail": false,
+      "end_card": {
+        "handle": "facebook"
+      },
+      "caption": "{body}\n\n{cta}\n\n{voice}\n\n{hashtags}",
+      "cta": {
+        "follow": {
+          "text": "*Follow*",
+          "sub": "One backstory, every day.",
+          "say": "Follow the page for one backstory every day.",
+          "line": "Follow the page for one backstory every day."
+        },
+        "send": {
+          "text": "*Share* it",
+          "sub": "Send it to someone curious.",
+          "say": "Share this with someone curious.",
+          "line": "Share this with someone who would love the story."
+        }
+      },
+      "filename": "{channel}-{platform}-{date}-{id}",
+      "destination": "forge-queue"
+    }
+  }
+}

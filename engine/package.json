@@ -15,7 +15,7 @@
     "stress": "node scripts/make.mjs test/stress-ui.json test/stress-ui-2.json",
     "typecheck": "tsc",
     "schemas": "node ../schemas/validate.ts",
-    "check": "tsc && node scripts/theme-gate.ts > /dev/null && node src/composer/textcheck.ts && node ../schemas/validate.ts > /dev/null && node ../studio/recipe.test.ts && node ../studio/qa.test.ts && node ../studio/approval.test.ts && node ../studio/dispatch.test.ts && node ../studio/learn.test.ts && node ../studio/telegram.test.ts && node ../studio/metrics.test.ts && node ../studio/run.test.ts && node ../studio/feed.test.ts && node ../studio/loop.test.ts"
+    "check": "tsc && node scripts/theme-gate.ts > /dev/null && node src/composer/textcheck.ts && node ../schemas/validate.ts > /dev/null && node ../studio/recipe.test.ts && node ../studio/qa.test.ts && node ../studio/approval.test.ts && node ../studio/dispatch.test.ts && node ../studio/learn.test.ts && node ../studio/telegram.test.ts && node ../studio/metrics.test.ts && node ../studio/run.test.ts && node ../studio/feed.test.ts && node ../studio/experiment.test.ts && node ../studio/improve.test.ts && node ../studio/loop.test.ts"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.527",

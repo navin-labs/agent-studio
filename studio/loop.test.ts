@@ -8,17 +8,18 @@ import os from 'node:os';
 import path from 'node:path';
 import {SPECS} from '../engine/src/primitives/specs.ts';
 import {post} from './approve-server.ts';
-import {ideasFile, ingestFeed} from './feed.ts';
+import {ideasFile} from './feed.ts';
 import {learnFile} from './learn.ts';
+import {renderVariants} from './fixtures/variants.ts';
 import {currentStatus, type Paths, readFingerprints, readJsonl} from './ledger.ts';
 import {due} from './metrics.ts';
-import type {Recipe} from './recipe.ts';
+import {type Recipe, recipeDate} from './recipe.ts';
 import {tick} from './run.ts';
 import {onUpdate, type Tg} from './telegram.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'loop-test-'));
-const p: Paths = {state: path.join(tmp, 'state'), content: [path.join(tmp, 'content')], out: path.join(tmp, 'out'), recipes: path.join(tmp, 'recipes'), channels: path.join(tmp, 'channels')};
+const p: Paths = {state: path.join(tmp, 'state'), content: [path.join(tmp, 'content')], out: path.join(tmp, 'out'), recipes: path.join(tmp, 'recipes'), channels: path.join(tmp, 'channels'), queue: path.join(tmp, 'queue')};
 const TRENDS = 'https://trends.google.com/trending/rss?geo=IN';
 for (const c of ['c1-automation', 'c2-reach', 'c3-studio']) {
   const ch = JSON.parse(fs.readFileSync(path.join(ROOT, 'channels', c, 'channel.json'), 'utf8'));
@@ -47,57 +48,58 @@ const week1: Recipe[] = JSON.parse(fs.readFileSync(path.join(p.recipes, 'c1-auto
 assert.equal(week1.length, 7);
 
 // 3. Forge writes one board per recipe (shots, theme, hook, transitions from the recipe; one idea each, with its link);
-// 4. the watcher renders and QA passes (fake renderer: video, qa.json, the handle it showed)
+// 4. the watcher renders each board once per platform and QA passes (fake renderer: the variant folders make.mjs + qa.ts leave;
+// C1's Facebook username is pending, so QA holds its Facebook variants)
 const forgeWrites = (week: Recipe[]) =>
   week.forEach((rc, i) => {
     const idea = ideas[i % ideas.length];
     const doc = {format: 'storyboard', id: rc.id, channel: rc.channel, theme: rc.theme, ...(rc.primitives[0] === 'host-hook' ? {host: 'chiku', captionStyle: 'karaoke'} : {}), hookPattern: rc.hook_pattern,
       scenes: rc.primitives.map((pr, j) => ({primitive: pr, ...(j ? {transition: rc.transitions[j]} : {}), params: SPECS[pr].example, vo: 'One short line.'})),
-      caption: `Topic ${rc.id} done by hand.\n\nExample data.\n\nFollow for more.`, hashtags: ['#automation', '#n8n', '#smallbusinessindia'], meta: {source: idea.source_url, idea_id: idea.id, recipe_id: rc.id, hero_metaphor: `metaphor ${rc.id}`}};
+      caption: `Topic ${rc.id} done by hand.\n\nExample data.\n\nSend this to whoever does it.`, hashtags: ['#automation', '#n8n', '#smallbusinessindia'], meta: {source: idea.source_url, idea_id: idea.id, recipe_id: rc.id, hero_metaphor: `metaphor ${rc.id}`}};
     fs.writeFileSync(path.join(p.content[0], `${rc.id}.json`), JSON.stringify(doc));
-    const out = path.join(p.out, rc.id);
-    fs.mkdirSync(out, {recursive: true});
-    fs.writeFileSync(path.join(out, 'reel.mp4'), `video ${rc.id}`);
-    fs.writeFileSync(path.join(out, 'qa.json'), JSON.stringify({storyboard_id: rc.id, pass: true, checks: []}));
-    fs.writeFileSync(path.join(out, 'render.json'), JSON.stringify({handle: HANDLE}));
+    renderVariants(p, doc, {date: recipeDate(rc), qa: {facebook: false}});
   });
 forgeWrites(week1);
 
-// 5. the next tick shows each QA-passed video on Telegram once, then "Approve all"
+// 5. the next tick shows each QA-passed video on Telegram once (one message for its variants), then "Approve all"
 r = await tick({...base, now: THU1 + 3600_000});
 assert.equal(msgs.filter((m) => m.method === 'sendVideo').length, 7);
 const all = msgs.find((m) => m.method === 'sendMessage' && m.body.reply_markup)!.body.reply_markup.inline_keyboard[0][0].callback_data;
 assert.equal(all, 'A|c1-automation|2026-W41');
 
-// 6. Navin taps "Approve all": 7 ledger approvals, 7 fingerprints
+// 6. Navin taps "Approve all": 7 videos x 2 ready variants (YouTube, Instagram) approved, 7 fingerprints
 const SECRET = 'loop-test-secret-0123456789';
-assert.match((await onUpdate(tg, {update_id: 1, callback_query: {id: 'q', data: all, from: {id: 111}, message: {chat: {id: 111}}}}, {chatId: NAVIN, secret: SECRET, paths: p, now: THU1 + 7200_000}))!, /^Approved: /);
-assert.equal([...currentStatus(p).values()].filter((e) => e.status === 'approved').length, 7);
+assert.match((await onUpdate(tg, {update_id: 1, callback_query: {id: 'q', data: all, from: {id: 111}, message: {chat: {id: 111}}}}, {chatId: NAVIN, secret: SECRET, paths: p, now: THU1 + 7200_000}))!, /^Approved: c1-2026-w41-1 \(instagram, youtube\)/);
+assert.equal([...currentStatus(p).values()].filter((e) => e.status === 'approved').length, 14);
 assert.equal(readFingerprints(p).length, 7);
 
-// 7. Dispatch (live, fake n8n): every video to YouTube once and into Forge's queue
+// 7. Dispatch (live, fake n8n): every YouTube variant to C1's own workflow once, every Instagram variant into C1's Instagram queue
 let uploads = 0;
-const n8n = async () => ({ok: true, status: 200, text: async () => JSON.stringify({uploaded: true, youtube_id: `yt${String(++uploads).padStart(9, '0')}`})});
-r = await tick({...base, now: THU1 + 3 * 3600_000, live: true, youtubeUrl: 'http://n8n.test/yt', fetch: n8n});
-assert.deepEqual([r.problems, uploads], [[], 7]);
-assert.equal([...currentStatus(p).values()].filter((e) => e.status === 'dispatched').length, 7);
-r = await tick({...base, now: THU1 + 4 * 3600_000, live: true, youtubeUrl: 'http://n8n.test/yt', fetch: n8n});
+const hooks = new Set<string>();
+const n8n = async (url: string) => (hooks.add(url), {ok: true, status: 200, text: async () => JSON.stringify({uploaded: true, youtube_id: `yt${String(++uploads).padStart(9, '0')}`})});
+r = await tick({...base, now: THU1 + 3 * 3600_000, live: true, fetch: n8n});
+assert.deepEqual([r.problems, uploads, [...hooks]], [[], 7, ['http://localhost:5678/webhook/agent-studio-youtube-c1-automation']]);
+assert.equal([...currentStatus(p).values()].filter((e) => e.status === 'dispatched').length, 14);
+r = await tick({...base, now: THU1 + 4 * 3600_000, live: true, fetch: n8n});
 assert.equal(uploads, 7, 'the next tick uploads nothing again');
 
-// 8. Forge posts each queue folder at its time and writes posted.json; the tick marks them published
-const queue = path.join(p.state, 'queue', 'instagram');
-const folders = fs.readdirSync(queue);
-assert.equal(folders.length, 7);
-for (const f of folders) {
-  const job = JSON.parse(fs.readFileSync(path.join(queue, f, 'post.json'), 'utf8'));
-  assert.deepEqual(job.accounts, [{platform: 'instagram', handle: HANDLE}]);
-  fs.writeFileSync(path.join(queue, f, 'posted.json'), JSON.stringify({posted_at: job.scheduled_for, urls: {instagram: `https://www.instagram.com/reel/${job.storyboard_id}/`}}));
+// 8. Forge posts each queued item at its time (reading only its manifest) and writes <prefix>.posted.json; the tick marks the
+// Instagram variants published, and the YouTube variants once their scheduled publish time has passed
+const queue = path.join(p.queue, 'c1-automation', 'instagram');
+const manifests = fs.readdirSync(queue).filter((f) => f.endsWith('.manifest.json'));
+assert.equal(manifests.length, 7);
+assert.ok(!fs.existsSync(path.join(p.queue, 'c1-automation', 'facebook')), 'the held Facebook variants never reach the queue');
+for (const f of manifests) {
+  const m = JSON.parse(fs.readFileSync(path.join(queue, f), 'utf8'));
+  assert.deepEqual([m.channel, m.platform, m.handle], ['c1-automation', 'instagram', HANDLE]);
+  assert.ok(fs.existsSync(path.join(queue, m.files.video)) && fs.existsSync(path.join(queue, m.files.caption)));
+  fs.writeFileSync(path.join(queue, f.replace('.manifest.json', '.posted.json')), JSON.stringify({posted_at: m.scheduled_for, url: `https://www.instagram.com/reel/${m.video_id}/`}));
 }
 const AFTER = Date.parse('2026-10-12T12:00:00Z'); // the week has been posted
-r = await tick({...base, now: AFTER, live: true, youtubeUrl: 'http://n8n.test/yt', fetch: n8n});
+r = await tick({...base, now: AFTER, live: true, fetch: n8n});
 const published = [...currentStatus(p).values()].filter((e) => e.status === 'published');
-assert.equal(published.length, 7);
-assert.ok(published.every((e) => e.post_urls!.length === 2), 'YouTube and Instagram URLs');
+assert.deepEqual([published.filter((e) => e.platform === 'instagram').length, published.filter((e) => e.platform === 'youtube').length], [7, 7]);
+assert.ok(published.every((e) => e.post_urls!.length === 1), 'each variant carries its own platform\'s URL');
 
 // 9. Metrics: Forge reports Instagram (with a pattern: slot 1 and 2 do far better); n8n reports YouTube views when due
 fs.mkdirSync(base.inbox, {recursive: true});

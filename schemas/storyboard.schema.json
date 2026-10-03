@@ -38,7 +38,9 @@
         "mono",
         "studio",
         "night",
-        "archive"
+        "archive",
+        "night-signal",
+        "archive-gold"
       ]
     },
     "host": {
@@ -126,7 +128,8 @@
               "cut",
               "whip-pan",
               "ink-wipe",
-              "pixel-wipe"
+              "pixel-wipe",
+              "fold"
             ]
           },
           "captions": {
@@ -178,8 +181,30 @@
           "type": "string",
           "minLength": 1,
           "description": "The video's central image, checked by the 14-day novelty rule"
+        },
+        "title_b": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 100,
+          "description": "Experiment arm B: an alternative YouTube title (arm A is caption line 1). Optional."
+        },
+        "thumb_b": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 60,
+          "description": "Experiment arm B: an alternative thumbnail headline, *accent* allowed (arm A is the hook). Optional."
+        },
+        "year": {
+          "type": "string",
+          "pattern": "^[0-9]{3,4}$",
+          "description": "the story's year, shown by the year-flap opener"
         }
       }
+    },
+    "style": {
+      "type": "string",
+      "pattern": "^c[0-9]-[a-z0-9-]+-v[0-9]+$",
+      "description": "style preset id (styles/<id>.json); unset: the channel's style"
     }
   }
 }

@@ -1,0 +1,94 @@
+{
+  "format": "storyboard",
+  "id": "style-c2",
+  "channel": "c2-reach",
+  "theme": "archive-gold",
+  "style": "c2-archive-gold-v1",
+  "hookPattern": "question",
+  "scenes": [
+    {
+      "primitive": "word-stack-slam",
+      "params": {
+        "text": "Who drew the first barcode?"
+      },
+      "vo": "In *1948*, a grocery boss asked: why is checkout so slow?"
+    },
+    {
+      "primitive": "pile-drop",
+      "transition": "cut",
+      "params": {
+        "item": {
+          "title": "ITEM",
+          "id": "P-",
+          "pill": "TYPED",
+          "amount": false
+        },
+        "count": 16,
+        "start": 101
+      },
+      "vo": "Every price was typed in by hand, one item at a time, while the line behind it kept growing."
+    },
+    {
+      "primitive": "highlighter-swipe",
+      "transition": "cut",
+      "params": {
+        "text": "A student, *Norman Woodland*, took it to the beach."
+      },
+      "vo": "So a young student, *Norman Woodland*, took that question with him to a beach in Florida."
+    },
+    {
+      "primitive": "zoom-dive",
+      "transition": "ink-wipe",
+      "params": {
+        "layers": [
+          {
+            "icon": "waves",
+            "label": "Dots and dashes",
+            "sub": "Drawn in the sand"
+          },
+          {
+            "icon": "file",
+            "label": "U.S. Patent",
+            "sub": "2,612,994, granted 1952"
+          },
+          {
+            "icon": "barcode",
+            "label": "Thin, thick lines",
+            "sub": "Morse code, pulled down"
+          }
+        ]
+      },
+      "vo": "He drew Morse code in the sand, then pulled its dots and dashes down into thin and thick lines. Patent: 1952."
+    },
+    {
+      "primitive": "split-flap",
+      "transition": "cut",
+      "params": {
+        "label": "FIRST SCAN AT A CHECKOUT",
+        "text": "1974",
+        "sub": "Twenty two years after the patent"
+      },
+      "vo": "The first real scan at a checkout came in *1974*, twenty two years later."
+    },
+    {
+      "primitive": "end-card",
+      "transition": "cut",
+      "params": {
+        "text": "*Follow*",
+        "sub": "One backstory a day."
+      }
+    }
+  ],
+  "caption": "Who drew the first barcode in 1948?\n\nA student took a supermarket's question to a Florida beach and drew Morse code in the sand.\n\nSend this to someone who scans things all day.\n\nSource: https://en.wikipedia.org/wiki/Norman_Joseph_Woodland",
+  "hashtags": [
+    "#history",
+    "#barcode",
+    "#inventions"
+  ],
+  "meta": {
+    "source": "https://en.wikipedia.org/wiki/Norman_Joseph_Woodland",
+    "idea_id": "style-test-barcode",
+    "recipe_id": "style-test-c2",
+    "year": "1948"
+  }
+}

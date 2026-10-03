@@ -56,7 +56,7 @@ export const Captions: React.FC<{vo: string; starts: number[]; top?: number}> = 
           const h = accent[idx] ? interpolate(frame - starts[idx], [0, 8], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : 0;
           return (
             <span key={idx} style={{display: 'inline-block', position: 'relative'}}>
-              {h > 0 ? <span style={{position: 'absolute', left: -6, right: -6, top: '14%', bottom: '4%', background: th.accent, transformOrigin: '0 50%', transform: `scaleX(${h}) skewX(-6deg)`, borderRadius: 4}} /> : null}
+              {h > 0 ? <span style={{position: 'absolute', left: -6, right: -6, top: '14%', bottom: '4%', background: th.reveal ?? th.accent, transformOrigin: '0 50%', transform: `scaleX(${h}) skewX(-6deg)`, borderRadius: 4}} /> : null}
               <span style={{position: 'relative', color: h > 0.5 ? th.onAccent : undefined}}>{w}</span>
             </span>
           );

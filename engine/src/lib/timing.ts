@@ -3,10 +3,12 @@ import {splitWords} from './text.ts';
 
 export const FPS = 30;
 export const LEAD = 4; // frames of silence before VO starts in each scene
-export const TAIL_AUDIO = 0.35; // seconds after measured VO ends
-// ponytail: one rate for every provider; Sarvam bulbul:v3 at pace 1.1 measured 3.6 words/s, so 3.0 leaves headroom. Per-provider rates if a slower voice is chosen.
-export const VOICE_WPS = 3.0;
-export const TAIL_EST = 0.4; // seconds after estimated VO ends
+export const TAIL_AUDIO = 0.2; // seconds after measured VO ends: with the next LEAD, 0.33 s between lines (clips are trimmed)
+// ponytail: one rate for every voice. Measured 2026-10-03 on a 62-word passage with clips trimmed (tts_local.py): C2 Kokoro
+// am_fenrir at 1.0 = 3.64 words/s, C1 af_heart at 1.15 = 3.93 (so C1 estimates run slightly long). The real length is measured
+// after voicing; per-voice rates if one voice keeps missing the length gate.
+export const VOICE_WPS = 3.6;
+export const TAIL_EST = 0.25; // seconds after estimated VO ends
 
 // ~155 words per minute plus pauses for punctuation (story format). Storyboards pass VOICE_WPS.
 export const estimateSeconds = (vo: string, wps = 2.4) => {

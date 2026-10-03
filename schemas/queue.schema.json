@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "queue",
+  "description": "One post in Forge's publish queue: queue/<channel>/<platform>/<channel>-<platform>-<date>-<id>.manifest.json, written by studio/dispatch.ts after the video and caption it names (so a manifest only exists once its files do). The Queue Publisher skill posts exactly this video and caption to exactly this account and nothing else; it never guesses a destination.",
+  "type": "object",
+  "required": [
+    "channel",
+    "platform",
+    "video_id",
+    "date",
+    "handle",
+    "scheduled_for",
+    "video_sha256",
+    "files"
+  ],
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "platform": {
+        "const": "facebook"
+      }
+    },
+    "required": [
+      "platform"
+    ]
+  },
+  "then": {
+    "required": [
+      "page_id"
+    ]
+  },
+  "properties": {
+    "channel": {
+      "enum": [
+        "c1-automation",
+        "c2-reach",
+        "c3-studio"
+      ]
+    },
+    "platform": {
+      "enum": [
+        "instagram",
+        "facebook"
+      ],
+      "description": "the queue only carries Instagram and Facebook; YouTube goes through n8n"
+    },
+    "video_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,79}$"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "handle": {
+      "type": "string",
+      "pattern": "^@[A-Za-z0-9._]{1,30}$",
+      "description": "the account to post to (Instagram), or the page's username (Facebook)"
+    },
+    "page_id": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "description": "Facebook: post to this page by its ID"
+    },
+    "scheduled_for": {
+      "type": "string",
+      "format": "date-time",
+      "description": "post at or after this time (IST); never before"
+    },
+    "video_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the approved video"
+    },
+    "files": {
+      "type": "object",
+      "required": [
+        "video",
+        "caption"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "video": {
+          "type": "string",
+          "pattern": "^c[0-9]-[a-z0-9-]+-(instagram|facebook)-[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]+\\.mp4$"
+        },
+        "caption": {
+          "type": "string",
+          "pattern": "^c[0-9]-[a-z0-9-]+-(instagram|facebook)-[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]+\\.caption\\.txt$"
+        }
+      }
+    }
+  }
+}

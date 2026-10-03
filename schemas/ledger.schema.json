@@ -1,10 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "ledger",
-  "description": "One entry per video. Dispatch only acts on status approved; approval needs a person and a time.",
+  "description": "One entry per platform variant of a video (studio/variant.ts); the latest line per (video, platform) wins. Dispatch only acts on status approved; approval needs a person, a time and the hash of the exact video approved.",
   "type": "object",
   "required": [
     "storyboard_id",
+    "platform",
     "channel",
     "status",
     "updated_at"
@@ -29,13 +30,21 @@
     "required": [
       "approved_by",
       "approved_at",
-      "targets"
+      "sha256"
     ]
   },
   "properties": {
     "storyboard_id": {
       "type": "string",
       "minLength": 1
+    },
+    "platform": {
+      "enum": [
+        "youtube",
+        "instagram",
+        "facebook"
+      ],
+      "description": "one line per platform variant (studio/variant.ts)"
     },
     "channel": {
       "enum": [
@@ -64,17 +73,6 @@
       "type": "string",
       "format": "date-time"
     },
-    "targets": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "enum": [
-          "instagram",
-          "facebook",
-          "youtube"
-        ]
-      }
-    },
     "scheduled_for": {
       "type": "string",
       "format": "date-time"
@@ -89,6 +87,21 @@
     "updated_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "style": {
+      "type": "string",
+      "pattern": "^c[0-9]-[a-z0-9-]+-v[0-9]+$",
+      "description": "the style preset the approved video was rendered in"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the variant video that was approved; dispatch refuses if the file on disk is no longer that video (a render after approval needs a new approval)"
+    },
+    "approval": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$",
+      "description": "the approval link it came from (first 16 hex of its signature); a link is used once, so replaying it after a rejection is refused"
     }
   }
 }

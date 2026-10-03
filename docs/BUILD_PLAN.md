@@ -38,7 +38,7 @@ A6 Host format (pixel-narrator, ADR 13 to 15): one of several formats; spec = Na
   > Build the 4 windows as primitives (host visible beside them, tilting toward the active panel). Spring entrances staggered 80 to 120 ms.
   > Stop when all render in night theme and pass `npm run primitives`.
 - [x] **A6.4 Pixel-wipe, payoff card, logo line.** Done when: pixel-dissolve transition, payoff line primitive, DM AUDIT card and VT323 brand line render (VT323 self-hosted in public/fonts).
-- [x] **A6.5 C1 host recipe + real voice.** Done when: a 40 to 60 s (measured with voice), 7-scene C1 storyboard (hook, pain A, pain B, turn, demo A, demo B, payoff + CTA) renders voiced with Sarvam's best voice and passes all gates. Needs engine/.env with the Sarvam key (Navin copies it; Claude never reads it). Built with speaker shubh (43.8 s); final voice picked later, re-voice only.
+- [x] **A6.5 C1 host recipe + real voice.** Done when: a 40 to 60 s (measured with voice), 7-scene C1 storyboard (hook, pain A, pain B, turn, demo A, demo B, payoff + CTA) renders voiced and passes all gates. Built with a test voice (43.8 s); the final voice is local Kokoro (docs/FORMATS_PROPOSAL.md), re-voice only.
 - [x] **A6.6 Per-format QA.** Done when: duration limits are per format (host 40 to 60 s measured after voice, composed 20 to 45 s) and text QA has platform safe-zone profiles (Instagram, YouTube Shorts).
 
 ## Phase B: agent-studio core
@@ -91,6 +91,7 @@ Phase done when: a dry-run week for C1 goes from feed to approved queue with zer
 - [x] **P3 Production loop.** Hourly tick with a per-channel `live` switch; Telegram send-once; publish confirmation from Forge; Facebook via the Forge queue; per-channel YouTube webhook.
 - [x] **P4 Forge skills and setup guide.** Weekly Writer (all channels), Queue Publisher, Metrics Reporter; `docs/SETUP.md`.
 - [x] **P6 Audit.** Feed (n8n -> /feed -> ideas), crash-safe dispatch (claim, resume, stuck + resolve), torn-line-safe JSONL, fingerprint repair, render watcher on this engine, end-to-end loop test.
+- [x] **P7 Platform variants and clean slate (2026-10-03).** Three renders per video (YouTube, Instagram, Facebook) from the style preset's platform spec; canonical `out/<channel>/<date>/<id>/<platform>/` and `queue/<channel>/<platform>/` with manifests; per-variant QA, ledger and dispatch by (channel, platform), each failing closed; one Telegram approval per video; C1 40 to 60 s (8-beat explainer); test approvals and renders archived. Proof: `npm run check`, `node studio/simulate.ts` on real renders, live n8n contract checks.
 - [ ] **P5 Go-live (Navin + Claude).** `docs/SETUP.md` steps 1 to 6. Includes B4b.
 
 ## Phase D: channels (gated)

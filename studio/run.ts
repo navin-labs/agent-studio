@@ -1,20 +1,24 @@
 // The production loop: one idempotent tick, run every hour by launchd. Safe to run any time, any number of times.
 //   every tick:  file Forge's metrics (inbox/metrics), send newly QA-passed videos to Telegram (each once), dispatch approved,
 //                mark videos Forge has posted (posted.json in their queue folder) as published
-//   PLAN_DAY:    for each live channel, Learn for next week, then write next week's recipes (never overwrites) and tell Navin
-//                they are ready for Forge
+//   daily:       for each live channel, Learn from the latest metrics (Tier 1 changes logged with evidence), and Tier 2
+//                proposals sent to Navin with Approve / Not now buttons once the evidence is there (studio/improve.ts)
+//   PLAN_DAY:    for each live channel, Learn for next week, then write next week's recipes (never overwrites) and send them with
+//                the weekly learning note: what changed by itself and why, what waits for a tap, what is tested next
 // Only channels with "live": true in channel.json are touched. Dispatch also needs DISPATCH_LIVE=on (else it is a dry run).
 // Every failure is logged and sent to Telegram; one failing step never stops the others.
 //
 // node studio/run.ts tick              run once now
 // node studio/run.ts --install         run every hour via launchd (log: state/run.log)
+import {apply as applyArm, experiments, note, step as expStep} from './experiment.ts';
 import {spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {dispatch, markPublished, plan} from './dispatch.ts';
-import {runLearn} from './learn.ts';
-import {PATHS, type Paths, repairFingerprints} from './ledger.ts';
+import {learnFile, runLearn} from './learn.ts';
+import {propose, proposals, proposalsFile, proposalText, weeklyNote} from './improve.ts';
+import {appendJsonl, PATHS, type Paths, repairFingerprints} from './ledger.ts';
 import {ingest} from './metrics.ts';
 import {addDays, isoWeek} from './novelty.ts';
 import {planWeek} from './recipe.ts';
@@ -49,7 +53,7 @@ export const watcherProblem = (o: {agents?: string; loaded?: () => string} = {})
   return null;
 };
 
-export type TickOpts = {watcher?: () => string | null; fetch?: Parameters<typeof dispatch>[1]['fetch']; now?: number; paths?: Paths; tg?: Tg | null; chatId?: string; live?: boolean; youtubeUrl?: string; plan?: (ch: string, week: string) => {recipes: unknown[]}; inbox?: string};
+export type TickOpts = {experiments?: boolean; packaging?: Parameters<typeof applyArm>[1]; watcher?: () => string | null; fetch?: Parameters<typeof dispatch>[1]['fetch']; now?: number; paths?: Paths; tg?: Tg | null; chatId?: string; live?: boolean; plan?: (ch: string, week: string) => {recipes: unknown[]}; inbox?: string};
 
 export const tick = async (o: TickOpts = {}) => {
   const p = o.paths ?? PATHS;
@@ -87,11 +91,28 @@ export const tick = async (o: TickOpts = {}) => {
   });
 
   for (const ch of channels) {
+    // Learn daily from the latest metrics (Tier 1 applies through Recipe, the Writer and Dispatch); Tier 2 only proposes
+    const lf = learnFile(ch, p);
+    if (!fs.existsSync(lf) || JSON.parse(fs.readFileSync(lf, 'utf8')).updated !== date)
+      await step(`learn ${ch}`, () => {
+        const r = runLearn(ch, nextWeek, p, now);
+        return r.changes.length ? `${r.changes.length} change(s): ${r.changes.map((c) => c.what).join('; ')}` : '';
+      });
+    await step(`proposals ${ch}`, async () => {
+      const made = propose(p, ch, now);
+      const unsent = proposals(p).filter((x) => x.channel === ch && x.status === 'pending');
+      if (o.tg && o.chatId)
+        for (const x of unsent) {
+          await o.tg('sendMessage', {chat_id: o.chatId, text: proposalText(x), reply_markup: {inline_keyboard: [[{text: 'Approve', callback_data: `p|${x.id}|yes`}, {text: 'Not now', callback_data: `p|${x.id}|no`}]]}});
+          appendJsonl(proposalsFile(p), [{...x, status: 'sent'}]);
+        }
+      return made.length ? `proposed ${made.map((x) => x.title).join('; ')}` : '';
+    });
     if (weekday === PLAN_DAY && !fs.existsSync(path.join(p.recipes, ch, `${nextWeek}.json`)))
       await step(`plan ${ch} ${nextWeek}`, async () => {
-        runLearn(ch, nextWeek, p);
-        const r = o.plan ? o.plan(ch, nextWeek) : planWeek(ch, nextWeek, {recipes: p.recipes, state: p.state});
-        await say(`${ch} ${nextWeek}: ${r.recipes.length} recipes are ready. Forge: write the week (Weekly Writer skill).`);
+        runLearn(ch, nextWeek, p, now);
+        const r = o.plan ? o.plan(ch, nextWeek) : planWeek(ch, nextWeek, {recipes: p.recipes, state: p.state, channels: p.channels});
+        await say(`${ch} ${nextWeek}: ${r.recipes.length} recipes are ready. Forge: write the week (Weekly Writer skill).\n\n${weeklyNote(p, ch, nextWeek, r.recipes as Parameters<typeof weeklyNote>[3], now)}`);
         return `${r.recipes.length} recipes`;
       });
     if (o.tg && o.chatId)
@@ -104,7 +125,7 @@ export const tick = async (o: TickOpts = {}) => {
 
   await step('dispatch', async () => {
     const pl = plan(p, now);
-    const r = await dispatch(pl, {live: o.live ?? false, youtubeUrl: o.youtubeUrl, fetch: o.fetch, paths: p, now});
+    const r = await dispatch(pl, {live: o.live ?? false, fetch: o.fetch, paths: p, now});
     // an upload whose YouTube result is unknown gets its own Telegram message with two buttons (askResolve), once per claim
     const buttons = !!(o.tg && o.chatId);
     const unknown = (x: string) => buttons && /--resolve|upload state unknown/.test(x);
@@ -120,6 +141,24 @@ export const tick = async (o: TickOpts = {}) => {
     problems.push(...r.problems.map((x) => `queue ${x}`));
     return r.published.length ? `published ${r.published.join(', ')}` : '';
   });
+
+  // Title/thumbnail experiments (studio/experiment.ts): account changes, so only with EXPERIMENTS=on and for live channels
+  if (o.experiments ?? process.env.EXPERIMENTS === 'on')
+    await step('experiments', async () => {
+      const s = expStep(p, now);
+      const done: string[] = [];
+      for (const a of s.actions.filter((x) => channels.includes(x.channel))) {
+        await applyArm(a, {paths: p, now, ...o.packaging});
+        done.push(`${a.storyboard_id} arm ${a.arm}`);
+      }
+      for (const r of s.results.filter((x) => channels.includes(experiments(p).find((e) => e.id === x.storyboard_id)?.channel ?? ''))) {
+        note(p, {storyboard_id: r.storyboard_id, event: 'result', verdict: r.verdict, text: r.text}, now);
+        if (o.tg && o.chatId)
+          await o.tg('sendMessage', {chat_id: o.chatId, text: r.text, ...(r.verdict === 'b' ? {reply_markup: {inline_keyboard: [[{text: 'Adopt B', callback_data: `x|${r.storyboard_id}|adopt`}, {text: 'Keep A', callback_data: `x|${r.storyboard_id}|keep`}]]}} : {})});
+        done.push(`${r.storyboard_id} result ${r.verdict}`);
+      }
+      return done.join(', ');
+    });
 
   if (problems.length) await say(`agent-studio needs you:\n${problems.join('\n')}`).catch(() => {});
   return {log, problems, channels};
@@ -155,8 +194,8 @@ if (import.meta.main) {
   else if (process.argv[2] === 'tick') {
     const envFile = path.join(ROOT, '.env');
     if (fs.existsSync(envFile)) process.loadEnvFile(envFile);
-    const {TELEGRAM_BOT_TOKEN: token, TELEGRAM_CHAT_ID: chatId, DISPATCH_LIVE, YOUTUBE_WEBHOOK_URL} = process.env;
-    const r = await tick({tg: token && chatId ? telegram(token) : null, chatId, live: DISPATCH_LIVE === 'on', youtubeUrl: YOUTUBE_WEBHOOK_URL});
+    const {TELEGRAM_BOT_TOKEN: token, TELEGRAM_CHAT_ID: chatId, DISPATCH_LIVE} = process.env;
+    const r = await tick({tg: token && chatId ? telegram(token) : null, chatId, live: DISPATCH_LIVE === 'on'});
     console.log(`${new Date().toISOString()} tick: live channels ${r.channels.join(', ') || 'none'}${r.log.length ? `; ${r.log.join('; ')}` : ''}${r.problems.length ? `; PROBLEMS: ${r.problems.join('; ')}` : ''}`);
   } else {
     console.error('usage: node studio/run.ts tick | --install');

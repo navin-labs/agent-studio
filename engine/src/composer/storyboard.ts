@@ -1,13 +1,14 @@
 // Storyboard: the Composer's input. A list of primitive shots, each with the vo line shown as captions (and voiced when VOICE=on).
 // Pure data + timing + validation, no React, so make.mjs and agent-studio QA can use it.
 import {parseAccent, wordStarts} from '../lib/text.ts';
+import type {StylePreset} from './style.ts';
 import {estimateSeconds, FPS, LEAD, TAIL_AUDIO, TAIL_EST, VOICE_WPS} from '../lib/timing.ts';
 import {SPECS, validateParams} from '../primitives/specs.ts';
 import {THEMES, type ThemeName} from '../themes.ts';
 
-export const TRANSITIONS = ['cut', 'whip-pan', 'ink-wipe', 'pixel-wipe'] as const;
+export const TRANSITIONS = ['cut', 'whip-pan', 'ink-wipe', 'pixel-wipe', 'fold'] as const;
 export type Transition = (typeof TRANSITIONS)[number];
-export const TRANSITION_FRAMES = 12;
+export const TRANSITION_FRAMES = 9; // 0.3 s: the top of maker-motion's 0.15 to 0.3 s (docs/MOTION.md)
 
 export type StoryboardScene = {
   primitive: string;
@@ -33,10 +34,12 @@ export type Storyboard = {
   scenes: StoryboardScene[];
   caption?: string;
   hashtags?: string[];
-  meta?: {source?: string; idea_id?: string; recipe_id?: string; hero_metaphor?: string};
+  meta?: {source?: string; idea_id?: string; recipe_id?: string; hero_metaphor?: string; title_b?: string; thumb_b?: string; year?: string}; // title_b, thumb_b: experiment arm B; year: the year-flap opener
+  style?: string; // the style preset id (styles/<id>.json); unset: the channel's style
   channel?: string;
   handle?: string; // render-time only (not in the file): the channel's Instagram handle, added by make.mjs
   mark?: string; // render-time only: the channel's end-card logo (public/brand/<channel>/mark.svg), added by make.mjs
+  preset?: StylePreset; // render-time only: the style preset itself, added by make.mjs
 };
 
 export type Timing = {durations?: (number | null)[]; audio?: (string | null)[]};
@@ -78,8 +81,11 @@ export const captionsOn = (sc: StoryboardScene, sb?: Storyboard) =>
   sc.captions ?? (SPECS[sc.primitive]?.captions !== false && (sb?.captionStyle === 'karaoke' || SPECS[sc.primitive]?.family !== 'kinetic-type'));
 
 // Target length per format, in seconds. Host videos are judged on the measured voice; the estimate only warns.
-export const LENGTH = {host: [40, 60], composed: [20, 45]} as const;
-export const boardFormat = (sb: Storyboard): keyof typeof LENGTH => (sb.host ? 'host' : 'composed');
+// story: C2 Backstory's six-beat history story (docs/FORMATS_PROPOSAL.md, option A for launch, 2026-10-03)
+// Length per channel (Navin, 2026-10-03): C1 40 to 60 s in both formats, no exceptions; C2 25 to 45 s until the phase-2 history
+// shots arrive (its 40 to 60 s target needs them); C3's composed explainers 20 to 45 s.
+export const LENGTH = {c1: [40, 60], story: [25, 45], composed: [20, 45]} as const;
+export const boardFormat = (sb: Storyboard): keyof typeof LENGTH => (sb.channel === 'c2-reach' ? 'story' : sb.channel === 'c1-automation' || sb.host ? 'c1' : 'composed');
 export const lengthIssue = (sb: Storyboard, secs: number) => {
   const [lo, hi] = LENGTH[boardFormat(sb)];
   return secs < lo || secs > hi ? `${boardFormat(sb)} video is ${secs.toFixed(1)}s, needs ${lo} to ${hi}s` : null;

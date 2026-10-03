@@ -1,5 +1,5 @@
 // Contact sheet for a rendered storyboard: the real Composer frozen at the middle of each scene, 4 across.
-// Rendered by make.mjs next to reel.mp4 (contact.png) with the same props, so it shows exactly what QA and Navin approve.
+// Rendered by make.mjs next to each variant's video (<prefix>.contact.png) with the same props, so it shows exactly what QA and Navin approve.
 import React from 'react';
 import {AbsoluteFill, Freeze} from 'remotion';
 import {TYPE} from '../theme';

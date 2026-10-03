@@ -1,0 +1,14 @@
+{
+  "channel": "c1-automation",
+  "platform": "facebook",
+  "video_id": "c1-2026-w42-3",
+  "date": "2026-10-14",
+  "handle": "@example.page",
+  "page_id": "1000000000000001",
+  "scheduled_for": "2026-10-14T19:00:00+05:30",
+  "video_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "files": {
+    "video": "c1-automation-facebook-2026-10-14-c1-2026-w42-3.mp4",
+    "caption": "c1-automation-facebook-2026-10-14-c1-2026-w42-3.caption.txt"
+  }
+}

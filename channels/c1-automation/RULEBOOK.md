@@ -6,10 +6,11 @@ Why: turn a manual task an Indian SMB owns into a lead (DM AUDIT) or a follow.
 |---|---|
 | Role | Leads: automation clients |
 | KPI | DMs + profile visits per reach |
-| CTA | DM AUDIT or Follow, about 1 in 5 DM AUDIT (Weekly Writer skill; Navin may change it) |
+| CTA | Kind follow or dm-audit, about 1 in 5 dm-audit (Weekly Writer skill; Navin may change it). Each platform video says it its own way (style preset `platforms`): YouTube "Subscribe" or "DM AUDIT on Instagram", Instagram "Follow" or "DM AUDIT", Facebook "Follow the page" or "DM AUDIT on Instagram" |
+| Formats | host (Chiku) and explainer, 8 shots each, both 40 to 60 s, no exceptions (the length check measures every platform video) |
 | Themes | night only (one channel, one look: Night Signal, the banner and Chiku's stage) |
 | Cadence | 1 post a day |
-| Publisher | IG @theautomationguynavin + YouTube Shorts mirror; Facebook page 1429203763599559 (username pending, retry 2026-10-05) |
+| Publisher | Three platform videos per approved video: Instagram @theautomationguynavin (Forge queue), YouTube @theautomationguynavin (its own n8n workflow, `agent-studio-youtube-c1-automation`), Facebook page 1429203763599559 (Forge queue; username pending, retry 2026-10-05: QA holds the Facebook video until it is claimed) |
 
 ## Writing rules (from the Forge skill)
 - Send test: name who the viewer would DM this to. No specific person, drop the idea.
@@ -18,5 +19,5 @@ Why: turn a manual task an Indian SMB owns into a lead (DM AUDIT) or a follow.
 - Sample data only: invented Indian SMB names, INR in Indian grouping. "Example data." in every caption.
 - Trigger test: each step's action must be possible from the data available at that step.
 - Hook: max 6 words, a pain the viewer owns. Hook pattern not 3 in a row.
-- Caption line 1 max 125 characters. 3 to 5 hashtags. No em or en dashes.
+- Caption line 1 max 125 characters. No CTA line in the caption: each platform video adds its own. 3 to 5 hashtags. No em or en dashes.
 - Self-score 5 lines (hook, send test, specific, original, true); under 20/25 gets rewritten.

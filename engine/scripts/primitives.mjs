@@ -1,5 +1,5 @@
 // Primitive check: every spec's example (its test storyboard) validates, then renders a contact sheet.
-// usage: npm run primitives [-- --theme ink | --all-themes] [--only flow-run]   -> out/primitives/<id>-<theme>.png
+// usage: npm run primitives [-- --theme ink | --all-themes] [--only flow-run]   -> test/out/primitives/<id>-<theme>.png
 import {bundle} from '@remotion/bundler';
 import {renderStill, selectComposition} from '@remotion/renderer';
 import assert from 'node:assert';
@@ -52,7 +52,7 @@ for (const id of ids) {
 }
 if (fails) process.exit(1);
 
-const out = path.resolve('out/primitives');
+const out = path.resolve('test/out/primitives');
 fs.mkdirSync(out, {recursive: true});
 const serveUrl = await bundle({entryPoint: path.resolve('src/index.ts')});
 for (const theme of themes)
@@ -67,5 +67,5 @@ for (const theme of themes)
       fails++;
     }
   }
-console.log(fails ? `\n${fails} failure(s)` : `\n${ids.length * themes.length} contact sheet(s) in out/primitives/`);
+console.log(fails ? `\n${fails} failure(s)` : `\n${ids.length * themes.length} contact sheet(s) in test/out/primitives/`);
 process.exit(fails ? 1 : 0);

@@ -16,17 +16,17 @@ sequenceDiagram
   LN->>REC: scoreboard, bench list, 70/30 split
   REC->>REC: 7 recipes per channel, redraw until novelty rules pass
   REC->>FG: recipes + top 20 ideas + RULEBOOK + scoreboard
-  FG->>RE: 7 storyboards (content/<channel>/)
-  RE->>RE: render, QA, contact sheet
+  FG->>RE: 7 storyboards (engine/content/storyboards/)
+  RE->>RE: render 3 platform variants each, QA each, contact sheets
   alt QA fails
     RE->>FG: exact error
     FG->>RE: fixed storyboard
   end
-  RE->>NV: approval page (contact sheets, hooks, captions)
-  NV->>DS: approve per video or approve all (ledger = approved)
-  DS->>N8N: YouTube upload + schedule
-  DS->>FG: Instagram publish queue
-  FG->>FG: publish Instagram
+  RE->>NV: Telegram: one message per video, its variants listed
+  NV->>DS: approve per video or approve all (one ledger line per QA-passed variant)
+  DS->>N8N: YouTube variant to that channel's upload workflow
+  DS->>FG: Instagram and Facebook variants to queue/<channel>/<platform>/
+  FG->>FG: Queue Publisher posts each item to the account its manifest names
   N8N->>LN: metrics
 ```
 
@@ -42,7 +42,9 @@ sequenceDiagram
 | Failure | What happens |
 |---|---|
 | Novelty rule fails | Recipe redraws |
-| QA fails | Exact error goes back to Forge; Forge fixes and resubmits. Max attempts TBD (owner: Navin) |
+| QA fails | Exact error per platform goes back to Forge; Forge fixes and resubmits; the variants that passed stay approvable. Max attempts TBD (owner: Navin) |
+| A variant's account is not set up (e.g. Facebook username pending) | That variant is held alone; the others go out |
+| A variant is refused at dispatch (mismatch, missing manifest, changed video, wrong destination) | Nothing is sent for it; Telegram "agent-studio needs you" with the reason |
 | Mac asleep / missed render | Watcher retries; renders queue in Drive; missed day catches up |
 | Video not approved | Not dispatched. Replacement policy TBD (owner: Navin) |
 | Feed returns too few ideas | The Weekly Writer adds ideas itself, each with a real link it opened (no link, no idea) |
@@ -50,8 +52,8 @@ sequenceDiagram
 ## Who does what
 | Actor | Does | Never does |
 |---|---|---|
-| n8n | Feeds, YouTube upload, approval webhook, metrics pull | Writes words |
+| n8n | Feeds, YouTube upload (one workflow per channel), approval webhook, metrics pull | Writes words |
 | Code | Recipe, QA, dispatch, learn | Publishes without approval |
-| Forge | Writes words; publishes Instagram from the approved queue | Changes recipe shape, edits engine code |
+| Forge | Writes words; posts Instagram and Facebook items from the queue, to the account each manifest names | Changes recipe shape, edits engine code, guesses an account |
 | Navin | Approves weekly; approves commits; approves themes | Hand-edits storyboards (goal) |
 | Claude | Builds engine and primitives; monthly audit | Runs in the weekly loop |

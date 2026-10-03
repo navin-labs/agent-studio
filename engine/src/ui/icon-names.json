@@ -41,5 +41,7 @@
   "workflow": "Workflow",
   "sparkles": "Sparkles",
   "attach": "Paperclip",
-  "star": "Star"
+  "star": "Star",
+  "barcode": "ScanBarcode",
+  "waves": "Waves"
 }

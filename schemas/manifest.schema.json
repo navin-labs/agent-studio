@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "manifest",
+  "description": "What one rendered platform variant is, for whom, and where it goes: engine/out/<channel>/<date>/<video id>/<platform>/<channel>-<platform>-<date>-<id>.manifest.json. Written last by engine/scripts/make.mjs; QA fills in qa_status. QA, approval and dispatch trust nothing the manifest does not say, and refuse a variant whose manifest disagrees with its folder, channel.json or style preset.",
+  "type": "object",
+  "required": [
+    "channel",
+    "platform",
+    "video_id",
+    "date",
+    "style_version",
+    "voice",
+    "cta_kind",
+    "cta_text",
+    "cta_say",
+    "end_card_handle",
+    "destination",
+    "size",
+    "video_sha256",
+    "qa_status",
+    "files"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "channel": {
+      "enum": [
+        "c1-automation",
+        "c2-reach",
+        "c3-studio"
+      ]
+    },
+    "platform": {
+      "enum": [
+        "youtube",
+        "instagram",
+        "facebook"
+      ]
+    },
+    "video_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,79}$"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "the video's slot date (its recipe), the date folder"
+    },
+    "style_version": {
+      "type": "string",
+      "pattern": "^c[0-9]-[a-z0-9-]+-v[0-9]+$",
+      "description": "the style preset (styles/<id>.json) the variant was rendered from"
+    },
+    "voice": {
+      "description": "the local voice used (engine/voice/speed), or null for a silent render"
+    },
+    "cta_kind": {
+      "enum": [
+        "follow",
+        "dm-audit",
+        "send"
+      ]
+    },
+    "cta_text": {
+      "type": "string",
+      "minLength": 1,
+      "description": "the closing card's CTA for this platform (the preset's, without *accent* marks)"
+    },
+    "cta_say": {
+      "type": "string",
+      "minLength": 1,
+      "description": "the spoken CTA line on the closing card"
+    },
+    "end_card_handle": {
+      "description": "the account named on the end card (the preset's end_card.handle), or null when it names none"
+    },
+    "destination": {
+      "type": "object",
+      "required": [
+        "via",
+        "handle"
+      ],
+      "additionalProperties": false,
+      "description": "this platform's publisher in channel.json at render time; dispatch refuses if it changed since",
+      "properties": {
+        "via": {
+          "enum": [
+            "n8n",
+            "forge-queue"
+          ]
+        },
+        "handle": {
+          "type": "string",
+          "minLength": 1,
+          "description": "@handle, or pending_... while the username is not claimed (QA holds the variant)"
+        },
+        "page_id": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        }
+      }
+    },
+    "size": {
+      "type": "object",
+      "required": [
+        "width",
+        "height"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        }
+      }
+    },
+    "video_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 of the video file; QA checks the file still is it, approval records it, dispatch sends only it"
+    },
+    "qa_status": {
+      "enum": [
+        "pending",
+        "pass",
+        "fail"
+      ]
+    },
+    "files": {
+      "type": "object",
+      "required": [
+        "video",
+        "caption"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "video": {
+          "type": "string",
+          "pattern": "^c[0-9]-[a-z0-9-]+-(youtube|instagram|facebook)-[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]+\\.mp4$"
+        },
+        "caption": {
+          "type": "string",
+          "pattern": "^c[0-9]-[a-z0-9-]+-(youtube|instagram|facebook)-[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]+\\.caption\\.txt$"
+        },
+        "thumbnail": {
+          "type": "string",
+          "pattern": "^c[0-9]-[a-z0-9-]+-(youtube|instagram|facebook)-[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]+\\.thumbnail\\.png$"
+        }
+      }
+    }
+  }
+}

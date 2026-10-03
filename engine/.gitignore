@@ -7,3 +7,5 @@ public/vo/
 voice/*.wav
 voice/*.m4a
 .venv-voice/
+test/out/
+content/storyboards/*.json

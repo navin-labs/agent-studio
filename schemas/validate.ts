@@ -48,6 +48,7 @@ export const validate = (s: Schema, v: unknown, at = '$'): string[] => {
     for (const [k, x] of Object.entries(o)) {
       if (s.properties?.[k]) e.push(...validate(s.properties[k], x, `${at}.${k}`));
       else if (s.additionalProperties === false) e.push(`${at}: unknown field "${k}"`);
+      else if (s.additionalProperties && typeof s.additionalProperties === 'object') e.push(...validate(s.additionalProperties, x, `${at}.${k}`));
     }
   }
   if (s.if && !validate(s.if, v, at).length) e.push(...validate(s.then, v, at));
@@ -62,11 +63,14 @@ const SAMPLES: Record<string, string[]> = {
   channel: fs.readdirSync(path.join(ROOT, 'channels')).map((c) => `channels/${c}/channel.json`), // every channel, not one sample
   idea: ['schemas/samples/idea.json'],
   recipe: ['schemas/samples/recipe.json'],
-  storyboard: fs.readdirSync(path.join(ROOT, 'engine/content/storyboards')).filter((f) => f.endsWith('.json')).map((f) => `engine/content/storyboards/${f}`),
+  storyboard: fs.readdirSync(path.join(ROOT, 'engine/test/boards')).filter((f) => f.endsWith('.json')).map((f) => `engine/test/boards/${f}`), // sample boards (the watch folder starts empty)
   fingerprint: ['schemas/samples/fingerprint.json'],
   qa: ['schemas/samples/qa.json'],
   ledger: ['schemas/samples/ledger.json'],
   metrics: ['schemas/samples/metrics.json'],
+  manifest: ['schemas/samples/manifest.json'],
+  queue: ['schemas/samples/queue.json'],
+  style: fs.readdirSync(path.join(ROOT, 'styles')).map((f) => `styles/${f}`), // every preset
 };
 
 // Every enum in the schemas that mirrors an engine list must equal it, and repeated enums must agree across schemas.
@@ -109,7 +113,7 @@ const main = async () => {
   const {THEMES} = await import('../engine/src/themes.ts');
   const {SPECS} = await import('../engine/src/primitives/specs.ts');
   const sb = await import('../engine/src/composer/storyboard.ts');
-  const all = Object.keys(SAMPLES).map(loadSchema);
+  const all = Object.keys(SAMPLES).filter((n) => n !== 'queue').map(loadSchema); // the queue carries a subset of platforms on purpose (checked below)
   const same = (key: string, want?: readonly string[]) => {
     const found = all.flatMap((s) => enumsAt(s, key));
     assert.ok(found.length, `no "${key}" enum found`);
@@ -127,8 +131,33 @@ const main = async () => {
   same('opening', Object.keys(SPECS));
   same('transitions', sb.TRANSITIONS);
   same('channel');
-  same('platform');
-  same('targets', enumsAt(loadSchema('channel'), 'platform')[0]);
+  same('platform', (await import('../studio/variant.ts')).PLATFORMS);
+  assert.deepEqual(loadSchema('queue').properties.platform.enum, ['instagram', 'facebook'], 'the queue carries Instagram and Facebook only');
+  const st = await import('../engine/src/composer/style.ts');
+  same('opener', st.OPENERS);
+  same('overlay', st.OVERLAYS);
+  // a channel has a style preset (of its own) or a theme list
+  for (const f of SAMPLES.channel) {
+    const c = read(f);
+    assert.ok(c.style || c.themes?.length, `${f}: set "style" (styles/<id>.json) or "themes"`);
+    if (c.style) assert.equal(read(`styles/${c.style}.json`).channel, c.id, `${f}: style ${c.style} belongs to another channel`);
+  }
+  // a preset's id is its file name, and its channel's short name; its platform specs state the one file name rule and route
+  const v = await import('../studio/variant.ts');
+  for (const f of SAMPLES.style) {
+    const s = read(f);
+    assert.equal(`styles/${s.id}.json`, f, `${f}: id must match the file name`);
+    assert.equal(s.id.split('-')[0], s.channel.split('-')[0], `${f}: id must start with its channel's short name`);
+    for (const pf of v.PLATFORMS) assert.deepEqual([s.platforms[pf].filename, s.platforms[pf].destination], [v.FILENAME, v.ROUTE[pf]], `${f}: ${pf} filename/destination`);
+  }
+  // every publisher is reached the way its platform is (studio/variant.ts ROUTE); a YouTube webhook is that channel's own
+  for (const f of SAMPLES.channel) {
+    const c = read(f);
+    for (const x of c.publishers) {
+      assert.equal(x.via, v.ROUTE[x.platform as keyof typeof v.ROUTE], `${f}: ${x.platform} goes via ${v.ROUTE[x.platform as keyof typeof v.ROUTE]}`);
+      if (x.webhook) assert.ok(v.ownWebhook(c.id, x.webhook), `${f}: the YouTube webhook must be this channel's own (${v.youtubeWebhookPath(c.id)})`);
+    }
+  }
 
   // samples: schema, and for storyboards the engine's own checks too (params, text limits, closer, vo length)
   let bad = 0;
@@ -147,9 +176,14 @@ const main = async () => {
     assert.match(validate(loadSchema(n), d).join('\n'), want, `${n}: expected ${want}`);
   };
   broken('ledger', 'schemas/samples/ledger.json', (d) => delete d.approved_by, /missing "approved_by"/); // approval needs a person
-  broken('ledger', 'schemas/samples/ledger.json', (d) => (d.status = 'published', delete d.targets), /missing "targets"/);
-  broken('storyboard', 'engine/content/storyboards/host-supplier-bills.json', (d) => delete d.meta.source, /missing "source"/); // no feed link, no video
-  broken('storyboard', 'engine/content/storyboards/host-supplier-bills.json', (d) => (d.scenes[0].primitive = 'made-up'), /must be one of/);
+  broken('ledger', 'schemas/samples/ledger.json', (d) => (d.status = 'published', delete d.sha256), /missing "sha256"/); // which exact video was approved
+  broken('ledger', 'schemas/samples/ledger.json', (d) => (d.platform = 'tiktok'), /must be one of youtube, instagram, facebook/);
+  broken('manifest', 'schemas/samples/manifest.json', (d) => (d.files.video = 'video.mp4'), /must match/); // a bare file name
+  broken('manifest', 'schemas/samples/manifest.json', (d) => delete d.destination, /missing "destination"/);
+  broken('queue', 'schemas/samples/queue.json', (d) => delete d.page_id, /missing "page_id"/); // Facebook posts to a page by its ID
+  broken('queue', 'schemas/samples/queue.json', (d) => (d.platform = 'youtube'), /must be one of instagram, facebook/);
+  broken('storyboard', 'engine/test/boards/host-supplier-bills.json', (d) => delete d.meta.source, /missing "source"/); // no feed link, no video
+  broken('storyboard', 'engine/test/boards/host-supplier-bills.json', (d) => (d.scenes[0].primitive = 'made-up'), /must be one of/);
   broken('qa', 'schemas/samples/qa.json', (d) => delete d.checks[3].error, /missing "error"/); // a failed check must say why
   broken('idea', 'schemas/samples/idea.json', (d) => (d.source_url = 'not a link'), /valid uri/);
   if (bad) process.exit(1);

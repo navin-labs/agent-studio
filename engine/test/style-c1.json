@@ -1,0 +1,166 @@
+{
+  "format": "storyboard",
+  "id": "style-c1",
+  "channel": "c1-automation",
+  "theme": "night-signal",
+  "style": "c1-night-signal-v1",
+  "hookPattern": "question",
+  "scenes": [
+    {
+      "primitive": "word-stack-slam",
+      "params": {
+        "text": "Still typing *payment reminders*?"
+      },
+      "vo": "Still typing *payment reminders* by hand, one customer at a time?"
+    },
+    {
+      "primitive": "pile-drop",
+      "transition": "fold",
+      "params": {
+        "item": {
+          "title": "INVOICE",
+          "id": "INV-",
+          "pill": "UNPAID",
+          "amount": true
+        },
+        "count": 18,
+        "start": 1042
+      },
+      "vo": "Forty unpaid invoices, forty reminders, and every single one is typed and sent by hand, every Monday morning."
+    },
+    {
+      "primitive": "ui-chat",
+      "transition": "cut",
+      "params": {
+        "contact": "SHARMA TEXTILES",
+        "mode": "manual",
+        "messages": [
+          {
+            "from": "me",
+            "text": "Hi, invoice INV-1042 for 38,500 is due today."
+          },
+          {
+            "from": "them",
+            "text": "Will check and pay this week."
+          },
+          {
+            "from": "me",
+            "text": "Reminder: INV-1042 is now 5 days late."
+          }
+        ]
+      },
+      "vo": "Each reminder is typed from *scratch* with the name and the amount, the reply comes days *later*, and then a *second* reminder goes out by hand."
+    },
+    {
+      "primitive": "before-after-split",
+      "transition": "fold",
+      "params": {
+        "before": {
+          "title": "BY HAND",
+          "lines": [
+            "Check who has not paid",
+            "Type each reminder",
+            "Send one by one"
+          ]
+        },
+        "after": {
+          "title": "AUTOMATIC",
+          "lines": [
+            "Unpaid list read daily",
+            "Reminder for each one",
+            "Sent at 10 AM"
+          ]
+        }
+      },
+      "vo": "Here is the same Monday job, first *by hand*, and then done by itself every morning, *automatically*, with nobody typing."
+    },
+    {
+      "primitive": "flow-run",
+      "transition": "cut",
+      "params": {
+        "nodes": [
+          {
+            "icon": "sheet",
+            "label": "Unpaid invoices",
+            "sub": "Read at 10 AM"
+          },
+          {
+            "icon": "chat",
+            "label": "Reminder",
+            "sub": "Name and amount filled"
+          },
+          {
+            "icon": "send",
+            "label": "Sent",
+            "sub": "One per customer"
+          }
+        ],
+        "done": "SENT"
+      },
+      "vo": "Every morning at ten the unpaid list is *read*, a reminder with the customer's name and the amount is *written*, and each customer gets *one*."
+    },
+    {
+      "primitive": "ui-sheet",
+      "transition": "fold",
+      "params": {
+        "file": "PAYMENTS.XLSX",
+        "mode": "auto",
+        "columns": [
+          "INVOICE",
+          "PARTY",
+          "STATUS"
+        ],
+        "rows": [
+          [
+            "INV-1042",
+            "Sharma",
+            "REMINDED"
+          ],
+          [
+            "INV-1043",
+            "Patel",
+            "PAID"
+          ],
+          [
+            "INV-1044",
+            "Gupta",
+            "CALL"
+          ]
+        ]
+      },
+      "vo": "Then the sheet marks itself: *Sharma* reminded, *Patel* paid, *Gupta* flagged for a call, and your team only checks the odd ones out."
+    },
+    {
+      "primitive": "counter-drop",
+      "transition": "cut",
+      "params": {
+        "label": "TO TYPE",
+        "icon": "keyboard",
+        "from": 40,
+        "to": 0,
+        "tone": "ok"
+      },
+      "vo": "Reminders your team still types by hand this week: *zero*."
+    },
+    {
+      "primitive": "end-card",
+      "transition": "fold",
+      "params": {
+        "text": "*Follow*",
+        "sub": "One business automation, every day."
+      }
+    }
+  ],
+  "caption": "Still typing payment reminders by hand?\n\nThe unpaid list is read every morning, a reminder is written for each customer and sent at 10 AM, and the sheet marks who paid.\n\nExample data.\n\nSend this to whoever chases payments.",
+  "hashtags": [
+    "#automation",
+    "#smallbusinessindia",
+    "#payments"
+  ],
+  "meta": {
+    "source": "https://trends.google.com/trends/explore?geo=IN&q=payment%20reminder",
+    "idea_id": "style-test-payment-reminder",
+    "recipe_id": "style-test-c1",
+    "hero_metaphor": "pile of unpaid invoices"
+  }
+}

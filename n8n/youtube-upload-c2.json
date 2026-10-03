@@ -1,0 +1,244 @@
+{
+  "id": "agStudioYoutube2",
+  "name": "agent-studio: YouTube upload (C2 Backstory)",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agent-studio-youtube-c2-reach",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Video job",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "agent-studio-youtube-c2-reach"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This workflow uploads with c2-reach's YouTube credential, so it takes c2-reach's YouTube jobs only, and only after the Mac\n// receiver confirms the dispatcher is sending exactly this video of exactly this channel now. Anything else: refused, nothing uploaded.\nconst item = $input.first();\nlet job = {};\ntry {\n  job = JSON.parse(item.json.body.job);\n} catch (e) {\n  job = {};\n}\nlet approved = false;\nif (job.channel === 'c2-reach' && job.platform === 'youtube' && typeof job.storyboard_id === 'string') {\n  try {\n    await this.helpers.httpRequest({ url: 'http://host.docker.internal:5680/dispatch-check', qs: { id: job.storyboard_id, channel: 'c2-reach', platform: 'youtube' } });\n    approved = true;\n  } catch (e) {\n    approved = false;\n  }\n}\nreturn [{ json: { ...job, approved, binaryKeys: Object.keys(item.binary ?? {}) }, binary: item.binary }];"
+      },
+      "name": "Ask the Mac",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "approved",
+              "leftValue": "={{ $json.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $json.title }}",
+        "regionCode": "IN",
+        "categoryId": "={{ $json.category_id || '28' }}",
+        "binaryProperty": "={{ $json.binaryKeys.find((k) => k !== 'thumbnail') }}",
+        "options": {
+          "description": "={{ $json.description }}",
+          "tags": "={{ $json.tags.join(',') }}",
+          "privacyStatus": "private",
+          "publishAt": "={{ $json.scheduled_for || undefined }}",
+          "selfDeclaredMadeForKids": false,
+          "notifySubscribers": true
+        }
+      },
+      "name": "Upload to YouTube (private, scheduled)",
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -100
+      ],
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "XFDCox9vmhXJenuh",
+          "name": "YouTube C2 Backstory"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ uploaded: true, youtube_id: $('Upload to YouTube (private, scheduled)').item.json.id }) }}",
+        "options": {}
+      },
+      "name": "Uploaded",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ uploaded: false, reason: 'not approved for dispatch', binaryKeys: $json.binaryKeys }) }}",
+        "options": {
+          "responseCode": 403
+        }
+      },
+      "name": "Refused",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        100
+      ]
+    },
+    {
+      "name": "Attach thumbnail",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "// the upload result plus thumbnail A from the job (dispatch sends it as \"thumbnail\"); no thumbnail: nothing to set\nconst job = $('Ask the Mac').first();\nreturn [{ json: $json, binary: job.binary?.thumbnail ? { thumbnail: job.binary.thumbnail } : {} }];"
+      }
+    },
+    {
+      "name": "Set thumbnail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        -100
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={{ $('Upload to YouTube (private, scheduled)').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "youTubeOAuth2Api",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "thumbnail",
+        "options": {}
+      },
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "XFDCox9vmhXJenuh",
+          "name": "YouTube C2 Backstory"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Video job": {
+      "main": [
+        [
+          {
+            "node": "Ask the Mac",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask the Mac": {
+      "main": [
+        [
+          {
+            "node": "Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved?": {
+      "main": [
+        [
+          {
+            "node": "Upload to YouTube (private, scheduled)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Refused",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to YouTube (private, scheduled)": {
+      "main": [
+        [
+          {
+            "node": "Attach thumbnail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach thumbnail": {
+      "main": [
+        [
+          {
+            "node": "Set thumbnail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set thumbnail": {
+      "main": [
+        [
+          {
+            "node": "Uploaded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

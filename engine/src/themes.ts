@@ -15,9 +15,10 @@ export type Theme = {
   alert: string; // errors only: large text, icons, pills
   warn: string; // pain highlights (manual, wasteful steps)
   shadow: string; // hard offset shadow
+  reveal?: string; // the reveal (C2: the name and the year the moment they are spoken). Unset: the highlighter uses accent
 };
 
-export type ThemeName = 'paper' | 'ink' | 'mono' | 'studio' | 'night' | 'archive';
+export type ThemeName = 'paper' | 'ink' | 'mono' | 'studio' | 'night' | 'archive' | 'night-signal' | 'archive-gold';
 
 export const THEMES: Record<ThemeName, Theme> = {
   // Paper & Signal v1 (locked 2026-09-29): values copied from P in theme.ts.
@@ -49,6 +50,17 @@ export const THEMES: Record<ThemeName, Theme> = {
   archive: {
     bg: '#0E1A2B', surface: '#16243A', ink: '#F4F1EA', muted: '#A8A59E', rule: '#1E2D45',
     accent: '#E8A020', onAccent: '#0E1A2B', flow: '#E8A020', ok: '#E8A020', alert: '#E5484D', warn: '#E07A4F', shadow: '#000000',
+  },
+  // Signature styles (2026-10-03, for Navin's review; docs/MOTION.md). Two colours plus paper, and the colour means one thing.
+  // Night Signal: lime means "automated" and is ok only (the after-state, the done step); everything else is paper and greys.
+  'night-signal': {
+    bg: '#0B0B10', surface: '#15151C', ink: '#F4F1EA', muted: '#9C9A94', rule: '#26262F',
+    accent: '#F4F1EA', onAccent: '#0B0B10', flow: '#9C9A94', ok: '#C6F432', alert: '#F4F1EA', warn: '#9C9A94', shadow: '#000000',
+  },
+  // Archive Gold: gold means "the reveal" and is reveal only (the name, the year); everything else is paper and greys.
+  'archive-gold': {
+    bg: '#0E1A2B', surface: '#16243A', ink: '#F4F1EA', muted: '#A8A59E', rule: '#1E2D45',
+    accent: '#F4F1EA', onAccent: '#0E1A2B', flow: '#A8A59E', ok: '#F4F1EA', alert: '#F4F1EA', warn: '#A8A59E', shadow: '#000000', reveal: '#E8A020',
   },
 };
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-// Auto-render: any new or changed .json in content/stories or content/storyboards gets rendered.
-// The result is written next to the script as <name>.status.txt (Forge reads it); storyboards are QA-checked too.
-// Finished files are copied to Google Drive/Reel Engine/<id>/ (or iCloud, or RENDER_COPY_DIR in .env) so they reach your phone.
+// Auto-render: any new or changed .json in content/storyboards (the Writer's folder) is rendered once per platform into
+// out/<channel>/<date>/<id>/<platform>/ (studio/variant.ts) and QA-checked per variant. The result is written next to the board
+// as <name>.status.txt (Forge reads it). Every rendered variant folder is copied to Google Drive/Reel Engine/<channel>/<date>/<id>/
+// (or iCloud, or RENDER_COPY_DIR in .env) so it reaches your phone, QA result and manifest included.
 //   npm run watch            run in this Terminal window
 //   npm run watch:install    run in the background, starts at login, keeps the Mac awake on power (LaunchAgent com.theautomationguy.studiowatch)
 import {spawn, spawnSync} from 'node:child_process';
@@ -10,9 +11,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import url from 'node:url';
+import {findVariants, variantDir} from '../../studio/variant.ts';
 
 const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
-const DIRS = ['content/stories', 'content/storyboards'].map((d) => path.join(ROOT, d));
+const DIRS = [path.join(ROOT, 'content', 'storyboards')];
+const OUT = path.join(ROOT, 'out');
 const STATE = path.join(ROOT, 'out', '.watch-state.json');
 const envFile = path.join(ROOT, '.env');
 if (fs.existsSync(envFile)) {
@@ -81,24 +84,29 @@ function next() {
     // ponytail: a failed file is not retried until it changes; rewrite it to retry after a network error
     state[f] = h;
     save();
-    // storyboards also go through QA; its exact errors land in the status file for Forge
-    const qa = code === 0 && f.includes(`${path.sep}storyboards${path.sep}`) ? spawnSync(process.execPath, [path.join(ROOT, '../studio/qa.ts'), f], {encoding: 'utf8'}) : null;
-    if (qa?.status) {
-      fs.writeFileSync(statusFile, `failed QA ${new Date().toISOString()}\n\n${qa.stdout}${qa.stderr}`);
-      log(`failed QA ${path.relative(ROOT, f)} (see ${path.basename(statusFile)})`);
-    } else if (code === 0) {
-      let copied = '';
+    // QA every variant that rendered (a variant that failed to render is reported by QA as not rendered); its exact errors land in
+    // the status file for Forge. Exit 1 = something the Writer fixes; a variant held only because its account is not set up is not.
+    let id = null;
+    try {
+      id = JSON.parse(fs.readFileSync(f, 'utf8')).id;
+    } catch {}
+    const variants = id ? findVariants(OUT, id) : [];
+    const qa = variants.length ? spawnSync(process.execPath, [path.join(ROOT, '../studio/qa.ts'), f], {encoding: 'utf8'}) : null;
+    // copy what rendered to Drive (each platform folder, with its manifest and QA result), so the phone sees every variant
+    let copied = '';
+    for (const v of variants)
       try {
-        const {id} = JSON.parse(fs.readFileSync(f, 'utf8'));
-        if (COPY_TO) {
-          fs.cpSync(path.join(ROOT, 'out', id), path.join(COPY_TO, id), {recursive: true});
-          copied = `\ncopied to ${path.join(COPY_TO, id)}`;
-        }
+        if (COPY_TO) fs.cpSync(variantDir(OUT, v), variantDir(COPY_TO, v), {recursive: true});
       } catch (e) {
         copied = `\ncopy failed: ${e.message}`;
       }
-      fs.writeFileSync(statusFile, `ok ${new Date().toISOString()}${copied}\n\n${qa ? qa.stdout : text.slice(-1500)}`);
+    if (COPY_TO && variants.length && !copied) copied = `\ncopied to ${path.join(COPY_TO, variants[0].channel, variants[0].date, id)}/ (${variants.map((v) => v.platform).join(', ')})`;
+    if (code === 0 && qa?.status === 0) {
+      fs.writeFileSync(statusFile, `ok ${new Date().toISOString()}${copied}\n\n${qa.stdout}`);
       log(`done ${path.relative(ROOT, f)}${copied}`);
+    } else if (qa) {
+      fs.writeFileSync(statusFile, `failed QA ${new Date().toISOString()}${copied}\n\n${qa.stdout}${qa.stderr}${code === 0 ? '' : `\n\nrender log:\n${text.slice(-3000)}`}`);
+      log(`failed QA ${path.relative(ROOT, f)} (see ${path.basename(statusFile)})`);
     } else {
       fs.writeFileSync(statusFile, `failed ${new Date().toISOString()}\n\n${text.slice(-3000)}`);
       log(`failed ${path.relative(ROOT, f)} (see ${path.basename(statusFile)})`);
@@ -120,7 +128,7 @@ for (const d of DIRS) {
   });
 }
 jsonFiles().forEach(enqueue); // anything saved while the watcher was off
-log(`watching content/stories and content/storyboards${COPY_TO ? `; results copied to ${COPY_TO}` : ''}`);
+log(`watching content/storyboards${COPY_TO ? `; results copied to ${COPY_TO}` : ''}`);
 
 function install() {
   const label = 'com.theautomationguy.studiowatch'; // not reelwatch: that label belongs to the old reel-engine watcher (v1)

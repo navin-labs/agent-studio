@@ -11,7 +11,7 @@ import {type Paths, readJsonl} from './ledger.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'feed-test-'));
-const p: Paths = {state: path.join(tmp, 'state'), content: [], out: tmp, recipes: tmp, channels: path.join(tmp, 'channels')};
+const p: Paths = {state: path.join(tmp, 'state'), content: [], out: tmp, recipes: tmp, channels: path.join(tmp, 'channels'), queue: path.join(tmp, 'queue')};
 const TRENDS = 'https://trends.google.com/trending/rss?geo=IN';
 const REDDIT = 'https://www.reddit.com/r/smallbusiness/.rss';
 const setChannel = (id: string, f: object[]) => {

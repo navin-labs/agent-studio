@@ -1,17 +1,19 @@
 // Approve receiver on the Mac. n8n runs in Docker and cannot see this repo, so its approval webhook forwards the signed query
 // here (http://host.docker.internal:5680/approve?...). Everything is verified by ledger.ts; this only moves bytes.
-// /dispatch-check?id= lets n8n's YouTube workflow confirm a video is approved before it uploads (defence in depth).
+// /dispatch-check?id=&channel=&platform=youtube lets a channel's n8n YouTube workflow confirm that exactly this video of exactly
+// that channel is being dispatched now, before it uploads (defence in depth; channel and platform are required).
 // Also polls Telegram for Approve taps when configured (studio/telegram.ts). Listens on 127.0.0.1 only. The secret stays in agent-studio/.env (APPROVAL_SECRET); n8n never holds it.
 //
 // node studio/approve-server.ts            (APPROVE_PORT, default 5680)
 // node studio/approve-server.ts --install  run it at login via launchd (log: state/approve.log)
+import {daysDue, recordDays, step as expStep} from './experiment.ts';
 import {spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import {plan} from './dispatch.ts';
-import {applyApproval, currentStatus} from './ledger.ts';
+import {applyApproval, currentStatus, lkey} from './ledger.ts';
 import {feeds, type Get, ingestFeed, pullFeed} from './feed.ts';
 import {due, record} from './metrics.ts';
 import {poll, telegram} from './telegram.ts';
@@ -23,23 +25,36 @@ const page = (title: string, lines: string[]) =>
 export const handle = (url: string, secret: string, opts?: Parameters<typeof applyApproval>[2]): {status: number; body: string} => {
   const u = new URL(url, 'http://local');
   if (u.pathname === '/health') return {status: 200, body: 'ok'};
+  // ?channel=<id>: each channel's n8n workflow (its own YouTube credential) sees and may change only that channel's videos
+  const only = u.searchParams.get('channel');
+  const mine = <T extends {channel: string}>(xs: T[]) => (only ? xs.filter((x) => x.channel === only) : xs);
   // n8n's YouTube workflow asks this before every upload: yes only if the dispatcher would send this video now
   if (u.pathname === '/dispatch-check') {
     const id = u.searchParams.get('id') ?? '';
-    // dispatch claims a video ("dispatching") just before it calls n8n, so the claim in flight is what says yes (30 minutes)
-    const e = currentStatus(opts?.paths).get(id);
-    const inFlight = e?.status === 'dispatching' && !e.post_urls?.some((u) => u.includes('youtube.com/')) && (opts?.now ?? Date.now()) - Date.parse(e.updated_at) < 30 * 60_000;
-    const ok = inFlight || plan(opts?.paths, opts?.now).youtube.some((j) => j.storyboard_id === id);
+    // each channel's upload workflow names its channel and the platform on every ask; anything else is a wrong pair: refused
+    if (!only || u.searchParams.get('platform') !== 'youtube') return {status: 403, body: 'ask with channel=<this workflow\'s channel> and platform=youtube'};
+    // dispatch claims a variant ("dispatching") just before it calls n8n, so the claim in flight is what says yes (30 minutes)
+    const e = currentStatus(opts?.paths).get(lkey(id, 'youtube'));
+    const inFlight = e?.status === 'dispatching' && e.channel === only && !e.post_urls?.some((x) => x.includes('youtube.com/')) && (opts?.now ?? Date.now()) - Date.parse(e.updated_at) < 30 * 60_000;
+    const ok = inFlight || mine(plan(opts?.paths, opts?.now).youtube).some((j) => j.storyboard_id === id);
     return {status: ok ? 200 : 403, body: ok ? 'approved' : 'not approved for dispatch'};
   }
   // n8n's feed workflow: which feeds to fetch (JSON)
   if (u.pathname === '/feeds') return {status: 200, body: JSON.stringify(feeds(opts?.paths).map(({source, url}) => ({source, url})))};
   // n8n's YouTube stats workflow: which readings are due (JSON)
-  if (u.pathname === '/metrics-due') return {status: 200, body: JSON.stringify(due(opts?.paths, opts?.now))};
+  if (u.pathname === '/metrics-due') return {status: 200, body: JSON.stringify(mine(due(opts?.paths, opts?.now)))};
+  // n8n's packaging workflow asks this before changing a live title or thumbnail: yes only if the experiment step wants exactly this now
+  if (u.pathname === '/packaging-check') {
+    const q = (k: string) => u.searchParams.get(k);
+    const ok = !!only && mine(expStep(opts?.paths, opts?.now).actions).some((a) => a.storyboard_id === q('id') && a.video_id === q('video_id') && a.title === q('title'));
+    return {status: ok ? 200 : 403, body: ok ? 'approved' : 'not an experiment step due now'};
+  }
+  // n8n's YouTube stats workflow: which experiment days still need YouTube Analytics numbers (JSON)
+  if (u.pathname === '/experiment-days-due') return {status: 200, body: JSON.stringify(mine(daysDue(opts?.paths, opts?.now)))};
   if (u.pathname !== '/approve') return {status: 404, body: page('Not found', [])};
   try {
     const r = applyApproval(u.search.slice(1), secret, opts);
-    return {status: 200, body: page(r.written.length ? `Approved ${r.written.length}` : 'Nothing new approved', [...r.written.map((e) => `${e.storyboard_id}: approved for ${e.targets!.join(', ')}`), ...r.skipped])};
+    return {status: 200, body: page(r.written.length ? `Approved ${r.written.length}` : 'Nothing new approved', [...r.written.map((e) => `${e.storyboard_id} ${e.platform}: approved`), ...r.skipped])};
   } catch (e) {
     return {status: 403, body: page('Refused', [(e as Error).message])};
   }
@@ -53,6 +68,10 @@ export const post = async (route: string, raw: string, tooBig = false, opts?: {p
     j = JSON.parse(raw);
   } catch (e) {
     return {status: 400, body: {errors: [`not valid JSON: ${(e as Error).message}`]}};
+  }
+  if (route === '/experiment-days') {
+    const r = recordDays(Array.isArray(j) ? j : [j], opts?.paths);
+    return {status: r.errors.length ? 400 : 200, body: r};
   }
   if (route === '/metrics') {
     const r = record(Array.isArray(j) ? j : [j], opts?.paths);

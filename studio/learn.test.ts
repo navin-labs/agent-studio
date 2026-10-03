@@ -9,6 +9,7 @@ import {BENCH_WEEKS, learn, type Metric, metricsFile, MIN_N, runLearn, UNBENCHAB
 import {fingerprintFile, ledgerFile, type Paths, PATHS} from './ledger.ts';
 import type {Fingerprint} from './novelty.ts';
 import {FORMATS, generateWeek, type Recipe, toFingerprint} from './recipe.ts';
+import {sceneHolds, type Span} from './retention.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'learn-test-'));
@@ -25,7 +26,7 @@ const fps = history.map((f, i) => ({...f, topic_text: topics[i % 4]}));
 const hours = ['18', '19', '20', '21'];
 const at = (i: number) => `${fps[i].date}T${hours[i % 4]}:00:00+05:30`;
 lines(fingerprintFile(p), fps);
-lines(ledgerFile(p), fps.map((f, i) => ({storyboard_id: f.id, channel: f.channel, status: 'published', approved_by: 'navin', approved_at: '2026-09-01T10:00:00Z', targets: ['instagram', 'youtube'], scheduled_for: at(i), updated_at: '2026-09-01T10:00:00Z'})));
+lines(ledgerFile(p), fps.flatMap((f, i) => (['instagram', 'youtube'] as const).map((platform) => ({storyboard_id: f.id, platform, channel: f.channel, status: 'published', approved_by: 'navin', approved_at: '2026-09-01T10:00:00Z', sha256: '0'.repeat(64), scheduled_for: at(i), updated_at: '2026-09-01T10:00:00Z'}))));
 const metrics: Metric[] = fps.flatMap((f, i) => {
   const base = f.primitives.includes('stamp-hit') ? 4 : f.primitives.includes('chat-pop') ? 40 : 20;
   const yt = base + (hours[i % 4] === '21' ? 30 : 0);
@@ -35,7 +36,12 @@ const metrics: Metric[] = fps.flatMap((f, i) => {
     {storyboard_id: f.id, channel: f.channel, platform: 'youtube', window: '7d', reach: 1000, dms: yt / 2, profile_visits: yt / 2},
   ];
 });
-lines(metricsFile(p), metrics);
+// the rarest other primitive keeps fewer than MIN_N measured videos: shown, never judged
+const uses = new Map<string, number>();
+for (const f of fps) for (const x of new Set(f.primitives)) uses.set(x, (uses.get(x) ?? 0) + 1);
+const rare = [...uses].filter(([x]) => !['stamp-hit', 'chat-pop', 'end-card'].includes(x)).sort((a, b) => a[1] - b[1])[0][0];
+const unmeasured = new Set(fps.filter((f) => f.primitives.includes(rare)).slice(MIN_N - 1).map((f) => f.id));
+lines(metricsFile(p), metrics.filter((m) => !unmeasured.has(m.storyboard_id)));
 
 const r = runLearn('c1-automation', '2026-W41', p);
 const prim = new Map(r.tables.primitive.map((x) => [x.value, x]));
@@ -60,7 +66,7 @@ assert.match(outText, /learn: bench .*stamp-hit/);
 const week: Recipe[] = JSON.parse(fs.readFileSync(path.join(p.recipes, 'c1-automation/2026-W41.json'), 'utf8'));
 const benched = r.learned.bench.map((b) => b.primitive);
 assert.ok(week.every((x) => x.primitives.every((q) => !benched.includes(q))), 'no benched primitive in the week');
-const beatsOf = (x: Recipe) => (x.primitives[0] === 'host-hook' ? FORMATS.host : FORMATS.composed).beats;
+const beatsOf = (x: Recipe) => (x.primitives[0] === 'host-hook' ? FORMATS.host : FORMATS.explainer).beats; // C1: host or the 8-beat explainer
 // proven picks are a preference (they give way when only they would break the novelty rules), so most, not all, beats use them
 let eligible = 0;
 let used = 0;
@@ -87,6 +93,21 @@ assert.deepEqual([thin.learned.bench, thin.learned.proven, thin.times], [[], [],
 // bad metrics are refused, not averaged in
 fs.appendFileSync(metricsFile(p), JSON.stringify({storyboard_id: 'x', channel: 'c1-automation', platform: 'tiktok', window: '7d', reach: 5}) + '\n');
 assert.throws(() => runLearn('c1-automation', '2026-W41', p), /metrics.jsonl line \d+: \$\.platform/);
+
+// Scene retention: a curve maps onto scene spans; sparse curves give nothing; Learn finds the leaky opener; Recipe keeps it out of the opening shot
+const linear = (pts: [number, number][]) => Array.from({length: 100}, (_, i) => { const [a, b] = i < 50 ? [1, 0] : [0, 1]; const t = i < 50 ? (i + 1) / 50 : (i - 49) / 50; return pts[a][0] + (pts[b][1] - pts[a][0]) * t; });
+const two = (x: string): Span[] => [{primitive: x, start: 0, end: 5}, {primitive: 'end-card', start: 5, end: 10}];
+assert.ok(Math.abs(sceneHolds(linear([[1, 0.6], [0.6, 0.57]]), two('pile-drop'))[0].hold - 0.6) < 1e-9, 'hold = viewers at the scene end / at its start');
+assert.deepEqual(sceneHolds(Array(10).fill(0.5), two('pile-drop')), [], 'a sparse curve is no evidence');
+const openers: [string, number][] = [['word-stack-slam', 0.9], ['pile-drop', 0.8], ['counter-drop', 0.75], ['zoom-dive', 0.4]];
+const ret = fps.slice(0, 12).map((f, i) => ({f, op: openers[i % 4]}));
+const retMetrics = ret.map(({f, op}) => ({storyboard_id: f.id, channel: 'c1-automation', platform: 'youtube', window: '7d' as const, reach: 100, views: 100, retention: linear([[1, op[1]], [op[1], op[1] * 0.95]])}));
+const spanOf = new Map(ret.map(({f, op}) => [f.id, two(op[0])]));
+const rl = learn('c1-automation', '2026-W41', {metrics: retMetrics, fingerprints: fps, scheduled: new Map(), kpi: c1.kpi, spans: (id) => spanOf.get(id) ?? null}).learned.retention;
+assert.deepEqual(rl.leaks, ['zoom-dive'], JSON.stringify(rl));
+assert.ok(rl.holds.includes('word-stack-slam'), JSON.stringify(rl));
+const c2ch = JSON.parse(fs.readFileSync(path.join(ROOT, 'channels/c2-reach/channel.json'), 'utf8'));
+assert.ok(generateWeek(c2ch, '2026-W41', [], {leaks: ['zoom-dive']}).every((x) => x.opening !== 'zoom-dive'), 'a leak never opens while another opener exists');
 
 fs.rmSync(tmp, {recursive: true});
 console.log(`learn ok: ${fps.length} sample videos -> bench ${benched.join(', ')}; proven ${r.learned.proven.length} (used in ${used} of ${eligible} beats); YouTube best at 21:00; Recipe reads it`);

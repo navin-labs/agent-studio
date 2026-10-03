@@ -1,5 +1,5 @@
 // Text box QA: boxes are measured in the browser while a storyboard renders (see TextProbe in Composer.tsx),
-// written to out/<id>/text-boxes.json, then checked here. Pure data, no React.
+// written to each variant's <prefix>.text-boxes.json, then checked here. Pure data, no React.
 // Self-test: node src/composer/textcheck.ts
 
 export type Rect = {x: number; y: number; w: number; h: number};

@@ -100,7 +100,9 @@
         "mono",
         "studio",
         "night",
-        "archive"
+        "archive",
+        "night-signal",
+        "archive-gold"
       ]
     },
     "hook_pattern": {
@@ -119,6 +121,21 @@
     },
     "hash": {
       "type": "string"
+    },
+    "style": {
+      "type": "string",
+      "pattern": "^c[0-9]-[a-z0-9-]+-v[0-9]+$",
+      "description": "the style preset the video was rendered in (Learn scores each version)"
+    },
+    "cta": {
+      "type": "string",
+      "minLength": 1,
+      "description": "the closing card's CTA text (Learn scores CTAs)"
+    },
+    "seconds": {
+      "type": "number",
+      "minimum": 1,
+      "description": "the rendered length (Learn scores lengths)"
     }
   }
 }

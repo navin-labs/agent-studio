@@ -71,6 +71,17 @@
     "enquiries": {
       "type": "integer",
       "minimum": 0
+    },
+    "retention": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 100,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 10
+      },
+      "description": "YouTube only: audienceWatchRatio at evenly spaced points of the video (YouTube Analytics, elapsedVideoTimeRatio 0.01..1.00). Learn maps it onto the scenes in render.json."
     }
   }
 }

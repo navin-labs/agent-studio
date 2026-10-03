@@ -1,12 +1,12 @@
 {
   "id": "agStudioYoutube1",
-  "name": "agent-studio: YouTube upload",
+  "name": "agent-studio: YouTube upload (C1)",
   "active": false,
   "nodes": [
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "agent-studio-youtube",
+        "path": "agent-studio-youtube-c1-automation",
         "responseMode": "responseNode",
         "options": {}
       },
@@ -17,11 +17,11 @@
         0,
         0
       ],
-      "webhookId": "agent-studio-youtube"
+      "webhookId": "agent-studio-youtube-c1-automation"
     },
     {
       "parameters": {
-        "jsCode": "// Ask the Mac receiver whether the dispatcher really approved this video; keep the uploaded file attached.\nconst item = $input.first();\nconst job = JSON.parse(item.json.body.job);\nlet approved = false;\ntry {\n  await this.helpers.httpRequest({ url: 'http://host.docker.internal:5680/dispatch-check', qs: { id: job.storyboard_id } });\n  approved = true;\n} catch (e) {\n  approved = false;\n}\nreturn [{ json: { ...job, approved, binaryKeys: Object.keys(item.binary ?? {}) }, binary: item.binary }];"
+        "jsCode": "// This workflow uploads with c1-automation's YouTube credential, so it takes c1-automation's YouTube jobs only, and only after the Mac\n// receiver confirms the dispatcher is sending exactly this video of exactly this channel now. Anything else: refused, nothing uploaded.\nconst item = $input.first();\nlet job = {};\ntry {\n  job = JSON.parse(item.json.body.job);\n} catch (e) {\n  job = {};\n}\nlet approved = false;\nif (job.channel === 'c1-automation' && job.platform === 'youtube' && typeof job.storyboard_id === 'string') {\n  try {\n    await this.helpers.httpRequest({ url: 'http://host.docker.internal:5680/dispatch-check', qs: { id: job.storyboard_id, channel: 'c1-automation', platform: 'youtube' } });\n    approved = true;\n  } catch (e) {\n    approved = false;\n  }\n}\nreturn [{ json: { ...job, approved, binaryKeys: Object.keys(item.binary ?? {}) }, binary: item.binary }];"
       },
       "name": "Ask the Mac",
       "type": "n8n-nodes-base.code",
@@ -69,8 +69,8 @@
         "operation": "upload",
         "title": "={{ $json.title }}",
         "regionCode": "IN",
-        "categoryId": "28",
-        "binaryProperty": "={{ $json.binaryKeys[0] }}",
+        "categoryId": "={{ $json.category_id || '28' }}",
+        "binaryProperty": "={{ $json.binaryKeys.find((k) => k !== 'thumbnail') }}",
         "options": {
           "description": "={{ $json.description }}",
           "tags": "={{ $json.tags.join(',') }}",
@@ -86,19 +86,25 @@
       "position": [
         720,
         -100
-      ]
+      ],
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "MmUVmsONSAoYeMcH",
+          "name": "ETHAN personal AI assistant"
+        }
+      }
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ uploaded: true, youtube_id: $json.id }) }}",
+        "responseBody": "={{ JSON.stringify({ uploaded: true, youtube_id: $('Upload to YouTube (private, scheduled)').item.json.id }) }}",
         "options": {}
       },
       "name": "Uploaded",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        960,
+        1440,
         -100
       ]
     },
@@ -117,6 +123,44 @@
         720,
         100
       ]
+    },
+    {
+      "name": "Attach thumbnail",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "// the upload result plus thumbnail A from the job (dispatch sends it as \"thumbnail\"); no thumbnail: nothing to set\nconst job = $('Ask the Mac').first();\nreturn [{ json: $json, binary: job.binary?.thumbnail ? { thumbnail: job.binary.thumbnail } : {} }];"
+      }
+    },
+    {
+      "name": "Set thumbnail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        -100
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId={{ $('Upload to YouTube (private, scheduled)').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "youTubeOAuth2Api",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "thumbnail",
+        "options": {}
+      },
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "MmUVmsONSAoYeMcH",
+          "name": "ETHAN personal AI assistant"
+        }
+      }
     }
   ],
   "connections": {
@@ -161,6 +205,28 @@
       ]
     },
     "Upload to YouTube (private, scheduled)": {
+      "main": [
+        [
+          {
+            "node": "Attach thumbnail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach thumbnail": {
+      "main": [
+        [
+          {
+            "node": "Set thumbnail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set thumbnail": {
       "main": [
         [
           {

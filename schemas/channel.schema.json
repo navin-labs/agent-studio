@@ -9,7 +9,6 @@
     "audience",
     "kpi",
     "cta",
-    "themes",
     "cadence",
     "publishers"
   ],
@@ -121,9 +120,12 @@
           "mono",
           "studio",
           "night",
-          "archive"
+          "archive",
+          "night-signal",
+          "archive-gold"
         ]
-      }
+      },
+      "description": "Only for a channel without a style preset (a styled channel takes its theme from the preset)."
     },
     "cadence": {
       "type": "object",
@@ -167,7 +169,8 @@
             "enum": [
               "forge-queue",
               "n8n"
-            ]
+            ],
+            "description": "how this platform is reached: n8n (YouTube, that channel's own upload workflow) or forge-queue (Instagram, Facebook: queue/<channel>/<platform>/); must match the style preset's destination"
           },
           "page_id": {
             "type": "string",
@@ -176,8 +179,8 @@
           },
           "webhook": {
             "type": "string",
-            "pattern": "^http://localhost:5678/webhook/[a-z0-9-]+$",
-            "description": "YouTube only: this channel's n8n upload webhook (one per YouTube account). Default: YOUTUBE_WEBHOOK_URL."
+            "pattern": "^http://localhost:5678/webhook/agent-studio-youtube-c[0-9]-[a-z0-9-]+$",
+            "description": "YouTube: this channel's own n8n upload webhook, exactly http://localhost:5678/webhook/agent-studio-youtube-<channel id> (one workflow per YouTube account). Required to dispatch to YouTube: there is no shared default, so one channel's video can never reach another channel's workflow."
           }
         }
       }
@@ -224,6 +227,47 @@
           }
         }
       }
+    },
+    "voice": {
+      "type": "object",
+      "required": [
+        "engine",
+        "speed"
+      ],
+      "additionalProperties": false,
+      "description": "The channel voice: a local open-source engine with a built-in voice (no cloning, no paid API). engine/README.md \"Voice\".",
+      "properties": {
+        "engine": {
+          "enum": [
+            "kokoro",
+            "parler",
+            "chatterbox"
+          ]
+        },
+        "voice": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Built-in voice id (Kokoro), speaker name (Parler); omitted for Chatterbox (its default voice)"
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 2
+        },
+        "pronounce": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Word -> what the engine reads instead, per channel (Kokoro phonemes: \"[Tally](/tˈɑli/)\")"
+        }
+      }
+    },
+    "style": {
+      "type": "string",
+      "pattern": "^c[0-9]-[a-z0-9-]+-v[0-9]+$",
+      "description": "the channel's style preset (styles/<id>.json); change this one setting to switch or roll back a style"
     }
   }
 }

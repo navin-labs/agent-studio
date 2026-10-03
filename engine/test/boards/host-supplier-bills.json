@@ -1,0 +1,191 @@
+{
+  "format": "storyboard",
+  "id": "host-supplier-bills",
+  "channel": "c1-automation",
+  "theme": "night",
+  "host": "chiku",
+  "captionStyle": "karaoke",
+  "hookPattern": "question",
+  "scenes": [
+    {
+      "primitive": "host-hook",
+      "params": {
+        "text": "Still typing *supplier bills* by hand?"
+      },
+      "vo": "Still typing *supplier bills* into your books by hand? Let me show you something."
+    },
+    {
+      "primitive": "ui-inbox",
+      "transition": "whip-pan",
+      "params": {
+        "title": "BILLS@ INBOX",
+        "mode": "manual",
+        "rows": [
+          {
+            "from": "Mehta Traders",
+            "subject": "Bill SB-4403, 4 cartons"
+          },
+          {
+            "from": "Kapoor Foods",
+            "subject": "Invoice INV-1042 attached"
+          },
+          {
+            "from": "Shree Packaging",
+            "subject": "Revised bill for 12 Sep"
+          },
+          {
+            "from": "Gupta Steel",
+            "subject": "Bill SB-4410, 4,20,000 rupees"
+          }
+        ]
+      },
+      "vo": "Every morning the bills pile up. *Mehta*, *Kapoor*, *Shree*, *Gupta*. Someone opens each one and reads it line by line."
+    },
+    {
+      "primitive": "ui-sheet",
+      "transition": "whip-pan",
+      "params": {
+        "file": "PURCHASE.XLSX",
+        "mode": "manual",
+        "columns": [
+          "BILL",
+          "PARTY",
+          "AMOUNT"
+        ],
+        "rows": [
+          [
+            "SB-4403",
+            "Mehta",
+            "38,500"
+          ],
+          [
+            "SB-4404",
+            "Kapoor",
+            "1,12,000"
+          ],
+          [
+            "SB-4405",
+            "Shree",
+            "9,800"
+          ]
+        ]
+      },
+      "vo": "They type it again. *Bill number*, *party*, *amount*. One cell at a time. One typo, and the totals are off."
+    },
+    {
+      "primitive": "ui-diff",
+      "transition": "pixel-wipe",
+      "params": {
+        "file": "BILL-ENTRY PROCESS",
+        "lines": [
+          {
+            "op": "del",
+            "text": "Open every bill email"
+          },
+          {
+            "op": "del",
+            "text": "Type party, GSTIN, amount"
+          },
+          {
+            "op": "del",
+            "text": "Check totals by hand"
+          },
+          {
+            "op": "add",
+            "text": "Bill read on arrival"
+          },
+          {
+            "op": "add",
+            "text": "Entry added to register"
+          },
+          {
+            "op": "same",
+            "text": "You check the odd ones"
+          }
+        ]
+      },
+      "vo": "*Opening*, *typing* and *checking*? Gone. Bills get *read* and *entered* on their own. You check the *odd* ones."
+    },
+    {
+      "primitive": "flow-run",
+      "transition": "whip-pan",
+      "params": {
+        "done": "ENTERED",
+        "nodes": [
+          {
+            "icon": "mail",
+            "label": "Read the bill",
+            "sub": "bills@ inbox"
+          },
+          {
+            "icon": "search",
+            "label": "Pull the fields",
+            "sub": "GSTIN, amount, date"
+          },
+          {
+            "icon": "sheet",
+            "label": "Add the entry",
+            "sub": "Purchase register"
+          },
+          {
+            "icon": "check",
+            "label": "Flag odd ones",
+            "sub": "Only these need you"
+          }
+        ]
+      },
+      "vo": "Here is the flow. It *reads* the bill, *pulls* the GSTIN and amount, *adds* the entry, and *flags* anything odd."
+    },
+    {
+      "primitive": "ui-chat",
+      "transition": "whip-pan",
+      "params": {
+        "contact": "MEHTA TRADERS",
+        "mode": "auto",
+        "messages": [
+          {
+            "from": "them",
+            "text": "Did you get bill SB-4403?"
+          },
+          {
+            "from": "me",
+            "text": "Yes, entered today. Paying on 20 Oct."
+          },
+          {
+            "from": "them",
+            "text": "Great, thank you!"
+          }
+        ]
+      },
+      "vo": "Mehta Traders *asks* about a bill. The *reply* goes out on its own. *Done*, no one typed a thing."
+    },
+    {
+      "primitive": "host-payoff",
+      "transition": "pixel-wipe",
+      "params": {
+        "text": "Bills enter *themselves.* You check the odd ones."
+      },
+      "vo": "Bills enter *themselves*. Your team only checks the odd ones. That is the whole idea."
+    },
+    {
+      "primitive": "host-cta",
+      "params": {
+        "text": "DM *AUDIT*",
+        "sub": "I'll look at your most repetitive process for free."
+      },
+      "vo": "Want this for your own bills? Just DM me AUDIT."
+    }
+  ],
+  "caption": "Supplier bills do not need a person typing every line.\n\nA small automation can read each bill, pull the GSTIN, amount and date, and add the entry. Your team only checks the odd ones.\n\nExample data.\n\nSend this to whoever enters your bills.",
+  "hashtags": [
+    "#automation",
+    "#n8n",
+    "#smallbusinessindia",
+    "#accountspayable"
+  ],
+  "meta": {
+    "source": "https://example.com/ideas/host-supplier-bills",
+    "idea_id": "test-host-supplier-bills",
+    "recipe_id": "test-host-supplier-bills"
+  }
+}

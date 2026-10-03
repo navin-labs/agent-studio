@@ -1,111 +1,80 @@
-# Reel Engine: theautomationguynavin
+# engine: the agent-studio renderer
 
-> This is the engine inside agent-studio (`engine/`). It is not live yet: `~/Dev/projects/reel-engine` keeps rendering daily posts until the switch-over (BUILD_PLAN task B4b). Setup paths below still point at the live copy. Only the **story** format is supported here; reels and carousels were removed (ADR 9).
+The motion library and renderer inside agent-studio (Remotion 4, React 19, TypeScript). One storyboard JSON in, three finished platform videos out (YouTube, Instagram, Facebook), each checked by QA. How the studio around it works: `../docs/TECH.md`.
 
-One JSON script in, a finished post out.
-
-- **Stories**: the `pile-to-flow` motion video, silent by default (voiceover only with `VOICE=on`), captions and sound effects. 1080x1920. Renders in any theme: add `"theme": "paper" | "ink" | "mono" | "studio"` to the script (default `paper`).
-
-Every command below runs from the project folder. Open Terminal and start with:
-```
-cd ~/Dev/projects/reel-engine
-```
+Commands run from this folder (`engine/`).
 
 ---
 
 ## How it works (hands-free)
 
-1. Forge saves a script into `content/stories/<id>.json`.
-2. The watcher on your Mac notices it within 3 seconds and renders it.
-3. The watcher writes `<id>.status.txt` next to the script: `ok`, or `failed` plus the errors. Forge reads it and fixes its own mistakes.
-4. The finished files are copied to **Google Drive → My Drive → Reel Engine → <id>**.
-5. You open that folder in the Google Drive app on your phone, watch the reel and post it with the text from `caption.txt`.
+1. Forge (the Weekly Writer skill) saves a storyboard into `content/storyboards/<id>.json`.
+2. The watcher notices it within a few seconds and renders it once per platform, from the channel's style preset (`../styles/<id>.json` `platforms`): each platform gets its own closing call to action, spoken CTA line, end card account and caption ending, and YouTube its thumbnail.
+3. Each platform's files land in `out/<channel>/<yyyy-mm-dd>/<id>/<platform>/`, every file named `<channel>-<platform>-<date>-<id>.<kind>` (video `.mp4`, `.caption.txt`, `.manifest.json`, `.qa.json`, `.contact.png`, YouTube `.thumbnail.png`).
+4. QA checks each platform video on its own (`../studio/qa.ts`). The watcher writes `<id>.status.txt` next to the board: `ok`, `failed` or `failed QA`, with the exact errors per platform. Forge reads it and fixes its own mistakes.
+5. Every platform folder is copied to **Google Drive > My Drive > Reel Engine > <channel> > <date> > <id> > <platform>** so it reaches your phone, and each QA-passed video arrives on Telegram for approval.
 
-The only rule: while you're away, the Mac must be **on, plugged in, lid open and on Wi-Fi**. With the lid closed it sleeps and nothing renders.
+Nothing here publishes anything. Publishing is the dispatcher's job, and only after your approval (`../agents/dispatch/RULES.md`).
+
+The Mac must be on, plugged in, lid open and on Wi-Fi for renders to happen.
 
 ---
 
 ## What to do, and when
 
-| Situation | What to do | Why |
-|---|---|---|
-| **Normal day** | Nothing. | The watcher runs in the background. |
-| **Restart, shutdown or log out** | Nothing. | The watcher starts itself every time you log in. |
-| **Leaving the Mac while you're out** | Plug it in, keep the lid open, leave Wi-Fi on. | Plugged in, the watcher keeps it awake. A closed lid always sleeps. |
-| **Forge says "Ready: <id>"** | Phone: Google Drive app → My Drive → Reel Engine → <id>. Open `caption.txt` and copy the text. Open `reel.mp4` → ⋮ → Send a copy → Instagram. Set `cover.png` as the cover. | Posting stays with you. |
-| **Forge says it failed twice** | Read the status file (see Troubleshooting), fix it or tell Forge what to change. | Forge makes at most 2 fix attempts, then hands over. |
-| **You want to check a script before it renders** | `npm run make -- content/stories/<id>.json --check` | Runs the quality gate only. Nothing renders and no voice credit is used. |
-| **You want to render something yourself** | `npm run make -- content/stories/<id>.json`, then `open out/<id>` | A manual render. Works any time, watcher or not. |
-| **One voice line sounds wrong** | Edit that scene's `vo` (or add a `"say"` field with the spelling the voice needs) and save. | Saving triggers a re-render. Only the changed line gets a new voice clip. |
-| **You change the voice or pace** | See "Voice settings" below. | The change applies to every future render. |
-| **I send you a new engine zip** | See "Updating the engine" below. | Pulls in new features without losing your settings. |
-| **You move the folder or reinstall Node** | `npm run watch:install` | The background service stores the folder path and Node's location, so it needs reinstalling. |
-| **Pause auto-render** (travel, heavy work, battery) | `launchctl unload ~/Library/LaunchAgents/com.theautomationguy.reelwatch.plist` | Stops rendering and lets the Mac sleep normally. |
-| **Resume auto-render** | `launchctl load -w ~/Library/LaunchAgents/com.theautomationguy.reelwatch.plist` | Scripts saved while it was paused render right away. |
-| **Moving to a new Mac** | Follow "One-time setup" on the new Mac, then copy your `.env` over. | `.env` holds your Sarvam key and voice settings. |
+| Situation | What to do |
+|---|---|
+| Normal day | Nothing. The watcher runs in the background and starts at every login. |
+| Check a board before it renders | `npm run make -- content/storyboards/<id>.json --check` (quality gate only; nothing renders) |
+| Render a board yourself | `npm run make -- content/storyboards/<id>.json`, then `open out/<channel>/<date>/<id>` |
+| Render a test board | `npm run make -- test/style-c1.json` (test boards render to `test/out/`, never to `out/`) |
+| One voice line sounds wrong | Edit that scene's `vo` (or add a `"say"` field with the spelling the voice needs) and save. Only changed lines get a new clip. |
+| Pause auto-render | `launchctl unload ~/Library/LaunchAgents/com.theautomationguy.studiowatch.plist` |
+| Resume auto-render | `npm run watch:install` |
+| You moved the folder or reinstalled Node | `npm run watch:install` |
 
 ---
 
-## One-time setup (already done on this Mac)
+## One-time setup
 
 ```
-# 1. Install Node.js LTS from nodejs.org
-# 2. Unzip reel-engine.zip into ~/Dev/projects/reel-engine, then:
-cd ~/Dev/projects/reel-engine
 npm install
-cp .env.example .env
-open -e .env          # paste SARVAM_API_KEY, set SARVAM_SPEAKER=shubh and SARVAM_PACE=1.0, save
-npm run make -- content/stories/story-order-emails.json    # test render
-npm run watch:install # start auto-render (runs at every login from now on)
+cp .env.example .env    # then set VOICE=on in .env (voices: see "Voice")
+npm run check           # types, themes, text QA, schemas, every studio test
+npm run watch:install   # start auto-render (runs at every login from now on)
 ```
 
-**Phone delivery:** install Google Drive for desktop (google.com/drive/download) on the Mac and sign in with <your Google account email>. Then run `npm run watch:install` again. Finished posts appear in the Google Drive app on your phone. If Drive for desktop has several Google accounts signed in, set the folder yourself in `.env`:
+**Phone delivery:** install Google Drive for desktop on the Mac and sign in. The watcher finds `My Drive` by itself; with several Google accounts signed in, set the folder in `.env`: `RENDER_COPY_DIR=<path to My Drive>/Reel Engine`, then `npm run watch:install` again. macOS may show "Background Items Added: node": allow it, that is the watcher.
+
+Is the watcher running?
 ```
-RENDER_COPY_DIR=/Users/navinrana/Library/CloudStorage/<your Google account email>/My Drive/Reel Engine
-```
-
-macOS may show "Background Items Added: node". Allow it, because that's the watcher.
-
----
-
-## Is the watcher running?
-
-```
-launchctl list | grep reelwatch     # a line with "reelwatch" means it's running
+launchctl list | grep studiowatch   # a line means it is running
 tail -20 out/watch.log              # what it did recently
 ```
 
 ---
 
-## Voice settings
+## Voice
 
-Your settings live in `.env`. Current setup: Sarvam, speaker `shubh`, pace `1.0`.
-
+Local, open-source voices with built-in speakers: no paid voice API, no voice cloning. Each channel picks its voice in `../channels/<id>/channel.json`:
 ```
-open -e .env                                                      # view or edit settings
-sed -i '' 's/^SARVAM_PACE=.*/SARVAM_PACE=1.0/' .env               # change speed (0.9 slower, 1.1 faster)
-sed -i '' 's/^SARVAM_SPEAKER=.*/SARVAM_SPEAKER=shubh/' .env       # change voice
-npm run make -- content/stories/<id>.json --force-vo                # rebuild a reel's voice with the new settings
+"voice": {"engine": "kokoro", "voice": "af_heart", "speed": 1.15, "pronounce": {"Tally": "[Tally](/tˈæli/)"}}
 ```
+| Engine | Voices | Speed on an Apple M5 (render seconds per minute of speech) | Notes |
+|---|---|---|---|
+| Kokoro (first choice) | built-in ids; locked: C1 `af_heart` 1.15, C2 `am_fenrir` 1.0 | about 6 s | native speed control; CPU |
+| Parler-TTS mini v1 | named speakers, e.g. `Gary`, `Rick` | about 3.5 min | pace is described, not exact; GPU |
+| Chatterbox | its default voice only | about 4.5 min | pace via cfg_weight; watermarked; GPU |
 
-Voice clips are cached in `public/vo/<id>/`. A re-render after a visual-only edit uses no voice credit.
-
-**To use your own voice for a reel:** record one clip per scene and name them `s01.m4a`, `s02.m4a`, and so on in scene order. Put them in `public/vo/<id>/`. The engine uses your recordings and never overwrites them.
-
----
-
-## Updating the engine
-
-When I send you a new `reel-engine.zip`, download it, then run:
-
+Setup (one time; each engine in its own folder under `.venv-voice/`, which git ignores):
 ```
-cd ~/Dev/projects/reel-engine
-unzip -o "$(ls -t ~/Downloads/reel-engine*.zip | head -1)" -x ".env" -d .
-npm install
-npm run watch:install
+brew install espeak-ng
+uv venv --python 3.12 .venv-voice/kokoro && VIRTUAL_ENV=.venv-voice/kokoro uv pip install "kokoro>=0.9.4" "transformers>=4.45" soundfile pip "en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl"
+uv venv --python 3.12 .venv-voice/parler && VIRTUAL_ENV=.venv-voice/parler uv pip install "parler-tts @ git+https://github.com/huggingface/parler-tts.git" soundfile
+uv venv --python 3.11 .venv-voice/chatterbox && VIRTUAL_ENV=.venv-voice/chatterbox uv pip install chatterbox-tts soundfile "setuptools<81"
 ```
-
-This updates the code but keeps your `.env`, your scripts and your renders.
+Try a line: `.venv-voice/kokoro/bin/python scripts/tts_local.py --engine kokoro --voice af_heart --speed 1.15 --text "Hello." --out /tmp/a.wav`
+Voice clips are cached per platform in `public/vo/<id>/<platform>/` (the platforms share every line except the closing CTA); a visual-only edit re-voices nothing. Rebuild: `npm run make -- content/storyboards/<id>.json --force-vo`.
 
 ---
 
@@ -113,45 +82,18 @@ This updates the code but keeps your `.env`, your scripts and your renders.
 
 | Command | What it does |
 |---|---|
-| `npm run make -- <file>.json` | Renders a story into `out/<id>/` |
+| `npm run make -- <board>.json` | Renders a board: one video per platform (production boards into `out/`, anything else into `test/out/`) |
+| `npm run make -- <board>.json --out=<dir>` | Renders into another renders root |
+| `npm run make -- <board>.json --check` | Quality gate only, no render |
+| `npm run make -- <board>.json --no-vo` | Silent preview |
+| `npm run make -- <board>.json --vo-only` | Generates voice clips only |
+| `npm run make -- <board>.json --force-vo` | Rebuilds all voice clips |
+| `npm run check` | TypeScript, theme gate, text QA self-test, schemas, every studio test (run before every commit) |
 | `npm run gate:themes` | Contrast check for all themes + no raw colours outside `src/themes.ts` |
-| `npm run stress` | Render every UI field at its maximum length through text QA (must pass with 0 errors) |
-| `npm run primitives -- --all-themes` | Validate every primitive's example and render its contact sheet to `out/primitives/` |
-| `npm run make -- <file>.json --check` | Quality gate only, no render |
-| `npm run make -- <file>.json --no-vo` | Silent preview (no voice credit) |
-| `npm run make -- <file>.json --vo-only` | Generates voice clips only |
-| `npm run make -- <file>.json --force-vo` | Rebuilds all voice clips |
-| `npm run make -- <file>.json --force` | Renders even if the quality gate fails (not for real posts) |
-| `npm run watch` | Runs the watcher in this Terminal window (for testing) |
-| `npm run watch:install` | Installs or reinstalls the background watcher |
+| `npm run stress` | Renders every UI field at its maximum length through text QA (must pass with 0 errors) |
+| `npm run primitives -- --all-themes` | Validates every primitive's example and renders its contact sheet |
+| `npm run watch` / `npm run watch:install` | Runs the watcher here / installs it in the background |
 | `npm run studio` | Live visual editor in your browser |
-| `open out/<id>` | Opens a finished post |
-| `pbcopy < out/<id>/caption.txt` | Copies the caption to the clipboard |
-| `ls content/stories` | Lists the scripts Forge has saved |
-
----
-
-## Your cloned voice (one-time setup)
-
-Every video speaks in your own voice, cloned locally with Chatterbox (open-source, MIT licence, free). You record once; after that no human input is needed. Captions must say "Voiceover: AI (my cloned voice)".
-
-1. **Record** the text in `voice/RECORD_THIS.md` (about 60 seconds, quiet room, phone Voice Memos). AirDrop it to the Mac.
-2. **Convert and place it** (change the path to your file):
-```
-cd ~/Dev/projects/reel-engine
-afconvert -f WAVE -d LEI16@24000 -c 1 ~/Downloads/"New Recording.m4a" voice/navin.wav
-```
-3. **Install the clone** (about 5 minutes, downloads a few GB the first time it runs):
-```
-python3 -m venv .venv-voice
-.venv-voice/bin/pip install --upgrade pip
-.venv-voice/bin/pip install chatterbox-tts
-echo "CLONE_VOICE=voice/navin.wav" >> .env
-```
-4. **Test it:** `npm run make -- content/stories/story-invoice-chase.json --force-vo && open out/story-invoice-chase/reel.mp4`
-
-**Quality gate before you ship it:** listen once. If it sounds robotic or has glitches, record a cleaner, longer sample and repeat step 2. Don't publish a bad clone.
-To go back to Sarvam: delete the `CLONE_VOICE` line in `.env`.
 
 ---
 
@@ -159,14 +101,11 @@ To go back to Sarvam: delete the `CLONE_VOICE` line in `.env`.
 
 | Problem | Fix |
 |---|---|
-| Forge saved a script but nothing rendered | `launchctl list \| grep reelwatch`. If nothing prints, run `npm run watch:install`. Then check `tail -20 out/watch.log`. |
-| Status file says `failed` | `cat content/stories/<id>.status.txt` shows the errors. Quality gate errors mean the script breaks a rule, so Forge should fix it. |
-| `Sarvam TTS 401` or `403` | The key is wrong or has no credit. Check `SARVAM_API_KEY` in `.env` and your Sarvam dashboard. |
-| A render failed because the internet dropped | Save the script again (even unchanged). The watcher only retries after a file changes. |
-| `command not found: npm` | Node isn't installed. Get the LTS version from nodejs.org. |
-| Mac was asleep all day | The lid was closed, or it wasn't plugged in. Everything saved while it slept renders when it wakes. |
-| Running low on disk | Old renders in `out/<id>/` are safe to delete once posted. Copies stay in Google Drive. |
-| Files not appearing in Google Drive | Check the log: `grep copied out/watch.log \| tail -3`. If it says `copy failed`, allow the macOS permission prompt, or set `RENDER_COPY_DIR=` in `.env` to your Drive folder and run `npm run watch:install`. |
+| Forge saved a board but nothing rendered | `launchctl list \| grep studiowatch`. If nothing prints, run `npm run watch:install`. Then `tail -20 out/watch.log`. |
+| Status file says `failed` or `failed QA` | `cat content/storyboards/<id>.status.txt` shows the errors per platform. A board error is Forge's to fix; a variant "held for Navin" (for example a Facebook username still pending) is a channel.json setting. |
+| `Voice engine ... not installed` | Run that engine's line under "Voice" setup. |
+| A render failed because the network dropped | Save the board again (even unchanged). The watcher only retries after a file changes. |
+| Files not appearing in Google Drive | `grep copied out/watch.log \| tail -3`. If it says `copy failed`, allow the macOS permission prompt, or set `RENDER_COPY_DIR` in `.env` and run `npm run watch:install`. |
 
 ---
 
@@ -175,22 +114,15 @@ To go back to Sarvam: delete the `CLONE_VOICE` line in `.env`.
 - Em or en dashes
 - Client claims ("my clients", "companies like yours", "we helped")
 - Result claims ("3x", "save 20 hours", "guaranteed", "100%")
-- Wrong structure: a story must start with `hook` and end with `cta`
-- Unknown theme: use `paper`, `ink`, `mono` or `studio`
-- Word limits: 28 words of voiceover per scene, 10 words of hook text, 32 words per slide
-- UI limits: 5 emails, 6 sheet rows and 4 columns, 5 chat messages, 6 steps, 4 flow nodes, 3 notifications
+- Text over a primitive's limits, unknown icons, an unknown hook pattern or theme
+- A channel board without a real Instagram handle or a style preset, a theme or transition the preset does not allow, a year-flap style without `meta.year`
+- 3 to 5 hashtags only
 
 ---
 
-## Extras
-
-- **Background music:** put a royalty-free track in `public/music/` and add `"music": "track.mp3"` to the story script. It plays at 7% volume.
-- **Sound effects** are on by default. Add `"sfx": false` to a script to turn them off.
-- **Look and feel:** colours, fonts, handle and safe zones are in `src/theme.ts`. The logo is in `public/brand/`.
-
 ## Licences
 
-- Remotion is free for individuals and for-profit companies with up to 3 employees, including commercial use. A company licence is needed beyond that. You may not resell this engine itself as a product (see `node_modules/remotion/LICENSE.md`).
-- Inter font: SIL Open Font License (`public/fonts/OFL-Inter.txt`).
+- Remotion is free for individuals and for-profit companies with up to 3 employees, including commercial use. A company licence is needed beyond that (see `node_modules/remotion/LICENSE.md`).
+- Fonts: Inter, Inter Tight, JetBrains Mono, VT323 under the SIL Open Font License (`public/fonts/OFL-*.txt`).
 - Icons: Lucide (ISC).
 - The sound effects were generated for this project and are free to use.

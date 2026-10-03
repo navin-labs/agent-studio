@@ -47,7 +47,9 @@
         "mono",
         "studio",
         "night",
-        "archive"
+        "archive",
+        "night-signal",
+        "archive-gold"
       ]
     },
     "opening": {
@@ -115,7 +117,8 @@
           "cut",
           "whip-pan",
           "ink-wipe",
-          "pixel-wipe"
+          "pixel-wipe",
+          "fold"
         ]
       }
     },
@@ -144,6 +147,11 @@
     "experiment": {
       "type": "boolean",
       "description": "true = part of the 30% experiments"
+    },
+    "style": {
+      "type": "string",
+      "pattern": "^c[0-9]-[a-z0-9-]+-v[0-9]+$",
+      "description": "the channel's style preset when the week was planned; the Writer copies it into the storyboard"
     }
   }
 }

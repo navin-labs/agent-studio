@@ -1,0 +1,103 @@
+{
+  "id": "c2-archive-gold-v1",
+  "channel": "c2-reach",
+  "version": 1,
+  "about": "Archive Gold with the year flip: every story opens on its year landing in split-flap tiles, a gold timeline thread runs under the story and flares at each reveal, gold only on the name and the year the moment they are spoken, one slow push per shot, mostly cuts.",
+  "expect": "Recognised in the first 2 seconds and easier to follow, so more viewers reach the follow card (YouTube retention, follows per reach).",
+  "theme": "archive-gold",
+  "transitions": [
+    "cut",
+    "ink-wipe"
+  ],
+  "opener": "year-flap",
+  "overlay": "thread",
+  "camera": {
+    "pain": 0.05,
+    "result": 0.05,
+    "other": 0.05
+  },
+  "strike": false,
+  "platforms": {
+    "youtube": {
+      "size": {
+        "width": 1080,
+        "height": 1920
+      },
+      "thumbnail": true,
+      "end_card": {
+        "handle": "youtube"
+      },
+      "caption": "{body}\n\n{cta}\n\n{voice}\n\n{hashtags}",
+      "cta": {
+        "follow": {
+          "text": "*Subscribe*",
+          "sub": "One backstory, every day.",
+          "say": "Subscribe for one backstory every day.",
+          "line": "Subscribe for one backstory every day."
+        },
+        "send": {
+          "text": "*Share* it",
+          "sub": "Send it to someone curious.",
+          "say": "Share this with someone curious.",
+          "line": "Share this with someone who would love the story."
+        }
+      },
+      "filename": "{channel}-{platform}-{date}-{id}",
+      "destination": "n8n"
+    },
+    "instagram": {
+      "size": {
+        "width": 1080,
+        "height": 1920
+      },
+      "thumbnail": false,
+      "end_card": {
+        "handle": "instagram"
+      },
+      "caption": "{body}\n\n{cta}\n\n{voice}\n\n{hashtags}",
+      "cta": {
+        "follow": {
+          "text": "*Follow*",
+          "sub": "One backstory, every day.",
+          "say": "Follow for one backstory every day.",
+          "line": "Follow {ig} for one backstory every day."
+        },
+        "send": {
+          "text": "*Send* it",
+          "sub": "Send it to someone curious.",
+          "say": "Send this to someone curious.",
+          "line": "Send this to someone who would love the story."
+        }
+      },
+      "filename": "{channel}-{platform}-{date}-{id}",
+      "destination": "forge-queue"
+    },
+    "facebook": {
+      "size": {
+        "width": 1080,
+        "height": 1920
+      },
+      "thumbnail": false,
+      "end_card": {
+        "handle": "facebook"
+      },
+      "caption": "{body}\n\n{cta}\n\n{voice}\n\n{hashtags}",
+      "cta": {
+        "follow": {
+          "text": "*Follow*",
+          "sub": "One backstory, every day.",
+          "say": "Follow the page for one backstory every day.",
+          "line": "Follow the page for one backstory every day."
+        },
+        "send": {
+          "text": "*Share* it",
+          "sub": "Send it to someone curious.",
+          "say": "Share this with someone curious.",
+          "line": "Share this with someone who would love the story."
+        }
+      },
+      "filename": "{channel}-{platform}-{date}-{id}",
+      "destination": "forge-queue"
+    }
+  }
+}

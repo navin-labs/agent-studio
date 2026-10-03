@@ -1,88 +1,156 @@
-// node studio/dispatch.test.ts : only approved ledger entries reach the n8n YouTube call or the Instagram queue; dry run sends and
-// writes nothing. Temp folder only.
+// node studio/dispatch.test.ts : only approved platform variants go out, each to its own (channel, platform) destination: YouTube
+// to that channel's own n8n webhook, Instagram and Facebook to queue/<channel>/<platform>/ with a manifest; any mismatch, missing
+// manifest, unknown pair, wrong destination, changed video or second queueing is refused. Dry run sends and writes nothing.
+// Temp folder only.
 import assert from 'node:assert';
+import {createHash} from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import {handle} from './approve-server.ts';
 import {dispatch, markPublished, plan, resolve, slotTime} from './dispatch.ts';
-import {currentStatus, type LedgerEntry, ledgerFile, type Paths} from './ledger.ts';
+import {renderVariants} from './fixtures/variants.ts';
+import {currentStatus, type LedgerEntry, ledgerFile, lkey, type Paths, reject} from './ledger.ts';
+import {file, type Platform, queueFile} from './variant.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dispatch-test-'));
-const p: Paths = {state: path.join(tmp, 'state'), content: [path.join(tmp, 'content')], out: path.join(tmp, 'out'), recipes: path.join(ROOT, 'studio/fixtures/recipes'), channels: path.join(tmp, 'channels')};
-// a live copy of C1 (the real one is not live until go-live)
+const p: Paths = {state: path.join(tmp, 'state'), content: [path.join(tmp, 'content')], out: path.join(tmp, 'out'), recipes: path.join(ROOT, 'studio/fixtures/recipes'), channels: path.join(tmp, 'channels'), queue: path.join(tmp, 'queue')};
+// a live copy of C1 with a claimed Facebook page (the real one is not live, and its Facebook username is pending); C2 as it is
 const c1 = JSON.parse(fs.readFileSync(path.join(ROOT, 'channels/c1-automation/channel.json'), 'utf8'));
+const FB = {platform: 'facebook', handle: '@theautomationguy.fb', via: 'forge-queue', page_id: '1429203763599559'};
+const C1_HOOK = 'http://localhost:5678/webhook/agent-studio-youtube-c1-automation';
 const setChannel = (patch: object) => {
   fs.mkdirSync(path.join(p.channels, 'c1-automation'), {recursive: true});
-  fs.writeFileSync(path.join(p.channels, 'c1-automation', 'channel.json'), JSON.stringify({...c1, live: true, ...patch}));
+  fs.writeFileSync(path.join(p.channels, 'c1-automation', 'channel.json'), JSON.stringify({...c1, live: true, publishers: c1.publishers.map((x: {platform: string}) => (x.platform === 'facebook' ? FB : x)), ...patch}));
 };
+const withYoutube = (yt: object) => ({publishers: [...c1.publishers.filter((x: {platform: string}) => x.platform === 'instagram'), {platform: 'youtube', handle: '@theautomationguynavin', via: 'n8n', ...yt}, FB]});
 setChannel({});
-const board = JSON.parse(fs.readFileSync(path.join(ROOT, 'engine/content/storyboards/host-supplier-bills.json'), 'utf8'));
+fs.cpSync(path.join(ROOT, 'channels/c2-reach'), path.join(p.channels, 'c2-reach'), {recursive: true});
+const board = JSON.parse(fs.readFileSync(path.join(ROOT, 'engine/test/boards/host-supplier-bills.json'), 'utf8'));
 fs.mkdirSync(p.content[0], {recursive: true});
 fs.mkdirSync(p.state, {recursive: true});
+const DATE = '2026-10-01'; // the fixture recipe's slot date
 
 const T = '2026-10-01T10:00:00.000Z';
-const ok = {approved_by: 'navin', approved_at: T, targets: ['instagram', 'youtube'], updated_at: T};
-const video = (id: string, {qa = true, mp4 = true} = {}) => {
-  fs.writeFileSync(path.join(p.content[0], `${id}.json`), JSON.stringify({...board, id}));
-  const d = path.join(p.out, id);
-  fs.mkdirSync(d, {recursive: true});
-  fs.writeFileSync(path.join(d, 'qa.json'), JSON.stringify({storyboard_id: id, pass: qa, checks: []}));
-  if (mp4) fs.writeFileSync(path.join(d, 'reel.mp4'), `video ${id}`);
-  fs.writeFileSync(path.join(d, 'render.json'), JSON.stringify({handle: '@theautomationguynavin'}));
+const sha = (id: string, platform: string) => createHash('sha256').update(`video ${id} ${platform}`).digest('hex'); // the fixture's video bytes
+const ok = {approved_by: 'navin', approved_at: T, updated_at: T};
+const video = (id: string, o: Partial<Parameters<typeof renderVariants>[2]> = {}) => {
+  const doc = {...board, id};
+  fs.writeFileSync(path.join(p.content[0], `${id}.json`), JSON.stringify(doc));
+  renderVariants(p, doc, {date: DATE, ...o});
 };
-const ledger = (rows: Partial<LedgerEntry>[]) => fs.appendFileSync(ledgerFile(p), rows.map((r) => JSON.stringify({channel: 'c1-automation', ...r}) + '\n').join(''));
+// an approval carries the hash of the exact video approved
+const ledger = (rows: Partial<LedgerEntry>[]) => fs.appendFileSync(ledgerFile(p), rows.map((r) => JSON.stringify({channel: 'c1-automation', platform: 'youtube', ...r, ...(r.approved_by && !r.sha256 ? {sha256: sha(r.storyboard_id!, r.platform ?? 'youtube')} : {})}) + '\n').join(''));
+const all = (id: string, extra: Partial<LedgerEntry> = {}) => (['youtube', 'instagram', 'facebook'] as const).map((platform) => ({storyboard_id: id, platform, status: 'approved', ...ok, ...extra}));
+const vf = (id: string, platform: Platform, kind: string) => file(p.out, {channel: 'c1-automation', date: DATE, id, platform}, kind);
+const editManifest = (id: string, platform: Platform, change: (m: any) => void) => {
+  const m = JSON.parse(fs.readFileSync(vf(id, platform, 'manifest.json'), 'utf8'));
+  change(m);
+  fs.writeFileSync(vf(id, platform, 'manifest.json'), JSON.stringify(m));
+};
 
-for (const id of ['v-approved', 'v-pending', 'v-rejected', 'v-qa-failed', 'v-rendered', 'v-revoked', 'v-hand-edit', 'v-dispatched']) video(id);
-video('v-qa-now-fails', {qa: false});
+for (const id of ['v-approved', 'v-pending', 'v-rejected', 'v-revoked', 'v-hand-edit', 'v-dispatched', 'v-mismatch', 'v-no-manifest', 'v-bad-manifest', 'v-wrong-dest', 'v-wrong-page', 'v-stale', 'v-other-channel', 'v-qa-other-file']) video(id);
+video('v-qa-now-fails', {qa: {instagram: false}});
 video('v-no-video', {mp4: false});
+editManifest('v-mismatch', 'instagram', (m) => (m.channel = 'c2-reach'));
+fs.rmSync(vf('v-no-manifest', 'facebook', 'manifest.json'));
+editManifest('v-bad-manifest', 'facebook', (m) => delete m.destination);
+editManifest('v-wrong-dest', 'instagram', (m) => (m.destination.handle = '@someone.else'));
+editManifest('v-wrong-page', 'facebook', (m) => (m.destination.page_id = '999'));
+const qaOther = vf('v-qa-other-file', 'youtube', 'qa.json');
+fs.writeFileSync(qaOther, JSON.stringify({...JSON.parse(fs.readFileSync(qaOther, 'utf8')), video_sha256: 'f'.repeat(64)})); // QA passed another file
+fs.writeFileSync(vf('v-stale', 'youtube', 'mp4'), 'a render made after the approval');
 ledger([
-  {storyboard_id: 'v-approved', status: 'approved', ...ok},
+  ...all('v-approved'),
   {storyboard_id: 'v-pending', status: 'pending-approval', updated_at: T},
   {storyboard_id: 'v-rejected', status: 'rejected', updated_at: T},
-  {storyboard_id: 'v-qa-failed', status: 'qa-failed', updated_at: T},
-  {storyboard_id: 'v-rendered', status: 'rendered', updated_at: T},
   {storyboard_id: 'v-revoked', status: 'approved', ...ok},
   {storyboard_id: 'v-revoked', status: 'rejected', updated_at: T}, // latest line wins
-  {storyboard_id: 'v-hand-edit', status: 'approved', updated_at: T}, // typed into the file: no approver, no time
-  {storyboard_id: 'v-qa-now-fails', status: 'approved', ...ok},
+  {storyboard_id: 'v-hand-edit', status: 'approved', updated_at: T}, // typed into the file: no approver, no time, no video hash
+  {storyboard_id: 'v-qa-now-fails', platform: 'instagram', status: 'approved', ...ok}, // held alone: its YouTube line still goes
+  {storyboard_id: 'v-qa-now-fails', platform: 'youtube', status: 'approved', ...ok},
   {storyboard_id: 'v-no-video', status: 'approved', ...ok},
   {storyboard_id: 'v-dispatched', status: 'approved', ...ok},
   {storyboard_id: 'v-dispatched', status: 'dispatched', ...ok},
+  {storyboard_id: 'v-mismatch', platform: 'instagram', status: 'approved', ...ok},
+  {storyboard_id: 'v-no-manifest', platform: 'facebook', status: 'approved', ...ok},
+  {storyboard_id: 'v-bad-manifest', platform: 'facebook', status: 'approved', ...ok},
+  {storyboard_id: 'v-wrong-dest', platform: 'instagram', status: 'approved', ...ok},
+  {storyboard_id: 'v-wrong-page', platform: 'facebook', status: 'approved', ...ok},
+  {storyboard_id: 'v-stale', status: 'approved', ...ok},
+  {storyboard_id: 'v-other-channel', channel: 'c2-reach', status: 'approved', ...ok}, // C1's video on C2's ledger line
+  {storyboard_id: 'v-qa-other-file', status: 'approved', ...ok},
+  {storyboard_id: 'v-approved', platform: 'tiktok' as never, status: 'approved', ...ok}, // an unknown pair
 ]);
 
 const NOW = Date.parse(T); // 15:30 IST, before the 19:00 slot
 const pl = plan(p, NOW);
-assert.deepEqual(pl.youtube.map((j) => j.storyboard_id), ['v-approved']);
-assert.deepEqual(pl.instagram.map((j) => j.storyboard_id), ['v-approved']);
-assert.deepEqual(pl.blocked.map((b) => b.split(':')[0]).sort(), ['v-hand-edit', 'v-no-video', 'v-qa-now-fails']);
-assert.match(pl.blocked.find((b) => b.startsWith('v-hand-edit'))!, /missing "approved_by"/);
-assert.deepEqual(pl.skipped.sort(), ['v-dispatched: dispatched', 'v-pending: pending-approval', 'v-qa-failed: qa-failed', 'v-rejected: rejected', 'v-rendered: rendered', 'v-revoked: rejected']);
-const job = pl.youtube[0];
-assert.deepEqual([job.scheduled_for, job.tags], ['2026-10-01T19:00:00+05:30', ['automation', 'n8n', 'smallbusinessindia', 'accountspayable']]);
-assert.deepEqual(pl.instagram[0].accounts, [{platform: 'instagram', handle: '@theautomationguynavin'}]);
+assert.deepEqual(pl.youtube.map((j) => j.storyboard_id).sort(), ['v-approved', 'v-qa-now-fails']);
+assert.deepEqual(pl.queue.map((q) => `${q.storyboard_id} ${q.platform}`), ['v-approved instagram', 'v-approved facebook']);
+const blocked = Object.fromEntries(pl.blocked.map((b) => [b.slice(0, b.indexOf(':')), b.slice(b.indexOf(':') + 2)]));
+assert.deepEqual(Object.keys(blocked).sort(), ['v-approved tiktok', 'v-bad-manifest facebook', 'v-hand-edit youtube', 'v-mismatch instagram', 'v-no-manifest facebook', 'v-no-video youtube', 'v-other-channel youtube', 'v-qa-now-fails instagram', 'v-qa-other-file youtube', 'v-stale youtube', 'v-wrong-dest instagram', 'v-wrong-page facebook']);
+assert.match(blocked['v-hand-edit youtube'], /missing "approved_by"/);
+assert.match(blocked['v-approved tiktok'], /ledger entry invalid/);
+assert.match(blocked['v-mismatch instagram'], /the manifest says c2-reach instagram v-mismatch, the ledger says c1-automation instagram v-mismatch: refused/);
+assert.match(blocked['v-no-manifest facebook'], /no manifest for the facebook variant/);
+assert.match(blocked['v-bad-manifest facebook'], /manifest is malformed .*missing "destination"/);
+assert.match(blocked['v-wrong-dest instagram'], /rendered for forge-queue @someone.else, channel.json now says forge-queue @theautomationguynavin: render it again/);
+assert.match(blocked['v-wrong-page facebook'], /page 999, channel.json now says forge-queue @theautomationguy.fb page 1429203763599559/);
+assert.match(blocked['v-stale youtube'], /the video changed after it was approved/);
+assert.match(blocked['v-other-channel youtube'], /belongs to c1-automation, the ledger says c2-reach: refused/);
+assert.match(blocked['v-qa-now-fails instagram'], /QA no longer passes/);
+assert.match(blocked['v-qa-other-file youtube'], /QA checked another file than this video/);
+assert.match(blocked['v-no-video youtube'], /video file missing/);
+assert.deepEqual(pl.skipped.sort(), ['v-dispatched youtube: dispatched', 'v-pending youtube: pending-approval', 'v-rejected youtube: rejected', 'v-revoked youtube: rejected']);
+const job = pl.youtube.find((j) => j.storyboard_id === 'v-approved')!;
+assert.deepEqual([job.channel, job.platform, job.scheduled_for, job.tags, job.webhook], ['c1-automation', 'youtube', '2026-10-01T19:00:00+05:30', ['automation', 'n8n', 'smallbusinessindia', 'accountspayable'], C1_HOOK]);
+assert.match(job.description, /DM AUDIT to @theautomationguynavin on Instagram/, 'the YouTube description is the YouTube variant\'s own caption');
+assert.match(job.description, /Voiceover: AI-generated voice\./);
+assert.deepEqual([pl.queue[0].folder, pl.queue[0].handle, pl.queue[1].page_id], [path.join(p.queue, 'c1-automation', 'instagram'), '@theautomationguynavin', '1429203763599559']);
 
-// not live yet, or the video shows another account: blocked, nothing sent
+// not live, a pending platform, a video that shows another account, no webhook of its own, the wrong route: blocked, nothing sent
+const why = (key: string) => plan(p, NOW).blocked.find((b) => b.startsWith(key)) ?? '';
 setChannel({live: false});
-assert.match(plan(p, NOW).blocked.find((b) => b.startsWith('v-approved'))!, /not live/);
+assert.match(why('v-approved youtube'), /not live/);
+setChannel({publishers: c1.publishers});
+assert.match(why('v-approved facebook'), /still pending \(pending_retry/);
+setChannel(withYoutube({}));
+assert.match(why('v-approved youtube'), /no YouTube upload webhook of its own \(\/webhook\/agent-studio-youtube-c1-automation/, 'no shared default: a channel without its own webhook sends nothing');
+setChannel(withYoutube({webhook: 'http://localhost:5678/webhook/agent-studio-youtube-c2-reach'}));
+assert.match(why('v-approved youtube'), /no YouTube upload webhook of its own/, 'C2\'s workflow can never receive C1\'s video');
+setChannel({publishers: c1.publishers.map((x: {platform: string}) => (x.platform === 'instagram' ? {...x, via: 'n8n'} : x.platform === 'facebook' ? FB : x))});
+assert.match(why('v-approved instagram'), /sends instagram via n8n; instagram goes via forge-queue: refused/);
+setChannel({publishers: c1.publishers.map((x: {platform: string}) => (x.platform === 'facebook' ? {...FB, page_id: undefined} : x))});
+assert.match(why('v-approved facebook'), /facebook has no page_id: refused/);
 setChannel({});
-fs.writeFileSync(path.join(p.out, 'v-approved', 'render.json'), JSON.stringify({handle: '@preview.only'}));
-assert.match(plan(p, NOW).blocked.find((b) => b.startsWith('v-approved'))!, /shows @preview.only but the channel is @theautomationguynavin/);
-fs.writeFileSync(path.join(p.out, 'v-approved', 'render.json'), JSON.stringify({handle: '@theautomationguynavin'}));
+const rj = vf('v-approved', 'youtube', 'render.json');
+const rjText = fs.readFileSync(rj, 'utf8');
+fs.writeFileSync(rj, JSON.stringify({handle: '@preview.only'}));
+assert.match(why('v-approved youtube'), /shows @preview.only but the youtube account is @theautomationguynavin/);
+fs.writeFileSync(rj, rjText);
+fs.rmSync(path.join(p.channels, 'c2-reach'), {recursive: true});
+assert.match(why('v-other-channel youtube'), /unknown channel c2-reach/);
+fs.cpSync(path.join(ROOT, 'channels/c2-reach'), path.join(p.channels, 'c2-reach'), {recursive: true});
 
-// posting times come from data when Learn has written them; a slot already past goes out 15 minutes from now
+// posting times come from data, per platform; a slot already past goes out 15 minutes from now
 fs.mkdirSync(path.join(p.state, 'learn'), {recursive: true});
 fs.writeFileSync(path.join(p.state, 'learn', 'posting-times.json'), JSON.stringify({'c1-automation': {youtube: '18:30', instagram: '20:15'}}));
 const timed = plan(p, NOW);
-assert.deepEqual([timed.youtube[0].scheduled_for, timed.instagram[0].scheduled_for], ['2026-10-01T18:30:00+05:30', '2026-10-01T20:15:00+05:30']);
+assert.deepEqual([timed.youtube[0].scheduled_for, timed.queue[0].scheduled_for, timed.queue[1].scheduled_for], ['2026-10-01T18:30:00+05:30', '2026-10-01T20:15:00+05:30', '2026-10-01T19:00:00+05:30']);
 fs.rmSync(path.join(p.state, 'learn'), {recursive: true});
 assert.equal(slotTime('2026-10-01', '09:00', NOW), '2026-10-01T15:45:00+05:30');
 
-// n8n's pre-upload check on the Mac receiver: yes only for what the dispatcher would send
-assert.equal(handle('/dispatch-check?id=v-approved', 'x'.repeat(16), {paths: p, now: NOW}).status, 200);
-for (const id of ['v-pending', 'v-hand-edit', 'v-revoked', 'v-dispatched', 'nope']) assert.equal(handle(`/dispatch-check?id=${id}`, 'x'.repeat(16), {paths: p, now: NOW}).status, 403, id);
+// n8n's pre-upload check on the Mac receiver: yes only for the YouTube variant the dispatcher would send, asked by its own channel
+const check = (q: string, now = NOW) => handle(`/dispatch-check?${q}`, 'x'.repeat(16), {paths: p, now}).status;
+const ask = (id: string, channel = 'c1-automation', platform = 'youtube') => `id=${id}&channel=${channel}&platform=${platform}`;
+assert.equal(check(ask('v-approved')), 200);
+assert.equal(check('id=v-approved'), 403, 'channel and platform are required');
+assert.equal(check('id=v-approved&channel=c1-automation'), 403, 'no default platform');
+assert.equal(check(ask('v-approved', 'c2-reach')), 403, 'another channel\'s workflow (credential) cannot upload it');
+assert.equal(check(ask('v-approved', 'c1-automation', 'instagram')), 403, 'a wrong pair is refused');
+for (const id of ['v-pending', 'v-hand-edit', 'v-revoked', 'v-dispatched', 'v-stale', 'v-other-channel', 'nope']) assert.equal(check(ask(id)), 403, id);
 
 // dry run: no call, no file, no ledger line
 const before = fs.readFileSync(ledgerFile(p), 'utf8');
@@ -91,126 +159,146 @@ const noCall = () => {
 };
 assert.deepEqual(await dispatch(pl, {live: false, fetch: noCall, paths: p}), {sent: [], failed: []});
 assert.equal(fs.readFileSync(ledgerFile(p), 'utf8'), before);
-assert.ok(!fs.existsSync(path.join(p.state, 'queue')));
-await assert.rejects(dispatch(pl, {live: true, fetch: noCall, paths: p}), /YOUTUBE_WEBHOOK_URL/);
+assert.ok(!fs.existsSync(p.queue));
+await assert.rejects(dispatch({...pl, youtube: [{...job, webhook: 'http://localhost:5678/webhook/agent-studio-youtube-c2-reach'}]}, {live: true, fetch: noCall, paths: p}), /no webhook of its own channel: nothing sent/);
+assert.equal(fs.readFileSync(ledgerFile(p), 'utf8'), before);
 
-const yt = 'http://n8n.test/yt';
-const status = (id: string) => currentStatus(p).get(id)!.status;
+const status = (id: string, platform = 'youtube') => currentStatus(p).get(lkey(id, platform))!.status;
 const reply = (code: number, body: string) => async () => ({ok: code < 300, status: code, text: async () => body});
+const ytOnly = (x = plan(p, NOW)) => ({...x, youtube: x.youtube.filter((j) => j.storyboard_id === 'v-approved'), queue: [], resume: x.resume.filter((k) => k.startsWith('v-approved|'))});
 
 // n8n certainly did not upload (it said so, or the connection never opened): the claim is released, the next run retries
-const refused = await dispatch(pl, {live: true, youtubeUrl: yt, fetch: reply(403, '{"uploaded":false,"reason":"not approved for dispatch"}'), paths: p});
+const refused = await dispatch(ytOnly(), {live: true, fetch: reply(403, '{"uploaded":false,"reason":"not approved for dispatch"}'), paths: p});
 assert.match(refused.failed[0], /HTTP 403: not approved for dispatch \(will retry\)/);
-assert.deepEqual([status('v-approved'), fs.existsSync(path.join(p.state, 'queue'))], ['approved', false]);
-const noN8n = await dispatch(pl, {live: true, youtubeUrl: yt, fetch: async () => { throw Object.assign(new TypeError('fetch failed'), {cause: {code: 'ECONNREFUSED'}}); }, paths: p});
+assert.equal(status('v-approved'), 'approved');
+const noN8n = await dispatch(ytOnly(), {live: true, fetch: async () => { throw Object.assign(new TypeError('fetch failed'), {cause: {code: 'ECONNREFUSED'}}); }, paths: p});
 assert.match(noN8n.failed[0], /not reachable \(ECONNREFUSED\) \(will retry\)/);
 assert.equal(status('v-approved'), 'approved');
-assert.deepEqual(plan(p, NOW).youtube.map((j) => j.storyboard_id), ['v-approved'], 'retried');
+assert.equal(currentStatus(p).get(lkey('v-approved', 'youtube'))!.sha256, sha('v-approved', 'youtube'), 'a released claim keeps the approved hash');
 
 // result unknown (5xx, timeout, garbled 200): stays "dispatching", never uploaded again by itself; Navin resolves it
 for (const fetch of [reply(502, ''), reply(200, 'garbage'), async () => { throw new Error('timeout'); }]) {
-  const r = await dispatch(plan(p, NOW), {live: true, youtubeUrl: yt, fetch, paths: p});
+  const r = await dispatch(ytOnly(), {live: true, fetch, paths: p});
   assert.match(r.failed[0], /--resolve v-approved/);
   assert.equal(status('v-approved'), 'dispatching');
-  const stuck = plan(p, NOW);
-  assert.deepEqual([stuck.youtube.length, stuck.resume, stuck.stuck.length], [0, [], 1]);
-  assert.deepEqual(await dispatch(stuck, {live: true, youtubeUrl: yt, fetch: noCall, paths: p}), {sent: [], failed: []}, 'a stuck video is never sent again');
-  assert.ok(!fs.existsSync(path.join(p.state, 'queue')));
+  const stuck = ytOnly();
+  assert.deepEqual([stuck.youtube.length, stuck.resume, plan(p, NOW).stuck.some((s) => s.startsWith('v-approved youtube'))], [0, [], true]);
+  assert.deepEqual(await dispatch(stuck, {live: true, fetch: noCall, paths: p}), {sent: [], failed: []}, 'a stuck video is never sent again');
   resolve('v-approved', 'none', p); // "not in YouTube Studio": back to approved
   assert.equal(status('v-approved'), 'approved');
 }
 assert.throws(() => resolve('v-approved', 'none', p), /not stuck/);
 
-// live: exactly the approved video is sent, queued and marked dispatched
-const calls: string[] = [];
-const up = await dispatch(pl, {live: true, youtubeUrl: 'http://n8n.test/yt', fetch: async (_u, i) => (calls.push(JSON.parse(String(i.body.get('job'))).storyboard_id), assert.equal((i.body.get('video') as File).size, 'video v-approved'.length), {ok: true, status: 200, text: async () => JSON.stringify({uploaded: true, youtube_id: 'Q8sNfIm_PMU'})}), now: Date.parse(T), paths: p});
-assert.deepEqual(calls, ['v-approved']);
-assert.deepEqual(up.sent, ['youtube v-approved https://www.youtube.com/shorts/Q8sNfIm_PMU', 'forge-queue v-approved (instagram)']);
-const q = path.join(p.state, 'queue/instagram/2026-10-01-c1-automation-v-approved');
-assert.deepEqual(fs.readdirSync(q).sort(), ['caption.txt', 'post.json', 'reel.mp4']);
-assert.deepEqual(JSON.parse(fs.readFileSync(path.join(q, 'post.json'), 'utf8')), {storyboard_id: 'v-approved', channel: 'c1-automation', accounts: [{platform: 'instagram', handle: '@theautomationguynavin'}], scheduled_for: '2026-10-01T19:00:00+05:30'});
-const last = currentStatus(p).get('v-approved')!;
-assert.equal(last.status, 'dispatched');
+// the file changed between plan and send: nothing is sent, nothing is claimed
+const swapped = plan(p, NOW);
+const real = fs.readFileSync(vf('v-approved', 'youtube', 'mp4'));
+fs.writeFileSync(vf('v-approved', 'youtube', 'mp4'), 'swapped in after the plan');
+assert.match((await dispatch(ytOnly(swapped), {live: true, fetch: noCall, paths: p})).failed[0], /youtube v-approved: the video changed after it was approved; not sent/);
+assert.equal(status('v-approved'), 'approved');
+fs.writeFileSync(vf('v-approved', 'youtube', 'mp4'), real);
+
+// live: the approved video's three variants go to their three destinations, each marked dispatched on its own line
+const calls: {url: string; job: Record<string, unknown>; video: number; thumb: boolean}[] = [];
+const live = plan(p, NOW);
+const up = await dispatch({...live, youtube: live.youtube.filter((j) => j.storyboard_id === 'v-approved')}, {live: true, fetch: async (u, i) => (calls.push({url: u, job: JSON.parse(String(i.body.get('job'))), video: (i.body.get('video') as File).size, thumb: i.body.has('thumbnail')}), {ok: true, status: 200, text: async () => JSON.stringify({uploaded: true, youtube_id: 'Q8sNfIm_PMU'})}), now: NOW, paths: p});
+assert.deepEqual(calls.map((c) => [c.url, c.job.storyboard_id, c.job.channel, c.job.platform, c.video, c.thumb]), [[C1_HOOK, 'v-approved', 'c1-automation', 'youtube', 'video v-approved youtube'.length, true]], 'C1\'s own workflow, nothing else');
+assert.deepEqual(up.sent, ['youtube v-approved https://www.youtube.com/shorts/Q8sNfIm_PMU', 'forge-queue v-approved instagram -> queue/c1-automation/instagram', 'forge-queue v-approved facebook -> queue/c1-automation/facebook']);
+const qv = (platform: 'instagram' | 'facebook') => ({channel: 'c1-automation', date: DATE, id: 'v-approved', platform});
+const pre = (pf: string) => `c1-automation-${pf}-2026-10-01-v-approved`;
+assert.deepEqual(fs.readdirSync(path.join(p.queue, 'c1-automation', 'instagram')).sort(), [`${pre('instagram')}.caption.txt`, `${pre('instagram')}.manifest.json`, `${pre('instagram')}.mp4`], 'every file carries channel, platform, date and id; no temp files left');
+const fbManifest = JSON.parse(fs.readFileSync(queueFile(p.queue, qv('facebook'), 'manifest.json'), 'utf8'));
+assert.deepEqual(fbManifest, {channel: 'c1-automation', platform: 'facebook', video_id: 'v-approved', date: DATE, handle: '@theautomationguy.fb', page_id: '1429203763599559', scheduled_for: '2026-10-01T19:00:00+05:30', video_sha256: sha('v-approved', 'facebook'), files: {video: `${pre('facebook')}.mp4`, caption: `${pre('facebook')}.caption.txt`}});
+assert.deepEqual(validate(loadSchema('queue'), fbManifest), []);
+assert.equal(fs.readFileSync(queueFile(p.queue, qv('instagram'), 'mp4'), 'utf8'), 'video v-approved instagram', 'Instagram gets its own render, not YouTube\'s');
+assert.match(fs.readFileSync(queueFile(p.queue, qv('instagram'), 'caption.txt'), 'utf8'), /DM AUDIT and I will look/);
+for (const pf of ['youtube', 'instagram', 'facebook']) assert.equal(status('v-approved', pf), 'dispatched');
+const last = currentStatus(p).get(lkey('v-approved', 'youtube'))!;
 assert.deepEqual([last.post_urls, last.scheduled_for], [['https://www.youtube.com/shorts/Q8sNfIm_PMU'], '2026-10-01T19:00:00+05:30']);
 assert.deepEqual(validate(loadSchema('ledger'), last), []);
-assert.deepEqual(fs.readdirSync(path.join(p.state, 'queue/instagram')), ['2026-10-01-c1-automation-v-approved'], 'nothing else was queued');
-assert.equal(handle('/dispatch-check?id=v-approved', 'x'.repeat(16), {paths: p, now: NOW}).status, 403, 'dispatched videos cannot be uploaded again');
+assert.equal(check(ask('v-approved')), 403, 'dispatched videos cannot be uploaded again');
 
-// next run: nothing left to send
+// next run: nothing of it left to send
 const again = plan(p, NOW);
-assert.deepEqual([again.youtube.length, again.instagram.length], [0, 0]);
+assert.deepEqual([again.youtube.some((j) => j.storyboard_id === 'v-approved'), again.queue.length], [false, 0]);
+
+// a second approval of something already in the queue (a hand-made ledger line, a restored ledger): never queued twice
+ledger([{storyboard_id: 'v-approved', platform: 'instagram', status: 'approved', ...ok}]);
+assert.match(why('v-approved instagram'), /already in queue\/c1-automation\/instagram\/ \(c1-automation-instagram-2026-10-01-v-approved\.manifest\.json\): not queued twice/);
+ledger([{storyboard_id: 'v-approved', platform: 'instagram', status: 'dispatched', ...ok}]);
 
 // hold: YouTube gets no publish time and the ledger claims no schedule
 video('v-hold');
 ledger([{storyboard_id: 'v-hold', status: 'approved', ...ok}]);
 const sentJobs: {scheduled_for: string}[] = [];
-await dispatch(plan(p, NOW), {live: true, hold: true, youtubeUrl: 'http://n8n.test/yt', fetch: async (_u, i) => (sentJobs.push(JSON.parse(String(i.body.get('job')))), {ok: true, status: 200, text: async () => JSON.stringify({uploaded: true, youtube_id: 'abcdefghijk'})}), now: NOW, paths: p});
+const h = plan(p, NOW);
+await dispatch({...h, youtube: h.youtube.filter((j) => j.storyboard_id === 'v-hold')}, {live: true, hold: true, fetch: async (_u, i) => (sentJobs.push(JSON.parse(String(i.body.get('job')))), {ok: true, status: 200, text: async () => JSON.stringify({uploaded: true, youtube_id: 'abcdefghijk'})}), now: NOW, paths: p});
 assert.equal(sentJobs[0].scheduled_for, '');
-const held = currentStatus(p).get('v-hold')!;
+const held = currentStatus(p).get(lkey('v-hold', 'youtube'))!;
 assert.deepEqual([held.status, held.scheduled_for, held.post_urls], ['dispatched', undefined, ['https://www.youtube.com/shorts/abcdefghijk']]);
 
-// YouTube uploaded, then the local queue write failed: the next run finishes it WITHOUT uploading again
+// the Instagram queue write failed after the claim: the next run finishes it, and nothing goes to YouTube for it
 video('v-crash');
-ledger([{storyboard_id: 'v-crash', status: 'approved', ...ok}]);
-const blocker = path.join(p.state, 'queue/instagram/2026-10-01-c1-automation-v-crash');
-fs.mkdirSync(path.dirname(blocker), {recursive: true});
-fs.writeFileSync(blocker, 'not a folder'); // makes the queue write fail
-let uploads = 0;
-const once = async () => (uploads++, {ok: true, status: 200, text: async () => JSON.stringify({uploaded: true, youtube_id: 'crashcrash1'})});
-const half = await dispatch(plan(p, NOW), {live: true, youtubeUrl: yt, fetch: once, now: NOW, paths: p});
-assert.match(half.failed[0], /forge-queue v-crash: .*the next run finishes it without uploading again/);
-assert.deepEqual([status('v-crash'), currentStatus(p).get('v-crash')!.post_urls], ['dispatching', ['https://www.youtube.com/shorts/crashcrash1']]);
-fs.rmSync(blocker);
+ledger([{storyboard_id: 'v-crash', platform: 'instagram', status: 'approved', ...ok}]);
+const blocker = queueFile(p.queue, {channel: 'c1-automation', date: DATE, id: 'v-crash', platform: 'instagram'}, 'mp4');
+fs.mkdirSync(blocker, {recursive: true}); // a folder where the video must go makes the write fail
+const half = await dispatch({...plan(p, NOW), youtube: []}, {live: true, fetch: noCall, now: NOW, paths: p});
+assert.match(half.failed[0], /forge-queue v-crash instagram: .*the next run finishes it/);
+assert.equal(status('v-crash', 'instagram'), 'dispatching');
+fs.rmSync(blocker, {recursive: true});
 const next = plan(p, NOW);
-assert.deepEqual([next.resume, next.youtube.length], [['v-crash'], 0]);
-const done = await dispatch(next, {live: true, youtubeUrl: yt, fetch: noCall, now: NOW, paths: p});
-assert.deepEqual([done.failed, uploads, status('v-crash')], [[], 1, 'dispatched']);
-assert.deepEqual(fs.readdirSync(blocker).sort(), ['caption.txt', 'post.json', 'reel.mp4'], 'queued once, no temp files left');
+assert.deepEqual(next.resume, ['v-crash|instagram']);
+const done = await dispatch({...next, youtube: []}, {live: true, fetch: noCall, now: NOW, paths: p});
+assert.deepEqual([done.failed, status('v-crash', 'instagram'), fs.readFileSync(blocker, 'utf8')], [[], 'dispatched', 'video v-crash instagram']);
 
-// the process died after the claim, before YouTube answered: unknown, so stuck; Navin finds it in YouTube Studio
+// the process died after the YouTube claim, before YouTube answered: unknown, so stuck; Navin finds it in YouTube Studio
 video('v-died');
 ledger([{storyboard_id: 'v-died', status: 'dispatching', ...ok}]);
-assert.match(plan(p, NOW).stuck.join(), /v-died: upload state unknown/);
+assert.match(plan(p, NOW).stuck.join(), /v-died youtube: upload state unknown/);
 resolve('v-died', 'diedvideo01', p);
-const fin = await dispatch(plan(p, NOW), {live: true, youtubeUrl: yt, fetch: noCall, now: NOW, paths: p});
-assert.deepEqual([fin.failed, status('v-died'), currentStatus(p).get('v-died')!.post_urls], [[], 'dispatched', ['https://www.youtube.com/shorts/diedvideo01']]);
+const fin = plan(p, NOW);
+const finR = await dispatch({...fin, youtube: [], queue: [], resume: fin.resume.filter((k) => k.startsWith('v-died'))}, {live: true, fetch: noCall, now: NOW, paths: p});
+assert.deepEqual([finR.failed, status('v-died'), currentStatus(p).get(lkey('v-died', 'youtube'))!.post_urls], [[], 'dispatched', ['https://www.youtube.com/shorts/diedvideo01']]);
 
-// n8n's pre-upload check accepts a fresh claim (the upload in flight), not a stale one
-ledger([{storyboard_id: 'v-flight', status: 'dispatching', ...ok, updated_at: new Date(NOW).toISOString()}]);
+// n8n's pre-upload check accepts a fresh claim (the upload in flight) from its own channel, not a stale one
 video('v-flight');
-assert.equal(handle('/dispatch-check?id=v-flight', 'x'.repeat(16), {paths: p, now: NOW + 60_000}).status, 200);
-assert.equal(handle('/dispatch-check?id=v-flight', 'x'.repeat(16), {paths: p, now: NOW + 3600_000}).status, 403);
+ledger([{storyboard_id: 'v-flight', status: 'dispatching', ...ok, updated_at: new Date(NOW).toISOString()}]);
+assert.equal(check(ask('v-flight'), NOW + 60_000), 200);
+assert.equal(check(ask('v-flight', 'c2-reach'), NOW + 60_000), 403);
+assert.equal(check(ask('v-flight'), NOW + 3600_000), 403);
 
 // a torn last ledger line (crash mid-write) is ignored, and the next write starts on a fresh line
 fs.appendFileSync(ledgerFile(p), '{"storyboard_id": "v-to');
-assert.equal(status('v-crash'), 'dispatched');
+assert.equal(status('v-crash', 'instagram'), 'dispatched');
 resolve('v-flight', 'none', p);
 assert.equal(status('v-flight'), 'approved');
 
-// Forge posted it: posted.json in the queue folder marks it published once, keeping the YouTube URL
-fs.writeFileSync(path.join(q, 'posted.json'), JSON.stringify({posted_at: '2026-10-01T13:30:00Z', urls: {instagram: 'https://www.instagram.com/reel/ABC123/'}}));
-assert.deepEqual(markPublished(p, NOW), {published: ['v-approved'], problems: []});
-assert.deepEqual(currentStatus(p).get('v-approved')!.post_urls, ['https://www.youtube.com/shorts/Q8sNfIm_PMU', 'https://www.instagram.com/reel/ABC123/']);
+// Forge posted it: <prefix>.posted.json next to the manifest marks that variant published once
+const posted = queueFile(p.queue, qv('instagram'), 'posted.json');
+fs.writeFileSync(posted, JSON.stringify({posted_at: '2026-10-01T13:30:00Z', url: 'https://www.instagram.com/reel/ABC123/'}));
+assert.deepEqual(markPublished(p, NOW), {published: ['v-approved instagram'], problems: []});
+assert.deepEqual([status('v-approved', 'instagram'), status('v-approved', 'facebook')], ['published', 'dispatched'], 'each platform on its own');
 assert.deepEqual(markPublished(p, NOW).published, [], 'only once');
-assert.deepEqual(validate(loadSchema('ledger'), currentStatus(p).get('v-approved')), []);
-fs.writeFileSync(path.join(q, 'posted.json'), JSON.stringify({urls: {instagram: 'https://evil.example/x'}}));
-assert.match(markPublished(p, NOW).problems[0], /no instagram.com or facebook.com URL/);
-fs.rmSync(path.join(q, 'posted.json'));
+assert.deepEqual(validate(loadSchema('ledger'), currentStatus(p).get(lkey('v-approved', 'instagram'))), []);
+const fbPosted = queueFile(p.queue, qv('facebook'), 'posted.json');
+fs.writeFileSync(fbPosted, JSON.stringify({url: 'https://www.instagram.com/reel/XYZ/'}));
+assert.match(markPublished(p, NOW).problems[0], /no facebook URL in url/, 'a URL must be on the variant\'s own platform');
+fs.copyFileSync(queueFile(p.queue, qv('instagram'), 'manifest.json'), queueFile(p.queue, qv('facebook'), 'manifest.json'));
+fs.writeFileSync(fbPosted, JSON.stringify({url: 'https://www.facebook.com/reel/1/'}));
+assert.match(markPublished(p, NOW).problems[0], /manifest says c1-automation instagram, the folder is c1-automation\/facebook/);
+fs.writeFileSync(queueFile(p.queue, qv('facebook'), 'manifest.json'), JSON.stringify({channel: 'c1-automation', platform: 'facebook'}));
+assert.match(markPublished(p, NOW).problems[0], /its manifest is malformed/);
+assert.equal(status('v-approved', 'facebook'), 'dispatched', 'a mismatch is never trusted');
 
-// a channel with its own YouTube workflow: the job goes to that webhook
-setChannel({publishers: c1.publishers.map((x: {platform: string}) => (x.platform === 'youtube' ? {...x, webhook: 'http://localhost:5678/webhook/agent-studio-youtube-c1'} : x))});
-video('v-own-yt');
-ledger([{storyboard_id: 'v-own-yt', status: 'approved', ...ok}]);
-const urls: string[] = [];
-const own = plan(p, NOW);
-await dispatch({...own, youtube: own.youtube.filter((j) => j.storyboard_id === 'v-own-yt'), instagram: [], resume: []}, {live: true, fetch: async (u) => (urls.push(u), {ok: true, status: 200, text: async () => JSON.stringify({uploaded: true, youtube_id: 'abcdefghij2'})}), now: NOW, paths: p});
-assert.deepEqual(urls, ['http://localhost:5678/webhook/agent-studio-youtube-c1'], 'no global URL needed');
+// taking back a video that is partly out: only the variants still waiting are rejected; what was sent is left as it is
+video('v-partly');
+ledger([{storyboard_id: 'v-partly', status: 'dispatched', ...ok}, {storyboard_id: 'v-partly', platform: 'instagram', status: 'approved', ...ok}]);
+assert.deepEqual(reject(['v-partly'], p), {rejected: ['v-partly instagram'], kept: ['v-partly youtube is dispatched']});
+assert.throws(() => reject(['v-partly'], p), /only approved videos can be rejected: v-partly youtube is dispatched, v-partly instagram is rejected/);
 
-// Facebook rides in the same Forge queue folder when the channel has a Facebook account and the approval targets it
-setChannel({publishers: [...c1.publishers, {platform: 'facebook', handle: '@theautomationguy.fb', via: 'forge-queue'}]});
-video('v-fb');
-ledger([{storyboard_id: 'v-fb', status: 'approved', ...ok, targets: ['instagram', 'facebook', 'youtube']}]);
-assert.deepEqual(plan(p, NOW).instagram.find((q) => q.storyboard_id === 'v-fb')!.accounts, [{platform: 'instagram', handle: '@theautomationguynavin'}, {platform: 'facebook', handle: '@theautomationguy.fb'}]);
+// YouTube makes the scheduled upload public at its publish time: the first tick after it records the variant published, once
+assert.deepEqual(markPublished(p, NOW).published.filter((x) => x.endsWith('youtube')), [], 'not before 19:00 IST');
+assert.deepEqual(markPublished(p, Date.parse('2026-10-01T13:31:00Z')).published.filter((x) => x.endsWith('youtube')), ['v-approved youtube'], 'a held upload (no publish time) stays private');
+assert.deepEqual([status('v-approved'), status('v-hold'), markPublished(p, Date.parse('2026-10-01T14:00:00Z')).published.filter((x) => x.endsWith('youtube'))], ['published', 'dispatched', []]);
 
 fs.rmSync(tmp, {recursive: true});
-console.log('dispatch ok: only approved entries go out; refused uploads retry, unknown ones stick for Navin, a local failure after YouTube resumes without uploading again; torn ledger lines are safe');
+console.log('dispatch ok: each platform variant goes only to its own (channel, platform) destination; mismatched, unmanifested, misdirected, changed or already-queued variants and unknown pairs are refused; refused uploads retry, unknown ones stick for Navin; a crashed queue write resumes; torn ledger lines are safe');

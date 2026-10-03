@@ -28,7 +28,7 @@ if (board) {
   await shoot('Composer', script, starts.flatMap((s, i) => [s + 6, s + Math.round(fr[i] / 2)]), script.id);
 } else {
   for (const f of ['story-order-emails', 'story-invoice-chase', '2026-10-02-dispatch-lr-updates']) {
-    const script = JSON.parse(fs.readFileSync(`content/stories/${f}.json`, 'utf8'));
+    const script = JSON.parse(fs.readFileSync(`test/stories/${f}.json`, 'utf8'));
     const n = 8;
     const comp = await selectComposition({serveUrl, id: 'Story', inputProps: {script: theme ? {...script, theme} : script}});
     await shoot('Story', script, Array.from({length: n}, (_, i) => Math.round((i / (n - 1)) * (comp.durationInFrames - 1))), f);

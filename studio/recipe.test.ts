@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import {addDays, checkNovelty, type Fingerprint, isoWeek, structureDistance, topicSimilarity, weekStart} from './novelty.ts';
-import {generateWeek, type Recipe, recipeDate, toFingerprint} from './recipe.ts';
+import {channelThemes, generateWeek, reachable, type Recipe, recipeDate, toFingerprint} from './recipe.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 const c1 = JSON.parse(fs.readFileSync(path.join(ROOT, 'channels/c1-automation/channel.json'), 'utf8'));
@@ -37,7 +37,7 @@ for (const w of weeks)
     all.push(...rs);
   }
 // independent re-check: every recipe against the full history of what came before it
-for (const r of all) assert.deepEqual(checkNovelty(toFingerprint(r), history.filter((h) => h.id !== r.id), {themes: [c1, c2, c3].find((c) => c.id === r.channel).themes.length}), [], `${r.id} breaks a rule`);
+for (const r of all) assert.deepEqual(checkNovelty(toFingerprint(r), history.filter((h) => h.id !== r.id), {themes: channelThemes([c1, c2, c3].find((c) => c.id === r.channel)).length}), [], `${r.id} breaks a rule`);
 const c1all = all.filter((r) => r.channel === 'c1-automation');
 assert.ok(c1all.some((r) => r.primitives[0] === 'host-hook') && c1all.some((r) => r.primitives[0] !== 'host-hook'), 'C1 mixes host and composed videos');
 assert.ok(c1all.every((r) => r.theme === 'night'), 'C1 is night only');
@@ -77,5 +77,16 @@ assert.deepEqual(rules({...base, hash: 'abc'}, [{...h(0, {channel: 'c3-studio', 
 assert.deepEqual(rules(base, [h(1, {channel: 'c3-studio', opening: 'pile-drop', theme: 'paper'})]), [], 'other channels do not count for channel rules');
 assert.equal(recipeDate({week: '2026-W40', slot: 7}), '2026-10-04');
 
+// style presets: one setting switches the look (theme, transitions) and is recorded on every recipe; setting it back rolls back
+const v1 = generateWeek({...c1, style: 'c1-night-signal-v1'}, '2026-W45', []);
+assert.ok(v1.every((r) => r.theme === 'night-signal' && r.style === 'c1-night-signal-v1' && r.transitions.every((x) => ['cut', 'fold'].includes(x))), 'v1: its theme and transitions');
+assert.ok(v1.some((r) => r.transitions.includes('fold')), 'v1 uses its signature sweep');
+const v0 = generateWeek({...c1, style: 'c1-night-v0'}, '2026-W45', []);
+assert.ok(v0.every((r) => r.theme === 'night' && r.style === 'c1-night-v0' && !r.transitions.includes('fold')), 'rolled back to v0');
+assert.ok(all.filter((r) => r.channel === 'c3-studio').every((r) => !r.transitions.includes('fold') && !r.style), 'an unstyled channel never gets a signature');
+assert.ok(generateWeek({...c2, style: 'c2-archive-gold-v1'}, '2026-W45', []).every((r) => r.theme === 'archive-gold' && r.transitions.every((x) => ['cut', 'ink-wipe'].includes(x))));
+
 const hostShare = all.filter((r) => r.channel === 'c1-automation' && r.opening === 'host-hook').length / 56;
-console.log(`recipe ok: ${all.length} recipes over ${weeks.length} weeks, 0 rule breaks; C1 host share ${(hostShare * 100).toFixed(0)}%`);
+// every shot list can reach its channel's length floor (C1 40 s) with lines no longer than their shots
+assert.deepEqual(all.filter((r) => !reachable(r.channel, r.primitives)).map((r) => r.id), [], 'a recipe too short to reach the length floor');
+console.log(`recipe ok: ${all.length} recipes over ${weeks.length} weeks, 0 rule breaks, every shot list can reach its length floor; C1 host share ${(hostShare * 100).toFixed(0)}%`);

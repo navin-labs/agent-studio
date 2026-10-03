@@ -12,7 +12,7 @@ import {due, ingest, record} from './metrics.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'metrics-test-'));
-const p: Paths = {state: path.join(tmp, 'state'), content: [], out: path.join(tmp, 'out'), recipes: path.join(tmp, 'recipes'), channels: path.join(ROOT, 'channels')};
+const p: Paths = {state: path.join(tmp, 'state'), content: [], out: path.join(tmp, 'out'), recipes: path.join(tmp, 'recipes'), channels: path.join(ROOT, 'channels'), queue: path.join(tmp, 'queue')};
 const inbox = path.join(tmp, 'inbox');
 fs.mkdirSync(p.state, {recursive: true});
 fs.mkdirSync(inbox, {recursive: true});
@@ -20,10 +20,12 @@ fs.mkdirSync(inbox, {recursive: true});
 const T = '2026-10-05T19:00:00+05:30';
 const t = Date.parse(T);
 const H = 3600_000;
-const base = {channel: 'c1-automation', approved_by: 'navin', approved_at: T, targets: ['instagram', 'youtube'], updated_at: T};
+const base = {channel: 'c1-automation', approved_by: 'navin', approved_at: T, sha256: '0'.repeat(64), updated_at: T};
 fs.writeFileSync(ledgerFile(p), [
-  {storyboard_id: 'v1', status: 'dispatched', scheduled_for: T, post_urls: ['https://www.youtube.com/shorts/Q8sNfIm_PMU'], ...base},
-  {storyboard_id: 'v2', status: 'approved', ...base},
+  {storyboard_id: 'v1', platform: 'youtube', status: 'dispatched', scheduled_for: T, post_urls: ['https://www.youtube.com/shorts/Q8sNfIm_PMU'], ...base},
+  {storyboard_id: 'v1', platform: 'instagram', status: 'dispatched', scheduled_for: T, ...base}, // each platform variant has its own line
+  {storyboard_id: 'v2', platform: 'youtube', status: 'approved', ...base},
+  {storyboard_id: 'v2', platform: 'instagram', status: 'approved', ...base},
 ].map((e) => JSON.stringify(e) + '\n').join(''));
 
 const ig = (o: object = {}) => ({storyboard_id: 'v1', channel: 'c1-automation', platform: 'instagram', window: '24h', reach: 1000, sends: 4, dms: 2, profile_visits: 30, ...o});
@@ -46,7 +48,7 @@ assert.match(why('b-never-sent.error.txt'), /v2 was never dispatched/);
 assert.match(why('c-mixed.error.txt'), /row 2: .*platform/);
 assert.match(why('d-broken.error.txt'), /not valid JSON/);
 assert.match(why('e-wrong-channel.error.txt'), /belongs to c1-automation, not c2-reach/);
-assert.match(why('f-not-sent-there.error.txt'), /not sent to facebook/);
+assert.match(why('f-not-sent-there.error.txt'), /v1 was never dispatched to facebook/, 'the Facebook variant never went out');
 assert.deepEqual(fs.readdirSync(inbox).filter((f) => f.endsWith('.json')), [], 'the inbox is emptied');
 
 // YouTube readings come due at 24h and 7d after publishing, once each

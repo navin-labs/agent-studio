@@ -1,0 +1,64 @@
+[
+  {
+    "id": "style-test-c1",
+    "channel": "c1-automation",
+    "week": "2026-W41",
+    "slot": 1,
+    "theme": "night-signal",
+    "opening": "word-stack-slam",
+    "primitives": [
+      "word-stack-slam",
+      "pile-drop",
+      "ui-chat",
+      "before-after-split",
+      "flow-run",
+      "ui-sheet",
+      "counter-drop",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "fold",
+      "cut",
+      "fold",
+      "cut",
+      "fold",
+      "cut",
+      "fold"
+    ],
+    "rhythm": "test",
+    "hook_pattern": "question",
+    "fingerprint": "cc32aae94ed3",
+    "experiment": false,
+    "style": "c1-night-signal-v1"
+  },
+  {
+    "id": "style-test-c2",
+    "channel": "c2-reach",
+    "week": "2026-W41",
+    "slot": 1,
+    "theme": "archive-gold",
+    "opening": "word-stack-slam",
+    "primitives": [
+      "word-stack-slam",
+      "pile-drop",
+      "highlighter-swipe",
+      "zoom-dive",
+      "split-flap",
+      "end-card"
+    ],
+    "transitions": [
+      "cut",
+      "cut",
+      "cut",
+      "ink-wipe",
+      "cut",
+      "cut"
+    ],
+    "rhythm": "test",
+    "hook_pattern": "question",
+    "fingerprint": "62824c09a381",
+    "experiment": false,
+    "style": "c2-archive-gold-v1"
+  }
+]

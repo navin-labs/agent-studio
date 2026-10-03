@@ -1,0 +1,99 @@
+{
+  "id": "c1-night-v0",
+  "channel": "c1-automation",
+  "version": 0,
+  "about": "Night Signal before signatures: night theme, lime as the general accent, the slow camera drift, the format's own transitions.",
+  "theme": "night",
+  "transitions": [
+    "cut",
+    "whip-pan",
+    "ink-wipe",
+    "pixel-wipe"
+  ],
+  "opener": "none",
+  "overlay": "none",
+  "strike": false,
+  "platforms": {
+    "youtube": {
+      "size": {
+        "width": 1080,
+        "height": 1920
+      },
+      "thumbnail": true,
+      "end_card": {
+        "handle": "youtube"
+      },
+      "caption": "{body}\n\n{cta}\n\n{voice}\n\n{hashtags}",
+      "cta": {
+        "follow": {
+          "text": "*Subscribe*",
+          "sub": "One business automation, every day.",
+          "say": "Subscribe for one business automation every day.",
+          "line": "Subscribe for one business automation every day."
+        },
+        "dm-audit": {
+          "text": "DM *AUDIT*",
+          "sub": "on Instagram {ig}",
+          "say": "Send me the word audit on Instagram.",
+          "line": "DM AUDIT to {ig} on Instagram and I will look at your most repetitive process for free."
+        }
+      },
+      "filename": "{channel}-{platform}-{date}-{id}",
+      "destination": "n8n"
+    },
+    "instagram": {
+      "size": {
+        "width": 1080,
+        "height": 1920
+      },
+      "thumbnail": false,
+      "end_card": {
+        "handle": "instagram"
+      },
+      "caption": "{body}\n\n{cta}\n\n{voice}\n\n{hashtags}",
+      "cta": {
+        "follow": {
+          "text": "*Follow*",
+          "sub": "One business automation, every day.",
+          "say": "Follow for one business automation every day.",
+          "line": "Follow {ig} for one business automation every day."
+        },
+        "dm-audit": {
+          "text": "DM *AUDIT*",
+          "sub": "I'll look at your most repetitive process for free.",
+          "say": "Send me the word audit, and I will look at it for free.",
+          "line": "DM AUDIT and I will look at your most repetitive process for free."
+        }
+      },
+      "filename": "{channel}-{platform}-{date}-{id}",
+      "destination": "forge-queue"
+    },
+    "facebook": {
+      "size": {
+        "width": 1080,
+        "height": 1920
+      },
+      "thumbnail": false,
+      "end_card": {
+        "handle": "facebook"
+      },
+      "caption": "{body}\n\n{cta}\n\n{voice}\n\n{hashtags}",
+      "cta": {
+        "follow": {
+          "text": "*Follow*",
+          "sub": "One business automation, every day.",
+          "say": "Follow the page for one business automation every day.",
+          "line": "Follow the page for one business automation every day."
+        },
+        "dm-audit": {
+          "text": "DM *AUDIT*",
+          "sub": "on Instagram {ig}",
+          "say": "Send me the word audit on Instagram.",
+          "line": "DM AUDIT to {ig} on Instagram and I will look at your most repetitive process for free."
+        }
+      },
+      "filename": "{channel}-{platform}-{date}-{id}",
+      "destination": "forge-queue"
+    }
+  }
+}

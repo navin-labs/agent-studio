@@ -1,25 +1,25 @@
 # Learn: contract
 
-Why: close the loop so next week's recipes lean on what worked.
+Why: close the loop so every week's videos lean on what worked, with no coding and no prompting from Navin.
 
 | | |
 |---|---|
-| Runs | Code, weekly |
-| Input | Metrics (schemas/metrics.schema.json), ledger, fingerprints |
-| Output | `scoreboard.md` per channel, bench list, 70/30 split, missing-primitive hint |
+| Runs | Code, daily (the hourly tick, live channels) and before each Thursday plan |
+| Input | Metrics (schemas/metrics.schema.json), ledger, fingerprints (style version, CTA, length), render.json scene spans |
+| Output | `state/learn/<channel>/learn.json` (findings), `scoreboard.md`, `state/learn/posting-times.json`, `state/learn/changes.jsonl` (Tier 1 log), `state/learn/proposals.jsonl` (Tier 2) |
 | Tokens | 0 |
 
 ## Must
-- Compute the channel KPI by primitive, theme, hook pattern and topic.
-- Bench the bottom quartile for 2 weeks.
-- Suggest which primitive kind is missing (for the fortnightly build session).
+- Compute the channel KPI by primitive, style version, theme, hook pattern, caption kind, CTA, length, topic and posting hour; scene retention against the channel average at the same scene position (YouTube).
+- Tier 1, applied without a tap and logged with its evidence: rest the bottom quartile for 2 weeks, prefer primitives that hold viewers and keep the ones that lose them out of the opening shot, prefer winning hook patterns, Writer guidance (caption kind, CTA, length; only where the approved style and the channel rules leave a choice), posting times. Thumbnail arms rotate in studio/experiment.ts (EXPERIMENTS=on).
+- Tier 2, proposed on Telegram only when the evidence is there, applied only by Navin's tap (studio/improve.ts): switch the channel's style preset (a newer version once the current one has a baseline, or back to a version that scored at least 10% better over 6+ videos each); take a primitive out of the channel's grammar for good (retention at most 0.85 of the channel over 6+ videos, or rested twice).
+- A weekly note with the Thursday recipes: what changed by itself and why, what waits for a tap, what is tested next.
 
-Code: `studio/learn.ts` (`node studio/learn.ts <channel> <week>`), test `studio/learn.test.ts` in `npm run check`.
+Code: `studio/learn.ts` (`node studio/learn.ts <channel> <week>`), `studio/improve.ts`; tests `studio/learn.test.ts`, `studio/improve.test.ts` in `npm run check`.
 - KPI per channel from `channel.json` `kpi.numerator` / `kpi.denominator` (C1: (dms + profile_visits) / reach), pooled per group; the 7d window replaces 24h.
-- Input: `state/metrics.jsonl` (schema-checked, a bad line stops the run), `state/fingerprints.jsonl`, ledger `scheduled_for`.
-- Nothing is judged on fewer than 3 videos. Bench = bottom quartile (needs 4+ judged primitives), for 2 weeks, never a primitive that is a beat's only option. Proven = at or above the median.
-- Output: `state/learn/<channel>/learn.json` + `scoreboard.md`, `state/learn/posting-times.json` (best hour per platform, read by Dispatch). Recipe reads learn.json: proven picks for the 70%, experiments must try something unproven.
-- Known limit: a video's KPI counts for every primitive in it (no per-shot attribution).
+- Nothing is judged on fewer than 3 videos. A winner needs a runner-up with 3+ videos and a 10% lead. Bench never leaves a beat empty; a grammar removal never takes a beat's last option.
+- Known limit: a video's KPI counts for every primitive in it (no per-shot attribution); scene retention is the per-shot signal.
 
 ## Never
-- Change rules itself. The monthly Claude audit suggests; Navin decides.
+- Touch voices, colour tokens, the AI-voiceover disclosure, C2's every-claim-sourced rule, approval gates, `live` flags or dispatch switches. A Tier 2 tap writes exactly one thing: `channel.json` `style`, or the channel's grammar removals; anything else is refused.
+- Apply a Tier 2 change by itself.

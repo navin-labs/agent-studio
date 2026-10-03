@@ -4,13 +4,15 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {ledgerFile, type Paths} from './ledger.ts';
+import {renderVariants} from './fixtures/variants.ts';
+import {ledgerFile, type Paths, sha256} from './ledger.ts';
+import {file} from './variant.ts';
 import {OLD_WATCH_LABEL, tick, WATCH_LABEL, watcherProblem} from './run.ts';
 import type {Tg} from './telegram.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'run-test-'));
-const p: Paths = {state: path.join(tmp, 'state'), content: [path.join(tmp, 'content')], out: path.join(tmp, 'out'), recipes: path.join(tmp, 'recipes'), channels: path.join(tmp, 'channels')};
+const p: Paths = {state: path.join(tmp, 'state'), content: [path.join(tmp, 'content')], out: path.join(tmp, 'out'), recipes: path.join(tmp, 'recipes'), channels: path.join(tmp, 'channels'), queue: path.join(tmp, 'queue')};
 for (const c of ['c1-automation', 'c2-reach', 'c3-studio']) {
   const ch = JSON.parse(fs.readFileSync(path.join(ROOT, 'channels', c, 'channel.json'), 'utf8'));
   fs.mkdirSync(path.join(p.channels, c), {recursive: true});
@@ -20,11 +22,10 @@ for (const c of ['c1-automation', 'c2-reach', 'c3-studio']) {
 fs.mkdirSync(path.join(p.recipes, 'c1-automation'), {recursive: true});
 fs.copyFileSync(path.join(ROOT, 'studio/fixtures/recipes/host-supplier-bills.json'), path.join(p.recipes, 'c1-automation', '2026-W40.json'));
 fs.mkdirSync(p.content[0], {recursive: true});
-fs.copyFileSync(path.join(ROOT, 'engine/content/storyboards/host-supplier-bills.json'), path.join(p.content[0], 'host-supplier-bills.json'));
-const out = path.join(p.out, 'host-supplier-bills');
-fs.mkdirSync(out, {recursive: true});
-fs.writeFileSync(path.join(out, 'reel.mp4'), 'video');
-fs.writeFileSync(path.join(out, 'qa.json'), JSON.stringify({storyboard_id: 'host-supplier-bills', pass: true, checks: []}));
+fs.copyFileSync(path.join(ROOT, 'engine/test/boards/host-supplier-bills.json'), path.join(p.content[0], 'host-supplier-bills.json'));
+renderVariants(p, JSON.parse(fs.readFileSync(path.join(p.content[0], 'host-supplier-bills.json'), 'utf8')), {date: '2026-10-01', qa: {facebook: false}}); // Facebook: username pending
+const yv = (kind: string) => file(p.out, {channel: 'c1-automation', date: '2026-10-01', id: 'host-supplier-bills', platform: 'youtube'}, kind);
+const approvedYt = {storyboard_id: 'host-supplier-bills', platform: 'youtube', channel: 'c1-automation', approved_by: 'navin', approved_at: '2026-10-01T04:00:00Z', sha256: sha256(yv('mp4'))};
 fs.mkdirSync(p.state, {recursive: true});
 
 const calls: {method: string; body: any}[] = [];
@@ -40,7 +41,7 @@ assert.ok(fs.existsSync(path.join(p.recipes, 'c1-automation', '2026-W41.json')),
 assert.ok(!fs.existsSync(path.join(p.recipes, 'c2-reach')) && !fs.existsSync(path.join(p.recipes, 'c3-studio')), 'channels that are not live are not touched');
 assert.ok(fs.existsSync(path.join(p.state, 'learn', 'c1-automation', 'learn.json')), 'Learn ran before planning');
 assert.match(texts()[0], /c1-automation 2026-W41: 7 recipes are ready/);
-assert.equal(calls.filter((c) => c.method === 'sendVideo').length, 1);
+assert.equal(calls.filter((c) => c.method === 'sendVideo').length, 1, 'one message covers the video and its variants');
 
 // the next hour: nothing repeats (no replan, no resend)
 const before = fs.readFileSync(path.join(p.recipes, 'c1-automation', '2026-W41.json'), 'utf8');
@@ -57,18 +58,19 @@ assert.ok(!fs.existsSync(path.join(p.recipes, 'c1-automation', '2026-W41.json'))
 // problems are reported, and one bad step does not stop the rest: a bad metrics file plus an approved video showing a preview handle
 fs.mkdirSync(o.inbox, {recursive: true});
 fs.writeFileSync(path.join(o.inbox, 'bad.json'), '{');
-fs.writeFileSync(path.join(out, 'render.json'), JSON.stringify({handle: '@preview.only'}));
-fs.appendFileSync(ledgerFile(p), JSON.stringify({storyboard_id: 'host-supplier-bills', channel: 'c1-automation', status: 'approved', approved_by: 'navin', approved_at: '2026-10-01T04:00:00Z', targets: ['instagram', 'youtube'], updated_at: '2026-10-01T04:00:00Z'}) + '\n');
+const rj = fs.readFileSync(yv('render.json'), 'utf8');
+fs.writeFileSync(yv('render.json'), JSON.stringify({...JSON.parse(rj), handle: '@preview.only'}));
+fs.appendFileSync(ledgerFile(p), JSON.stringify({...approvedYt, status: 'approved', updated_at: '2026-10-01T04:00:00Z'}) + '\n');
 calls.length = 0;
 r = await tick({...o, now: THU + 7200_000});
 assert.equal(r.problems.length, 2, r.problems.join(' | '));
 assert.match(r.problems.join('\n'), /metrics rejected: bad.json/);
-assert.match(r.problems.join('\n'), /blocked host-supplier-bills: the video shows @preview.only/);
+assert.match(r.problems.join('\n'), /blocked host-supplier-bills youtube: the video shows @preview.only/);
 assert.match(texts().at(-1)!, /^agent-studio needs you:/);
 
 // an upload with an unknown result: the tick sends the two-button question once, and keeps it out of the problem text
-fs.writeFileSync(path.join(out, 'render.json'), JSON.stringify({handle: '@theautomationguynavin'}));
-fs.appendFileSync(ledgerFile(p), JSON.stringify({storyboard_id: 'host-supplier-bills', channel: 'c1-automation', status: 'dispatching', approved_by: 'navin', approved_at: '2026-10-01T04:00:00Z', targets: ['instagram', 'youtube'], updated_at: '2026-10-01T06:00:00Z'}) + '\n');
+fs.writeFileSync(yv('render.json'), rj);
+fs.appendFileSync(ledgerFile(p), JSON.stringify({...approvedYt, status: 'dispatching', updated_at: '2026-10-01T06:00:00Z'}) + '\n');
 calls.length = 0;
 r = await tick({...o, now: THU + 8000_000});
 assert.ok(!r.problems.some((x) => /host-supplier-bills/.test(x)), r.problems.join(' | '));

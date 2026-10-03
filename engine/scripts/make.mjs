@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 // Usage:
-//   npm run make -- content/stories/my-story.json         render a story reel (silent unless VOICE=on in .env)
-//   npm run make -- content/storyboards/my-board.json     render a storyboard through the Composer (primitives)
-//   npm run make -- content/stories/*.json                several at once
+//   npm run make -- content/storyboards/<id>.json         render a Writer board: one video per platform (silent unless VOICE=on in .env)
+//   npm run make -- test/style-c1.json                    render a test board (goes to test/out, never to production out/)
+//   npm run make -- test/stories/<file>.json              render a legacy story reel (test only)
 // Flags:
 //   --check      validate only, render nothing
 //   --vo-only    generate voiceover files only
 //   --force-vo   regenerate voiceover even if files exist
 //   --no-vo      ignore voiceover, render text-only timing
 //   --force      render even if the quality gate finds errors
+//   --out=<dir>  renders root (default: engine/out for the Writer's boards in content/storyboards, engine/test/out for anything else)
+//
+// Where renders go: a board from content/storyboards (the Writer's folder, what the watcher renders) is production: one render per
+// platform in engine/out/<channel>/<date>/<id>/<platform>/ (studio/variant.ts). Everything else (test boards, stress fixtures,
+// legacy stories) renders to engine/test/out/, which nothing ever dispatches from.
 
 import {spawnSync} from 'node:child_process';
 import crypto from 'node:crypto';
@@ -16,12 +21,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
 import {HOOK_PATTERNS, lengthIssue, probeFrames, validateStoryboard} from '../src/composer/storyboard.ts';
+import {ctaKind, file as variantFile, PLATFORMS, ROUTE, variantDir} from '../../studio/variant.ts';
+import {recipeDate} from '../../studio/recipe.ts';
 import {checkTextBoxes} from '../src/composer/textcheck.ts';
 import {THEMES} from '../src/themes.ts';
 
 const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
-const OUT = path.join(ROOT, 'out');
+const OUT_FLAG = process.argv.find((a) => a.startsWith('--out='))?.slice(6);
+const PRODUCTION = path.join(ROOT, 'content', 'storyboards');
+const outFor = (f) => (OUT_FLAG ? path.resolve(OUT_FLAG) : path.dirname(path.resolve(f)) === PRODUCTION ? path.join(ROOT, 'out') : path.join(ROOT, 'test', 'out'));
 const ICONS = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/ui/icon-names.json'), 'utf8'));
 
 // ---------- env ----------
@@ -37,7 +46,7 @@ const args = process.argv.slice(2);
 const flags = new Set(args.filter((a) => a.startsWith('--')));
 const files = args.filter((a) => !a.startsWith('--'));
 if (!files.length) {
-  console.log('Usage: npm run make -- content/stories/<file>.json [--check|--vo-only|--force-vo|--no-vo|--force]');
+  console.log('Usage: npm run make -- <board or story>.json [--check|--vo-only|--force-vo|--no-vo|--force|--out=<dir>]');
   process.exit(1);
 }
 
@@ -143,13 +152,33 @@ const validateBoard = (doc) => {
   // the closer shows the channel's own account: read it from channels/<id>/channel.json (no channel = test board, default handle)
   if (doc.channel) {
     const cf = path.join(ROOT, '..', 'channels', doc.channel, 'channel.json');
-    const ig = fs.existsSync(cf) ? JSON.parse(fs.readFileSync(cf, 'utf8')).publishers?.find((x) => x.platform === 'instagram')?.handle : undefined;
+    const ch = fs.existsSync(cf) ? JSON.parse(fs.readFileSync(cf, 'utf8')) : null;
+    doc.publishers = ch?.publishers ?? [];
+    const ig = doc.publishers.find((x) => x.platform === 'instagram')?.handle;
     const real = /^@[A-Za-z0-9._]{1,30}$/.test(ig ?? '');
     // PREVIEW_HANDLE: only while the channel has no handle yet (sample weeks); dispatch refuses a video whose handle is not the channel's
     if (real) doc.handle = ig;
-    if (fs.existsSync(path.join(ROOT, 'public', 'brand', doc.channel, 'mark.svg'))) doc.mark = `brand/${doc.channel}/mark.svg`; // the channel's own end-card logo
     else if (process.env.PREVIEW_HANDLE) (doc.handle = process.env.PREVIEW_HANDLE), warnings.push(`preview handle ${doc.handle}: channel ${doc.channel} has no Instagram handle yet; this render can never be dispatched`);
     else errors.push(`channel ${doc.channel} has no Instagram handle yet (channels/${doc.channel}/channel.json): the end card would show the wrong account`);
+    if (fs.existsSync(path.join(ROOT, 'public', 'brand', doc.channel, 'mark.svg'))) doc.mark = `brand/${doc.channel}/mark.svg`; // the channel's own end-card logo
+    // the style preset (styles/<id>.json, docs/MOTION.md): the board's own, else the channel's setting
+    const styleId = doc.style ?? ch?.style;
+    const sf = styleId && path.join(ROOT, '..', 'styles', `${styleId}.json`);
+    if (!styleId) errors.push(`channel ${doc.channel} has no style preset (channels/${doc.channel}/channel.json "style"), so it has no platform variants to render`);
+    else if (!fs.existsSync(sf)) errors.push(`style ${styleId} not found (styles/${styleId}.json)`);
+    else if (styleId) {
+      const preset = JSON.parse(fs.readFileSync(sf, 'utf8'));
+      if (preset.channel !== doc.channel) errors.push(`style ${styleId} belongs to ${preset.channel}, not ${doc.channel}`);
+      if ((doc.theme ?? 'paper') !== preset.theme) errors.push(`style ${styleId} uses theme ${preset.theme}; the board says ${doc.theme ?? 'paper'}`);
+      const bad = doc.scenes.map((s) => s.transition).filter((x) => x && !preset.transitions.includes(x));
+      if (bad.length) errors.push(`style ${styleId} allows transitions ${preset.transitions.join(', ')}; the board uses ${[...new Set(bad)].join(', ')}`);
+      if (preset.opener === 'year-flap' && !/^[0-9]{3,4}$/.test(doc.meta?.year ?? '')) errors.push(`style ${styleId} opens on the story's year: set meta.year (e.g. "1948")`);
+      doc.preset = preset;
+    }
+    // the video's date (its folder): the recipe's slot date, else today in IST (a board made outside the weekly plan)
+    const rf = (fs.existsSync(path.join(ROOT, '..', 'recipes')) ? fs.readdirSync(path.join(ROOT, '..', 'recipes'), {recursive: true, encoding: 'utf8'}) : []).filter((x) => x.endsWith('.json'));
+    const recipe = rf.flatMap((x) => JSON.parse(fs.readFileSync(path.join(ROOT, '..', 'recipes', x), 'utf8'))).find((r) => r.id === doc.meta?.recipe_id);
+    doc.date = recipe ? recipeDate(recipe) : new Date(Date.now() + 5.5 * 3600_000).toISOString().slice(0, 10);
   }
   return {errors, warnings};
 };
@@ -191,7 +220,7 @@ const checkPattern = (doc, err) => {
   if (!HOOK_PATTERNS.includes(doc.hookPattern)) return err(`"hookPattern" must be one of: ${HOOK_PATTERNS.join(', ')}`);
   const dir = path.join(ROOT, 'content/stories');
   // ponytail: "previous post" = newest other file by name (files are YYYY-MM-DD-slug), fine while names stay dated
-  const prev = fs.readdirSync(dir).filter((f) => /^\d{4}-\d{2}-\d{2}-.*\.json$/.test(f) && f < `${doc.id}.json`).sort().slice(-2);
+  const prev = (fs.existsSync(dir) ? fs.readdirSync(dir) : []).filter((f) => /^\d{4}-\d{2}-\d{2}-.*\.json$/.test(f) && f < `${doc.id}.json`).sort().slice(-2);
   const used = prev.map((f) => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')).hookPattern);
   if (used.length === 2 && used.every((u) => u === doc.hookPattern)) err(`hookPattern "${doc.hookPattern}" used in the last 2 posts, pick another`);
   const first = (doc.caption || '').split('\n')[0].toLowerCase();
@@ -225,17 +254,14 @@ const ttsText = (s, extra = {}) => {
   return t;
 };
 
-// Cloned voice (Chatterbox, local): set CLONE_VOICE=voice/navin.wav in .env. Wins over the API voices when present.
-const CLONE_VOICE = process.env.CLONE_VOICE && path.resolve(ROOT, process.env.CLONE_VOICE);
-const CLONE_PY = process.env.CLONE_PYTHON || path.join(ROOT, '.venv-voice/bin/python');
-const PROVIDER = (
-  process.env.TTS_PROVIDER ||
-  (CLONE_VOICE && fs.existsSync(CLONE_VOICE) ? 'chatterbox' : '') ||
-  (process.env.SARVAM_API_KEY ? 'sarvam' : process.env.ELEVENLABS_API_KEY ? 'elevenlabs' : process.env.OPENAI_API_KEY ? 'openai' : 'none')
-).toLowerCase();
-const SARVAM_SPEAKER = process.env.SARVAM_SPEAKER || 'shubh';
-const SARVAM_MODEL = process.env.SARVAM_MODEL || 'bulbul:v3';
-const SARVAM_PACE = Number(process.env.SARVAM_PACE || 1.1);
+// Voice: local, open-source engines with built-in voices (no cloning, no paid voice API). Each channel sets its voice in
+// channels/<id>/channel.json "voice": {"engine": "kokoro" | "parler" | "chatterbox", "voice", "speed"}; the engine runs from
+// engine/.venv-voice/<engine>/ via scripts/tts_local.py (setup: README "Voice"). OpenAI / ElevenLabs only via TTS_PROVIDER.
+const API_PROVIDER = (process.env.TTS_PROVIDER || (process.env.ELEVENLABS_API_KEY ? 'elevenlabs' : process.env.OPENAI_API_KEY ? 'openai' : 'none')).toLowerCase();
+const channelVoice = (script) => {
+  const f = script.channel && path.join(ROOT, '..', 'channels', script.channel, 'channel.json');
+  return f && fs.existsSync(f) ? (JSON.parse(fs.readFileSync(f, 'utf8')).voice ?? null) : null;
+};
 const OPENAI_VOICE = process.env.OPENAI_TTS_VOICE || 'ash';
 const OPENAI_MODEL = process.env.OPENAI_TTS_MODEL || 'gpt-4o-mini-tts';
 const INSTRUCTIONS =
@@ -250,19 +276,6 @@ const ttsOpenAI = async (text) => {
   });
   if (!res.ok) throw new Error(`OpenAI TTS ${res.status}: ${await res.text()}`);
   return Buffer.from(await res.arrayBuffer());
-};
-
-// Sarvam Bulbul: Indian English voices. Returns base64 audio in JSON.
-const ttsSarvam = async (text) => {
-  const res = await fetch('https://api.sarvam.ai/text-to-speech', {
-    method: 'POST',
-    headers: {'api-subscription-key': process.env.SARVAM_API_KEY, 'Content-Type': 'application/json'},
-    body: JSON.stringify({text, language_code: 'en-IN', speaker: SARVAM_SPEAKER, model: SARVAM_MODEL, pace: SARVAM_PACE, output_audio_codec: 'mp3'}),
-  });
-  if (!res.ok) throw new Error(`Sarvam TTS ${res.status}: ${await res.text()}`);
-  const {audios} = await res.json();
-  if (!audios?.[0]) throw new Error('Sarvam TTS returned no audio');
-  return Buffer.from(audios[0], 'base64');
 };
 
 const ttsEleven = async (text, prev, next) => {
@@ -292,24 +305,33 @@ const measure = async (file) => {
 
 const prepareVoice = async (script) => {
   const n = script.scenes.length;
-  if (flags.has('--no-vo') || !VOICE_ON) return {audio: Array(n).fill(null), durations: Array(n).fill(null)};
-  const dir = path.join(PUBLIC, 'vo', script.id);
+  if (flags.has('--no-vo') || !VOICE_ON) return {audio: Array(n).fill(null), durations: Array(n).fill(null), fresh: false};
+  const dir = path.join(PUBLIC, 'vo', script.id, script.variant?.platform ?? ''); // one cache per platform variant (the CTA line differs)
   fs.mkdirSync(dir, {recursive: true});
   const manifestFile = path.join(dir, 'manifest.json');
   const manifest = fs.existsSync(manifestFile) ? JSON.parse(fs.readFileSync(manifestFile, 'utf8')) : {scenes: []};
   const audio = [];
   const durations = [];
-  const inputs = script.scenes.map((s) => ttsText(s.say ?? s.vo, script.pronounce));
-  if (PROVIDER === 'chatterbox') cloneBatch(script, dir, manifest, inputs);
+  let fresh = false; // a clip was written: the render bundle (a copy of public/) must be rebuilt to include it
+  const lv = channelVoice(script);
+  // pronunciation: the channel's overrides (voice.pronounce, engine markup e.g. Kokoro "[Tally](/tˈæli/)"), then the board's own
+  // a scene without a line (the end card) stays silent
+  const inputs = script.scenes.map((s) => ((s.say ?? s.vo) ? ttsText(s.say ?? s.vo, {...lv?.pronounce, ...script.pronounce}) : null));
+  const PROVIDER = lv ? 'local' : API_PROVIDER;
+  if (lv) localBatch(lv, dir, manifest, inputs);
   for (let i = 0; i < n; i++) {
     const base = `s${String(i + 1).padStart(2, '0')}`;
     const existing = ['.mp3', '.wav', '.m4a'].map((e) => path.join(dir, base + e)).find((f) => fs.existsSync(f));
+    if (inputs[i] === null && !existing) {
+      audio.push(null);
+      durations.push(null);
+      continue;
+    }
     const entry = manifest.scenes[i];
     const voiceKey = {
       openai: `${OPENAI_MODEL}/${OPENAI_VOICE}/${INSTRUCTIONS}`,
       elevenlabs: `${process.env.ELEVENLABS_VOICE_ID}`,
-      sarvam: `${SARVAM_MODEL}/${SARVAM_SPEAKER}/${SARVAM_PACE}`,
-      chatterbox: CLONE_VOICE ? `${CLONE_VOICE}/${fs.statSync(CLONE_VOICE).mtimeMs}` : '',
+      local: lv ? localKey(lv) : '',
     }[PROVIDER] ?? '';
     const hash = crypto.createHash('sha1').update(`${PROVIDER}|${voiceKey}|${inputs[i]}`).digest('hex').slice(0, 12);
     const manual = existing && (!entry || entry.source === 'manual');
@@ -320,14 +342,15 @@ const prepareVoice = async (script) => {
     } else if (PROVIDER !== 'none' && (!existing || flags.has('--force-vo') || entry?.hash !== hash)) {
       process.stdout.write(c.dim(`  ${base}: generating voice (${PROVIDER})... `));
       const buf =
-        PROVIDER === 'chatterbox'
-          ? fs.readFileSync(path.join(dir, `${base}.clone.wav`))
-          : PROVIDER === 'sarvam' ? await ttsSarvam(inputs[i]) : PROVIDER === 'elevenlabs' ? await ttsEleven(inputs[i], inputs[i - 1], inputs[i + 1]) : await ttsOpenAI(inputs[i]);
-      file = path.join(dir, PROVIDER === 'chatterbox' ? `${base}.wav` : `${base}.mp3`);
+        PROVIDER === 'local'
+          ? fs.readFileSync(path.join(dir, `${base}.local.wav`))
+          : PROVIDER === 'elevenlabs' ? await ttsEleven(inputs[i], inputs[i - 1], inputs[i + 1]) : await ttsOpenAI(inputs[i]);
+      file = path.join(dir, PROVIDER === 'local' ? `${base}.wav` : `${base}.mp3`);
       if (existing && existing !== file) fs.renameSync(existing, `${existing}.old`);
       fs.writeFileSync(file, buf);
-      if (PROVIDER === 'chatterbox') fs.rmSync(path.join(dir, `${base}.clone.wav`), {force: true});
+      if (PROVIDER === 'local') fs.rmSync(path.join(dir, `${base}.local.wav`), {force: true});
       manifest.scenes[i] = {file: path.basename(file), source: PROVIDER, hash};
+      fresh = true;
       console.log('done');
     }
     if (file && fs.existsSync(file)) {
@@ -340,33 +363,35 @@ const prepareVoice = async (script) => {
   }
   manifest.scenes = manifest.scenes.slice(0, n);
   fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2));
-  const missing = audio.filter((a) => !a).length;
-  if (missing === n) console.log(c.yellow('  No voiceover: set SARVAM_API_KEY (or OPENAI_API_KEY / ELEVENLABS_API_KEY) in .env, or drop your recordings into ' + path.relative(ROOT, dir) + '/s01.mp3, s02.mp3 ...'));
+  const missing = audio.filter((a, i) => !a && inputs[i] !== null).length;
+  if (missing && missing === inputs.filter((x) => x !== null).length) console.log(c.yellow(`  No voiceover: set "voice" in channels/${script.channel ?? '<id>'}/channel.json (README "Voice"), or drop your recordings into ` + path.relative(ROOT, dir) + '/s01.mp3, s02.mp3 ...'));
   else if (missing) console.log(c.yellow(`  ${missing} scene(s) have no voiceover`));
-  return {audio, durations};
+  return {audio, durations, voice: audio.some(Boolean) ? (lv ? localKey(lv) : PROVIDER) : null, fresh};
 };
 
-// Runs the local clone once for every scene that needs a new clip (model loads once).
-function cloneBatch(script, dir, manifest, inputs) {
-  const voiceKey = `${CLONE_VOICE}/${fs.statSync(CLONE_VOICE).mtimeMs}`;
+// Voices every scene that needs a new clip with the channel's local engine (the model loads once per video).
+const localKey = (v) => `${v.engine}/${v.voice ?? 'default'}/${v.speed ?? 1}`;
+function localBatch(v, dir, manifest, inputs) {
   const jobs = [];
   inputs.forEach((text, i) => {
+    if (text === null) return;
     const base = `s${String(i + 1).padStart(2, '0')}`;
-    const hash = crypto.createHash('sha1').update(`chatterbox|${voiceKey}|${text}`).digest('hex').slice(0, 12);
+    const hash = crypto.createHash('sha1').update(`local|${localKey(v)}|${text}`).digest('hex').slice(0, 12);
     const entry = manifest.scenes[i];
     const existing = ['.mp3', '.wav', '.m4a'].some((e) => fs.existsSync(path.join(dir, base + e)));
     if (entry?.source === 'manual' && !flags.has('--force-vo')) return;
     if (existing && entry?.hash === hash && !flags.has('--force-vo')) return;
-    jobs.push({text, out: path.join(dir, `${base}.clone.wav`)});
+    jobs.push({text, out: path.join(dir, `${base}.local.wav`)});
   });
   if (!jobs.length) return;
-  if (!fs.existsSync(CLONE_PY)) throw new Error(`Voice clone not installed: ${CLONE_PY} missing. See README "Your cloned voice".`);
-  const list = path.join(dir, 'clone-jobs.json');
+  const py = path.join(ROOT, '.venv-voice', v.engine, 'bin', 'python');
+  if (!fs.existsSync(py)) throw new Error(`Voice engine ${v.engine} not installed: ${py} missing. See README "Voice".`);
+  const list = path.join(dir, 'voice-jobs.json');
   fs.writeFileSync(list, JSON.stringify(jobs));
-  console.log(c.dim(`  cloning ${jobs.length} line(s) in your voice (first run downloads the model)...`));
-  const r = spawnSync(CLONE_PY, [path.join(ROOT, 'scripts/clone_tts.py'), list, CLONE_VOICE], {stdio: 'inherit'});
+  console.log(c.dim(`  voicing ${jobs.length} line(s) with ${localKey(v)} (local)...`));
+  const r = spawnSync(py, [path.join(ROOT, 'scripts/tts_local.py'), '--engine', v.engine, '--voice', v.voice ?? '', '--speed', String(v.speed ?? 1), '--jobs', list], {stdio: ['ignore', 'ignore', 'inherit']});
   fs.rmSync(list, {force: true});
-  if (r.status !== 0) throw new Error('Voice clone failed (see output above)');
+  if (r.status !== 0) throw new Error(`Local voice (${v.engine}) failed (see output above)`);
 }
 
 // ---------- render ----------
@@ -393,23 +418,28 @@ const getBundle = async () => {
   return serveUrl;
 };
 
-const writeCaption = (doc, outDir) => {
-  if (!doc.caption) return;
-  const text = `${doc.caption}\n\n${(doc.hashtags || []).join(' ')}\n`;
-  fs.writeFileSync(path.join(outDir, 'caption.txt'), text);
-};
+// The caption (or YouTube description): the platform's template from the style preset, filled in; blank parts drop out
+// (a test render without a channel keeps the board's caption and hashtags).
+// {voice} is the AI-voiceover disclosure whenever the video is voiced (Learn never changes it).
+const AI_VOICE = 'Voiceover: AI-generated voice.';
+const captionText = (doc, voice) =>
+  doc.variant
+    ? doc.variant.caption.replace('{body}', doc.caption ?? '').replace('{cta}', doc.variant.line).replace('{voice}', voice ? AI_VOICE : '').replace('{hashtags}', (doc.hashtags || []).join(' ')).replace(/\n{3,}/g, '\n\n').trim() + '\n'
+    : `${doc.caption}\n\n${(doc.hashtags || []).join(' ')}\n`;
 
-const renderReel = async (script) => {
+const renderReel = async (script, place) => {
   const {renderMedia, renderStill, selectComposition} = await import('@remotion/renderer');
-  const {audio, durations} = await prepareVoice(script);
+  const {audio, durations, voice, fresh} = await prepareVoice(script);
   if (flags.has('--vo-only')) return;
+  if (fresh) serveUrl = null; // the bundle copies public/ when it is built; new voice clips need a new one
   const music = script.music && fs.existsSync(path.join(PUBLIC, 'music', script.music)) ? `music/${script.music}` : null;
   if (script.music && !music) console.log(c.yellow(`  music file public/music/${script.music} not found, rendering without music`));
   const inputProps = {script, timing: {audio, durations, music}};
   const browserExecutable = findBrowser();
   const url = await getBundle();
   const composition = await selectComposition({serveUrl: url, id: script.format === 'storyboard' ? 'Composer' : 'Story', inputProps, browserExecutable});
-  const outDir = path.join(OUT, script.id);
+  const outDir = place.dir;
+  const name = place.name;
   fs.mkdirSync(outDir, {recursive: true});
   const secs = (composition.durationInFrames / composition.fps).toFixed(1);
   let last = -1;
@@ -420,7 +450,7 @@ const renderReel = async (script) => {
     codec: 'h264',
     crf: 18,
     audioBitrate: '192k',
-    outputLocation: path.join(outDir, 'reel.mp4'),
+    outputLocation: name('mp4'),
     inputProps,
     browserExecutable,
     onArtifact: ({filename, content}) => {
@@ -438,19 +468,31 @@ const renderReel = async (script) => {
   });
   console.log('');
   const coverFrame = Math.max(0, (composition.props.frames?.[0] ?? 30) - 6);
-  await renderStill({composition, serveUrl: url, output: path.join(outDir, 'cover.png'), frame: coverFrame, inputProps, browserExecutable});
+  await renderStill({composition, serveUrl: url, output: name('cover.png'), frame: coverFrame, inputProps, browserExecutable});
   if (script.format === 'storyboard') {
+    // YouTube thumbnails in the channel theme: arm A = the hook (control), arm B = meta.thumb_b (the experiment's variant)
+    // only the platforms whose preset asks for one (YouTube); a board without a channel style keeps the legacy pair
+    const want = script.variant ? script.variant.thumbnail : true;
+    const arms = want ? [[name('thumbnail.png'), String(script.scenes[0]?.params?.text ?? script.caption?.split('\n')[0] ?? '')], ...(script.meta?.thumb_b ? [[name('thumbnail-b.png'), script.meta.thumb_b]] : [])] : [];
+    for (const [file, text] of arms) {
+      const props = {text, theme: script.theme, handle: script.handle};
+      const still = await selectComposition({serveUrl: url, id: 'Thumbnail', inputProps: props, browserExecutable});
+      await renderStill({composition: still, serveUrl: url, output: file, frame: 0, inputProps: props, browserExecutable});
+    }
     const sheet = await selectComposition({serveUrl: url, id: 'BoardSheet', inputProps, browserExecutable});
-    await renderStill({composition: sheet, serveUrl: url, output: path.join(outDir, 'contact.png'), frame: 0, inputProps, browserExecutable});
+    await renderStill({composition: sheet, serveUrl: url, output: name('contact.png'), frame: 0, inputProps, browserExecutable});
   }
-  writeCaption(script, outDir);
-  if (script.format === 'storyboard') fs.writeFileSync(path.join(outDir, 'render.json'), JSON.stringify({handle: script.handle ?? null}) + '\n'); // the account shown on the closer; Dispatch checks it
-  console.log(c.green(`  -> ${path.relative(ROOT, outDir)}/reel.mp4, cover.png, ${script.format === 'storyboard' ? 'contact.png, ' : ''}caption.txt`));
+  if (script.caption) fs.writeFileSync(name('caption.txt'), captionText(script, voice));
+  // render.json: the account shown on the closer (Dispatch checks it), the style preset, the AI voice used (null = silent; the YouTube description
+// discloses it) and each scene's time span (Learn maps YouTube retention onto it)
+  const at = (composition.props.frames ?? []).reduce((a, f) => [...a, a.at(-1) + f], [0]).map((f) => +(f / composition.fps).toFixed(2));
+  if (script.format === 'storyboard') fs.writeFileSync(name('render.json'), JSON.stringify({handle: script.handle || null, voice: voice ?? null, style: script.preset?.id ?? null, platform: script.variant?.platform ?? null, scenes: script.scenes.map((s, i) => ({primitive: s.primitive, start: at[i], end: at[i + 1]}))}) + '\n');
+  console.log(c.green(`  -> ${path.relative(ROOT, outDir)}/ (${fs.readdirSync(outDir).filter((x) => !x.startsWith('.')).length} files)`));
   if (script.format !== 'storyboard') return true;
   // text boxes: measured in the browser at render time, then checked (safe area, card overflow, caption overlap)
   const frames = [...measured].sort((a, b) => a[0] - b[0]).map(([frame, boxes]) => ({frame, boxes}));
   const issues = checkTextBoxes(frames);
-  fs.writeFileSync(path.join(outDir, 'text-boxes.json'), JSON.stringify({id: script.id, measured: frames.length, issues, frames}, null, 1));
+  fs.writeFileSync(name('text-boxes.json'), JSON.stringify({id: script.id, measured: frames.length, issues, frames}, null, 1));
   const fr = composition.props.frames;
   const expected = probeFrames(script, fr, fr.map((_, i) => fr.slice(0, i).reduce((a, b) => a + b, 0))).size;
   if (frames.length !== expected) {
@@ -464,7 +506,34 @@ const renderReel = async (script) => {
   const long = lengthIssue(script, composition.durationInFrames / composition.fps);
   const voiced = script.scenes.every((s, i) => !s.vo || durations[i] != null);
   if (long) console.log((voiced ? c.red : c.yellow)(`  ${voiced ? 'error' : 'warn'}: ${long}${voiced ? '' : ' (estimated, no voice)'}`));
+  // the variant's manifest, written last: what it is, for whom, and where its files are (QA fills in its status)
+  if (script.variant) {
+    const v = script.variant;
+    const files = {video: path.basename(name('mp4')), caption: path.basename(name('caption.txt')), ...(v.thumbnail ? {thumbnail: path.basename(name('thumbnail.png'))} : {})};
+    const sha = crypto.createHash('sha256').update(fs.readFileSync(name('mp4'))).digest('hex');
+    const {platform: _p, ...destination} = v.publisher;
+    fs.writeFileSync(name('manifest.json'), JSON.stringify({channel: script.channel, platform: v.platform, video_id: script.id, date: script.date, style_version: script.preset.id, voice: voice ?? null, cta_kind: v.kind, cta_text: v.text.replace(/\*/g, ''), cta_say: script.scenes.at(-1).vo, end_card_handle: script.handle || null, destination: {via: destination.via, handle: destination.handle, ...(destination.page_id ? {page_id: destination.page_id} : {})}, size: v.size, video_sha256: sha, qa_status: 'pending', files}, null, 2) + '\n');
+  }
   return errs === 0 && !(long && voiced);
+};
+
+// A platform variant of a channel board: the closing card's CTA, its spoken line and the caption's CTA line come from the style
+// preset for that platform (styles/<id>.json "platforms"). The CTA kind is read from the board's own closer.
+// The end card names the account the preset says (end_card.handle: this platform's own, from channel.json); a handle still pending
+// (pending_...) is never shown, so the card names none and QA holds that variant until the username is claimed.
+const variantOf = (doc, platform) => {
+  const spec = doc.preset.platforms[platform];
+  const publisher = doc.publishers.find((x) => x.platform === platform);
+  if (!publisher) throw new Error(`channel ${doc.channel} has no ${platform} publisher (channels/${doc.channel}/channel.json)`);
+  if (publisher.via !== ROUTE[platform] || spec.destination !== ROUTE[platform]) throw new Error(`${platform} goes via ${ROUTE[platform]}; channel.json says ${publisher.via}, style ${doc.preset.id} says ${spec.destination}`);
+  const closer = doc.scenes.at(-1);
+  const kind = ctaKind(closer?.params?.text);
+  const cta = spec.cta[kind];
+  if (!cta) throw new Error(`the closer's CTA "${closer?.params?.text}" is not one of this style's CTA kinds (${Object.keys(spec.cta).join(', ')})`);
+  const ig = (s) => s.replaceAll('{ig}', doc.handle ?? '');
+  const own = spec.end_card.handle === platform && /^@[A-Za-z0-9._]{1,30}$/.test(publisher.handle) ? publisher.handle : '';
+  const scenes = [...doc.scenes.slice(0, -1), {...closer, params: {...closer.params, text: cta.text, ...(cta.sub !== undefined ? {sub: ig(cta.sub)} : {})}, vo: ig(cta.say)}];
+  return {...doc, handle: own, scenes, variant: {platform, kind, text: cta.text, line: ig(cta.line), caption: spec.caption, thumbnail: spec.thumbnail, size: spec.size, publisher}};
 };
 
 // ---------- main ----------
@@ -489,6 +558,40 @@ for (const f of files) {
   }
   if (!errors.length) console.log(c.green('  quality gate passed'));
   if (flags.has('--check')) continue;
-  if (!(await renderReel(doc)) && !flags.has('--vo-only')) failed++;
+  const OUT = outFor(f);
+  if (doc.format === 'storyboard' && doc.channel) {
+    // a channel board: one render per platform, each in out/<channel>/<date>/<id>/<platform>/ (studio/variant.ts)
+    console.log(c.dim(`  renders -> ${path.relative(ROOT, OUT) || '.'}/${doc.channel}/${doc.date}/${doc.id}/<platform>/`));
+    // a new render replaces the old one whole: a platform that fails this time must not leave its last render (and its QA pass) behind
+    if (!flags.has('--vo-only')) for (const platform of PLATFORMS) fs.rmSync(variantDir(OUT, {channel: doc.channel, date: doc.date, id: doc.id, platform}), {recursive: true, force: true});
+    for (const platform of PLATFORMS) {
+      console.log(c.bold(`  ${platform}`));
+      let vs;
+      try {
+        vs = variantOf(doc, platform);
+      } catch (e) {
+        console.log(c.red(`  error: ${e.message}`));
+        failed++;
+        continue;
+      }
+      const verr = validateStoryboard(vs).errors;
+      if (verr.length) {
+        verr.forEach((e) => console.log(c.red(`  error: ${platform}: ${e}`)));
+        failed++;
+        continue;
+      }
+      const v = {channel: doc.channel, date: doc.date, id: doc.id, platform};
+      try {
+        if (!(await renderReel(vs, {dir: variantDir(OUT, v), name: (k) => variantFile(OUT, v, k)})) && !flags.has('--vo-only')) failed++;
+      } catch (e) {
+        // one platform's render failing never stops the others; QA reports this one as not rendered (or failing)
+        console.log(c.red(`  error: ${platform}: ${e.message.split('\n')[0]}`));
+        failed++;
+      }
+    }
+  } else if (OUT === path.join(ROOT, 'out')) {
+    console.log(c.red('  error: only a channel board renders into engine/out (production); render this one with --out=test/out'));
+    failed++;
+  } else if (!(await renderReel(doc, {dir: path.join(OUT, doc.id), name: (k) => path.join(OUT, doc.id, k === 'mp4' ? 'reel.mp4' : k)})) && !flags.has('--vo-only')) failed++;
 }
 process.exit(failed ? 1 : 0);

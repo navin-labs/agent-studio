@@ -1,5 +1,6 @@
 {
   "storyboard_id": "host-supplier-bills",
+  "platform": "youtube",
   "pass": false,
   "checks": [
     {
@@ -20,6 +21,6 @@
       "error": "scene 2 (ui-inbox) \"BY HAND\": outside the youtube safe area (x 895..979, y 311..337)"
     }
   ],
-  "video_path": "engine/out/host-supplier-bills/reel.mp4",
-  "contact_sheet_path": "engine/out/host-supplier-bills/contact.png"
+  "video_path": "engine/out/c1-automation/2026-10-12/host-supplier-bills/youtube/c1-automation-youtube-2026-10-12-host-supplier-bills.mp4",
+  "contact_sheet_path": "engine/out/c1-automation/2026-10-12/host-supplier-bills/youtube/c1-automation-youtube-2026-10-12-host-supplier-bills.contact.png"
 }

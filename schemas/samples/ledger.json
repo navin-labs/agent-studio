@@ -1,13 +1,12 @@
 {
   "storyboard_id": "host-supplier-bills",
+  "platform": "youtube",
   "channel": "c1-automation",
   "status": "approved",
   "approved_by": "navin",
   "approved_at": "2026-10-01T18:30:00+05:30",
-  "targets": [
-    "instagram",
-    "youtube"
-  ],
   "scheduled_for": "2026-10-02T19:00:00+05:30",
-  "updated_at": "2026-10-01T18:30:00+05:30"
+  "updated_at": "2026-10-01T18:30:00+05:30",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "approval": "0123456789abcdef"
 }

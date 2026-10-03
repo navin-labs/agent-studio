@@ -28,6 +28,7 @@ import {
   Receipt,
   RefreshCw,
   Repeat,
+  ScanBarcode,
   Search,
   Send,
   ShoppingCart,
@@ -40,6 +41,7 @@ import {
   Truck,
   User,
   Users,
+  Waves,
   Workflow,
   Zap,
 } from 'lucide-react';
@@ -74,6 +76,7 @@ const COMPONENTS: Record<string, React.ComponentType<{size?: number; color?: str
   Receipt,
   RefreshCw,
   Repeat,
+  ScanBarcode,
   Search,
   Send,
   ShoppingCart,
@@ -86,6 +89,7 @@ const COMPONENTS: Record<string, React.ComponentType<{size?: number; color?: str
   Truck,
   User,
   Users,
+  Waves,
   Workflow,
   Zap,
 };

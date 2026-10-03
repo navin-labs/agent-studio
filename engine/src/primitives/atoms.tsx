@@ -4,6 +4,7 @@ import {Check} from 'lucide-react';
 import React from 'react';
 import {AbsoluteFill, Easing, interpolate, random, spring, useCurrentFrame} from 'remotion';
 import {cuesOr, FPS} from '../lib/timing';
+import type {Camera} from '../composer/style';
 
 export {cuesOr};
 import {FONT, TYPE} from '../theme';
@@ -22,13 +23,31 @@ export const prog = (f: number, a: number, dur: number, e: (t: number) => number
 export const springFrom = (f: number, a: number, config = {}) => (f < a ? 0 : spring({frame: f - a, fps: FPS, config: {damping: 14, stiffness: 150, mass: 0.8, ...config}}));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
+// ---- motion (docs/MOTION.md; rules adopted from maker-motion): never linear, exits faster than entrances ----
+export const OUT = Easing.out(Easing.cubic); // entrances, 6 to 8 frames
+export const IN = Easing.in(Easing.cubic); // exits, 4 to 5 frames
+export const INOUT = Easing.inOut(Easing.cubic); // camera moves: start and end at rest
+export const EXPO = Easing.out(Easing.exp); // fast arrivals from far away (slams, the arrow fold)
+
+// The scene's style (from its preset, composer/style.ts) and primitive, so the camera can carry meaning.
+export const SceneCtx = React.createContext<{camera?: Camera; strike: boolean; primitive: string}>({strike: false, primitive: ''});
+const PAIN = new Set(['pile-drop', 'ui-inbox', 'ui-sheet', 'ui-chat', 'phone-buzz', 'chat-pop', 'maze-to-line', 'zoom-dive']);
+const RESULT = new Set(['counter-drop', 'stamp-hit', 'flow-run', 'before-after-split', 'end-card', 'host-cta']);
+// One move per shot: a > 0 pushes in over the whole shot, a < 0 starts pushed in and pulls out by 60% of it.
+const camera = (c: Camera, primitive: string, t: number) => {
+  const a = PAIN.has(primitive) ? c.pain : RESULT.has(primitive) ? c.result : c.other;
+  return a >= 0 ? 1 + a * INOUT(t) : 1 - a + a * OUT(Math.min(1, t / 0.6));
+};
+
 // ---- the shot: backdrop dot grid + a camera at `zoom` pushing by `push` (negative = pull back) around the stage centre ----
 export const STAGE = {top: 280, bottom: 1080, cy: 680};
 
-export const Shot: React.FC<{dur: number; zoom?: number; push?: number; children: React.ReactNode}> = ({dur, zoom = 1, push = 0.06, children}) => {
+// push: the primitive's own camera (pile-drop pulls back, zoom-dive holds); unset: the style preset's move, else the legacy drift
+export const Shot: React.FC<{dur: number; zoom?: number; push?: number; children: React.ReactNode}> = ({dur, zoom = 1, push, children}) => {
   const th = useTheme();
   const f = useCurrentFrame();
-  const z = zoom * (1 + push * prog(f, 0, dur, LINEAR));
+  const {camera: cam, primitive} = React.useContext(SceneCtx);
+  const z = zoom * (push === undefined && cam ? camera(cam, primitive, prog(f, 0, dur, LINEAR)) : 1 + (push ?? 0.06) * prog(f, 0, dur, LINEAR));
   return (
     <AbsoluteFill style={{background: th.bg, overflow: 'hidden'}}>
       <div
@@ -51,7 +70,7 @@ export const Highlight: React.FC<{p: number; children: React.ReactNode}> = ({p, 
   const th = useTheme();
   return (
     <span style={{position: 'relative', display: 'inline-block'}}>
-      <span style={{position: 'absolute', left: -8, right: -8, top: '18%', bottom: '6%', background: th.accent, transformOrigin: '0 50%', transform: `scaleX(${p}) skewX(-6deg)`, borderRadius: 4, zIndex: 0}} />
+      <span style={{position: 'absolute', left: -8, right: -8, top: '18%', bottom: '6%', background: th.reveal ?? th.accent, transformOrigin: '0 50%', transform: `scaleX(${p}) skewX(-6deg)`, borderRadius: 4, zIndex: 0}} />
       <span style={{position: 'relative', zIndex: 1, color: p > 0.5 ? th.onAccent : undefined}}>{children}</span>
     </span>
   );

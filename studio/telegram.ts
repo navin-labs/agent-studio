@@ -8,8 +8,11 @@
 // polling runs inside approve-server.ts when TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are set
 import fs from 'node:fs';
 import path from 'node:path';
+import {decide} from './experiment.ts';
+import {decideProposal} from './improve.ts';
 import {applyResolve, resolveQuery} from './dispatch.ts';
-import {applyApproval, approvalQuery, currentStatus, findVideo, PATHS, type Paths, weekVideos} from './ledger.ts';
+import {applyApproval, approvalQuery, currentStatus, findVideo, needsApproval, PATHS, type Paths, qaSummary, shown, type Video, weekVideos} from './ledger.ts';
+import type {Platform} from './variant.ts';
 
 export type Tg = (method: string, body: Record<string, unknown> | FormData) => Promise<any>;
 export const telegram = (token: string): Tg => async (method, body) => {
@@ -21,9 +24,12 @@ export const telegram = (token: string): Tg => async (method, body) => {
 
 const button = (text: string, data: string) => ({inline_keyboard: [[{text, callback_data: data}]]}); // callback_data max 64 bytes
 
-// What Navin has been shown: one id per line. Sends never repeat; "Approve all" covers only these.
+// What Navin has been shown: one render per line (`<id>|<video hash>`), so a re-render is shown again. Sends never repeat;
+// "Approve all" covers only these.
 const sentFile = (p: Paths) => path.join(p.state, 'telegram-sent.txt');
 export const sentIds = (p: Paths = PATHS) => new Set(fs.existsSync(sentFile(p)) ? fs.readFileSync(sentFile(p), 'utf8').split('\n').filter(Boolean) : []);
+export const renderKey = (v: Video) => `${v.id}|${shown(v)?.manifest?.video_sha256 ?? ''}`;
+
 
 export const notify = (tg: Tg, chatId: string, text: string) => tg('sendMessage', {chat_id: chatId, text});
 
@@ -31,20 +37,35 @@ export const send = async (tg: Tg, chatId: string, channel: string, week: string
   const status = currentStatus(p);
   const sent = sentIds(p);
   const week_ = weekVideos(channel, week, p);
-  const ready = week_.map((x) => x.video).filter((v) => v?.qa?.pass && !status.get(v.id)?.status?.match(/approved|dispatched|published/) && (o.again || !sent.has(v.id)));
+  // one message per render covers the video and its platform variants: shown once a variant passed QA and still needs approval
+  const ready = week_.map((x) => x.video).filter((v) => v && needsApproval(v, status) && (o.again || !sent.has(renderKey(v))));
   for (const v of ready) {
+    const q = qaSummary(v!);
+    const show = v!.variants[q.passed[0]]!; // a passing variant's video stands for the others
     const form = new FormData();
     form.set('chat_id', chatId);
-    form.set('caption', `${v!.id}\n\n${String(v!.doc.caption).slice(0, 900)}`);
-    form.set('reply_markup', JSON.stringify(button('Approve', `a|${v!.id}`)));
-    form.set('video', new Blob([fs.readFileSync(path.join(v!.outDir, 'reel.mp4'))], {type: 'video/mp4'}), `${v!.id}.mp4`);
+    const cta = (pl: Platform) => v!.variants[pl]?.manifest?.cta_text;
+    const lines = [`${v!.id} (${v!.doc.channel})`, `Video: the ${q.passed[0]} variant`, '', String(v!.doc.caption).slice(0, 600), '', 'One tap approves every ready variant:', ...q.passed.map((pl) => `${pl}: ready, CTA "${cta(pl)}"`), ...q.held.map((h) => `${h.split(':')[0]}: HELD (not approved by this tap):${h.slice(h.indexOf(':') + 1)}`), ...(q.warnings.length ? ['', `SEO: ${q.warnings.join('; ')}`] : [])];
+    form.set('caption', lines.join('\n').slice(0, 1000));
+    form.set('reply_markup', JSON.stringify(button(`Approve (${q.passed.join(', ')})`, `a|${v!.id}`)));
+    form.set('video', new Blob([fs.readFileSync(show.file('mp4'))], {type: 'video/mp4'}), path.basename(show.file('mp4')));
     await tg('sendVideo', form);
+    // the YouTube thumbnail arms ride with the video: A is the control; B (when the board has one) is the experiment's variant
+    for (const [kind, label] of [['thumbnail.png', 'Thumbnail A (control)'], ['thumbnail-b.png', `Thumbnail B, title B: ${v!.doc.meta?.title_b ?? '(same title)'}`]]) {
+      const img = v!.variants.youtube?.file(kind);
+      if (!img || !fs.existsSync(img)) continue;
+      const ph = new FormData();
+      ph.set('chat_id', chatId);
+      ph.set('caption', `${v!.id}: ${label}`.slice(0, 1000));
+      ph.set('photo', new Blob([fs.readFileSync(img)], {type: 'image/png'}), path.basename(img));
+      await tg('sendPhoto', ph);
+    }
     fs.mkdirSync(p.state, {recursive: true});
-    fs.appendFileSync(sentFile(p), `${v!.id}\n`);
+    fs.appendFileSync(sentFile(p), `${renderKey(v!)}\n`);
   }
   // once every video of the week has been shown: one "Approve all" (it approves only what was shown)
-  const shown = sentIds(p);
-  if (ready.length && week_.length > 1 && week_.every((x) => x.video && shown.has(x.video.id)))
+  const seen = sentIds(p);
+  if (ready.length && week_.length > 1 && week_.every((x) => x.video && seen.has(renderKey(x.video))))
     await tg('sendMessage', {chat_id: chatId, text: `${channel} ${week}: all ${week_.length} videos are in this chat.`, reply_markup: button(`Approve all ${week_.length}`, `A|${channel}|${week}`)});
   return ready.map((v) => v!.id);
 };
@@ -54,7 +75,7 @@ export const send = async (tg: Tg, chatId: string, channel: string, week: string
 const askedFile = (p: Paths) => path.join(p.state, 'telegram-stuck.txt');
 export const askResolve = async (tg: Tg, chatId: string, p: Paths = PATHS) => {
   const asked = new Set(fs.existsSync(askedFile(p)) ? fs.readFileSync(askedFile(p), 'utf8').split('\n').filter(Boolean) : []);
-  const unknown = [...currentStatus(p).values()].filter((e) => e.status === 'dispatching' && e.targets?.includes('youtube') && !e.post_urls?.some((u) => u.includes('youtube.com/')));
+  const unknown = [...currentStatus(p).values()].filter((e) => e.status === 'dispatching' && e.platform === 'youtube' && !e.post_urls?.some((u) => u.includes('youtube.com/')));
   const sent: string[] = [];
   for (const e of unknown) {
     const key = `${e.storyboard_id}|${e.updated_at}`;
@@ -107,7 +128,26 @@ export const onUpdate = async (tg: Tg, u: any, o: {chatId: string; secret: strin
   const mine = String(q.from?.id) === o.chatId && String(q.message?.chat?.id) === o.chatId; // Navin, in his private chat with the bot
   let text: string;
   if (!mine) text = 'Not allowed.';
-  else if (/^[nu]\|/.test(String(q.data))) {
+  else if (/^x\|/.test(String(q.data))) {
+    // the separate decision after an experiment result (studio/experiment.ts): adopt B or keep A
+    const [, id, choice] = String(q.data).split('|');
+    try {
+      decide(p, id, choice === 'adopt' ? 'adopt' : 'keep', now);
+      text = choice === 'adopt' ? `${id}: B adopted. The next hourly run applies it on YouTube.` : `${id}: keeping A.`;
+    } catch (e) {
+      text = `Refused: ${(e as Error).message}`;
+    }
+    await tg('sendMessage', {chat_id: o.chatId, text});
+  } else if (/^p\|/.test(String(q.data))) {
+    // a Tier 2 proposal from Learn (studio/improve.ts): only this tap applies it
+    const [, id, choice] = String(q.data).split('|');
+    try {
+      text = decideProposal(p, id, choice === 'yes', now);
+    } catch (e) {
+      text = `Refused: ${(e as Error).message}`;
+    }
+    await tg('sendMessage', {chat_id: o.chatId, text});
+  } else if (/^[nu]\|/.test(String(q.data))) {
     const id = String(q.data).slice(2);
     if (String(q.data)[0] === 'u') {
       await tg('sendMessage', {chat_id: o.chatId, text: ASK_ID(id), reply_markup: {force_reply: true, input_field_placeholder: 'YouTube video ID or link'}});
@@ -123,12 +163,14 @@ export const onUpdate = async (tg: Tg, u: any, o: {chatId: string; secret: strin
   } else {
     const [kind, a, b] = String(q.data ?? '').split('|');
     const v = kind === 'a' ? findVideo(a, p) : null;
-    const target = kind === 'A' ? {channel: a, week: b, ids: weekVideos(a, b, p).flatMap((x) => (x.video && sentIds(p).has(x.video.id) ? [x.video.id] : []))} : v?.recipe ? {channel: v.doc.channel, week: v.recipe.week, ids: [v.id]} : null;
+    const target = kind === 'A' ? {channel: a, week: b, ids: weekVideos(a, b, p).flatMap((x) => (x.video && sentIds(p).has(renderKey(x.video)) ? [x.video.id] : []))} : v?.recipe ? {channel: v.doc.channel, week: v.recipe.week, ids: [v.id]} : null;
     if (!target) text = 'Video not found.';
     else
       try {
         const r = applyApproval(approvalQuery({...target, by: 'navin', exp}, o.secret), o.secret, {paths: p, now});
-        text = [r.written.length ? `Approved: ${r.written.map((e) => e.storyboard_id).join(', ')}` : 'Nothing new approved.', ...r.skipped].join('\n');
+        const by = new Map<string, string[]>();
+        for (const e of r.written) by.set(e.storyboard_id, [...(by.get(e.storyboard_id) ?? []), e.platform]);
+        text = [r.written.length ? `Approved: ${[...by].map(([id, pfs]) => `${id} (${pfs.join(', ')})`).join(', ')}` : 'Nothing new approved.', ...r.skipped].join('\n');
       } catch (e) {
         text = `Refused: ${(e as Error).message}`;
       }

@@ -7,3 +7,14 @@ node_modules/
 out/
 .DS_Store
 inbox/
+*.env
+client_secret*.json
+credentials*.json
+token*.json
+*.pem
+*.key
+*.p12
+# production state written by the running studio (never committed): Forge's publish queue, the feed's ideas, the weekly recipes
+queue/
+ideas/*.jsonl
+recipes/*/

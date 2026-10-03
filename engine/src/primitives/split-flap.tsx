@@ -12,6 +12,7 @@ const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const scramble = (i: number, k: number) => GLYPHS[(i * 7 + k * 13 + ((i * k) % 5)) % GLYPHS.length];
 
 // Airport board: each tile flips through letters and lands on its character, left to right; the last one lands on cue 0.
+// With a reveal colour (archive-gold) the whole word turns to it the moment the last tile lands.
 export const SplitFlap: React.FC<PrimitiveProps<P>> = ({p, dur, cues}) => {
   const th = useTheme();
   const f = useCurrentFrame();
@@ -38,7 +39,7 @@ export const SplitFlap: React.FC<PrimitiveProps<P>> = ({p, dur, cues}) => {
             const phase = done || f < start ? 1 : ((f - start) % STEP) / STEP; // the top flap falls during each flip
             return (
               <div key={i} data-box style={{...card(th), position: 'relative', width: W, height: H, borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: c === ' ' ? th.bg : th.surface}}>
-                <div style={{fontFamily: TYPE.display, fontSize: Math.round(W * 0.82), fontWeight: 900, color: th.ink, fontVariantNumeric: 'tabular-nums'}}>{shown.trim()}</div>
+                <div style={{fontFamily: TYPE.display, fontSize: Math.round(W * 0.82), fontWeight: 900, color: th.reveal && f >= settle(chars.length - 1) ? th.reveal : th.ink, fontVariantNumeric: 'tabular-nums'}}>{shown.trim()}</div>
                 <div style={{position: 'absolute', left: 0, right: 0, top: H / 2 - 2, height: 4, background: th.rule}} />
                 {phase < 1 ? <div style={{position: 'absolute', left: 0, right: 0, top: 0, height: H / 2, background: th.surface, transformOrigin: 'bottom', transform: `scaleY(${1 - phase})`, borderBottom: `2px solid ${th.rule}`}} /> : null}
               </div>

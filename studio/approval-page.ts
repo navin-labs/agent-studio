@@ -5,7 +5,7 @@
 // node studio/approval-page.ts <channel> <YYYY-Www>   -> state/approval/<channel>/<week>/index.html (+ contact sheets beside it)
 import fs from 'node:fs';
 import path from 'node:path';
-import {approvalQuery, currentStatus, PATHS, type Paths, weekRecipes, weekVideos} from './ledger.ts';
+import {approvalQuery, currentStatus, needsApproval, PATHS, type Paths, qaSummary, shown, weekRecipes, weekVideos} from './ledger.ts';
 import {recipeDate} from './recipe.ts';
 
 export const LINK_DAYS = 7;
@@ -29,14 +29,15 @@ export const buildPage = (channel: string, week: string, env: {url: string; secr
     if (!v) return {...base, state: 'missing', note: 'not written yet'};
     const first = v.doc.scenes[0];
     const row = {...base, id: v.id, hook: plain(first.vo ?? first.params?.text), caption: v.doc.caption};
-    if (!v.qa) return {...row, state: 'missing', note: 'not rendered and checked yet'};
-    const sheet = path.join(v.outDir, 'contact.png');
+    const q = qaSummary(v);
+    if (!q.checked) return {...row, state: 'missing', note: 'not rendered and checked yet'};
+    const sheet = shown(v)!.file('contact.png');
     if (fs.existsSync(sheet)) fs.copyFileSync(sheet, path.join(dir, `${v.id}.png`));
     const withSheet = {...row, sheet: fs.existsSync(sheet) ? `${v.id}.png` : undefined};
-    if (!v.qa.pass) return {...withSheet, state: 'failed', note: v.qa.checks.filter((c) => !c.pass).map((c) => `${c.name}: ${c.error}`).join('\n')};
-    const st = status.get(v.id)?.status;
-    if (st && st !== 'qa-failed' && st !== 'rendered' && st !== 'pending-approval') return {...withSheet, state: 'approved', note: st};
-    return {...withSheet, state: 'approve', note: 'QA passed'};
+    if (!q.passed.length) return {...withSheet, state: 'failed', note: q.held.join('\n')};
+    const st = [...status.values()].filter((e) => e.storyboard_id === v.id).map((e) => `${e.platform} ${e.status}`);
+    if (!needsApproval(v, status)) return {...withSheet, state: 'approved', note: st.join(', ')};
+    return {...withSheet, state: 'approve', note: `QA passed: ${q.passed.join(', ')}${q.held.length ? `\nheld: ${q.held.join('\n')}` : ''}`};
   });
 
   const link = (ids: string[]) => `${env.url}?${approvalQuery({channel, week, ids, by, exp}, env.secret)}`;
@@ -47,7 +48,7 @@ export const buildPage = (channel: string, week: string, env: {url: string; secr
     ${r.sheet ? `<img src="${esc(r.sheet)}" alt="contact sheet for ${esc(r.id)}">` : ''}
     ${r.hook ? `<p class="hook">${esc(r.hook)}</p>` : ''}
     ${r.caption ? `<details><summary>Caption</summary><pre>${esc(r.caption)}</pre></details>` : ''}
-    ${r.state === 'approve' ? `<a class="btn" href="${esc(link([r.id!]))}">Approve</a>` : `<pre class="note">${esc(r.note)}</pre>`}
+    ${r.state === 'approve' ? `<a class="btn" href="${esc(link([r.id!]))}">Approve</a>` : ''}${r.note ? `<pre class="note">${esc(r.note)}</pre>` : ''}
   </article>`;
   const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">

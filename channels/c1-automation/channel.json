@@ -24,9 +24,7 @@
   "content_mix": [
     "manual pain to how it can run itself"
   ],
-  "themes": [
-    "night"
-  ],
+  "style": "c1-night-v0",
   "cadence": {
     "posts_per_week": 7
   },
@@ -39,7 +37,8 @@
     {
       "platform": "youtube",
       "handle": "@theautomationguynavin",
-      "via": "n8n"
+      "via": "n8n",
+      "webhook": "http://localhost:5678/webhook/agent-studio-youtube-c1-automation"
     },
     {
       "platform": "facebook",
@@ -60,5 +59,13 @@
       "source": "reddit",
       "url": "https://www.reddit.com/r/smallbusiness/.rss"
     }
-  ]
+  ],
+  "voice": {
+    "engine": "kokoro",
+    "voice": "af_heart",
+    "speed": 1.15,
+    "pronounce": {
+      "Tally": "[Tally](/tˈæli/)"
+    }
+  }
 }
