@@ -51,7 +51,7 @@
   ],
   "launch_gate": "First channel",
   "host": "chiku",
-  "live": false,
+  "live": true,
   "feeds": [
     {
       "source": "google-trends",

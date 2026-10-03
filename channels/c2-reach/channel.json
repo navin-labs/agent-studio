@@ -52,7 +52,7 @@
     }
   ],
   "launch_gate": "Launches with C1 (Navin, 2026-10-04)",
-  "live": false,
+  "live": true,
   "voice": {
     "engine": "kokoro",
     "voice": "am_fenrir",
