@@ -24,6 +24,11 @@
       "pattern": "^[a-z0-9][a-z0-9-]*$",
       "maxLength": 80
     },
+    "voice": {
+      "type": "object",
+      "required": ["engine", "speed"],
+      "description": "Only for a board with no channel (demos, tests): its own voice, the same shape as channel.json \"voice\". A channel board always speaks in its channel's voice."
+    },
     "channel": {
       "enum": [
         "c1-automation",

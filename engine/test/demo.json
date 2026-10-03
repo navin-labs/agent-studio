@@ -1,0 +1,119 @@
+{
+  "format": "storyboard",
+  "id": "demo",
+  "theme": "paper",
+  "hookPattern": "pile",
+  "scenes": [
+    {
+      "primitive": "word-stack-slam",
+      "params": {
+        "text": "One idea. *Three* videos."
+      },
+      "vo": "One idea becomes *three* finished videos."
+    },
+    {
+      "primitive": "pile-drop",
+      "params": {
+        "item": {
+          "title": "IDEA",
+          "id": "FEED-",
+          "pill": "NEW",
+          "amount": false
+        },
+        "count": 18,
+        "start": 101
+      },
+      "vo": "Ideas arrive from real feeds, each with its *source* link."
+    },
+    {
+      "primitive": "flow-build",
+      "transition": "whip-pan",
+      "params": {
+        "nodes": [
+          {
+            "icon": "search",
+            "label": "Pick a recipe",
+            "sub": "Code, not AI"
+          },
+          {
+            "icon": "sheet",
+            "label": "Write the words",
+            "sub": "The one AI step"
+          },
+          {
+            "icon": "inbox",
+            "label": "Render and check",
+            "sub": "Three platforms"
+          },
+          {
+            "icon": "send",
+            "label": "Approve and post",
+            "sub": "One human tap"
+          }
+        ]
+      },
+      "vo": "Code picks the shape. An AI writes the *words.*"
+    },
+    {
+      "primitive": "flow-run",
+      "params": {
+        "done": "POSTED",
+        "nodes": [
+          {
+            "icon": "search",
+            "label": "Pick a recipe",
+            "sub": "Code, not AI"
+          },
+          {
+            "icon": "sheet",
+            "label": "Write the words",
+            "sub": "The one AI step"
+          },
+          {
+            "icon": "inbox",
+            "label": "Render and check",
+            "sub": "Three platforms"
+          },
+          {
+            "icon": "send",
+            "label": "Approve and post",
+            "sub": "One human tap"
+          }
+        ]
+      },
+      "vo": "Every video is *rendered,* checked, and held until a person *approves* it."
+    },
+    {
+      "primitive": "chat-pop",
+      "transition": "ink-wipe",
+      "params": {
+        "app": "TELEGRAM",
+        "text": "Video ready: YouTube, Instagram, Facebook. Approve?"
+      },
+      "vo": "One tap. Then it posts at its *own* time on each platform."
+    },
+    {
+      "primitive": "end-card",
+      "params": {
+        "text": "*Demo*",
+        "sub": "agent-studio, open source"
+      }
+    }
+  ],
+  "caption": "One idea becomes three platform videos, each checked before a person approves it.\n\nThis is a demo render of the pipeline, not a channel post.\n\nExample data.",
+  "hashtags": [
+    "#automation",
+    "#remotion",
+    "#opensource"
+  ],
+  "meta": {
+    "source": "https://example.com/agent-studio/demo",
+    "idea_id": "demo",
+    "recipe_id": "demo"
+  },
+  "voice": {
+    "engine": "kokoro",
+    "voice": "am_michael",
+    "speed": 1
+  }
+}

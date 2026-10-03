@@ -94,6 +94,7 @@ export const lengthIssue = (sb: Storyboard, secs: number) => {
 // Engine-level checks. Channel rules (CTA mix, hook patterns) live in the channel RULEBOOK and agent-studio QA.
 // vo: the measured length of each scene's voice clip once the voice exists (then a line is judged by its real length, not the
 // word-count estimate, which overcounts a fast voice); "later" when the voice will be measured before render (VOICE=on).
+const HOLD = 0.5; // seconds a measured line may run past its shot's maximum (see below)
 export const validateStoryboard = (sb: Storyboard, vo?: (number | null)[] | 'later'): {errors: string[]; warnings: string[]} => {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -111,8 +112,10 @@ export const validateStoryboard = (sb: Storyboard, vo?: (number | null)[] | 'lat
     if (i === 0 && s.transition && s.transition !== 'cut') errors.push(`${w}: the first scene cannot have a transition`);
     if (s.vo !== undefined && (typeof s.vo !== 'string' || !s.vo.trim())) errors.push(`${w}: vo must be non-empty text or left out`);
     const heard = Array.isArray(vo) ? vo[i] : null;
-    const need = heard != null ? heard + TAIL_AUDIO : estimateSeconds(s.vo ?? '', VOICE_WPS) + TAIL_EST;
-    if (s.vo && vo !== 'later' && need > spec.seconds[1]) errors.push(`${w}: vo ${heard != null ? 'is' : 'needs about'} ${(need - (heard != null ? TAIL_AUDIO : TAIL_EST)).toFixed(1)}s but ${s.primitive} lasts at most ${spec.seconds[1]}s; shorten it`);
+    // the composer stretches a shot to its line (the voice is never cut): a measured line may run HOLD past the shot's maximum
+    // (an invisible hold of the last frame); longer is dead air. The estimate has its own slack.
+    const need = heard != null ? heard + TAIL_AUDIO - HOLD : estimateSeconds(s.vo ?? '', VOICE_WPS) + TAIL_EST;
+    if (s.vo && vo !== 'later' && need > spec.seconds[1]) errors.push(`${w}: vo ${heard != null ? 'is' : 'needs about'} ${(heard ?? need - TAIL_EST).toFixed(1)}s but ${s.primitive} lasts at most ${spec.seconds[1]}s; shorten it`);
   });
   const closers = Object.keys(SPECS).filter((k) => SPECS[k].closer);
   if (!SPECS[sc.at(-1)?.primitive ?? '']?.closer) errors.push(`last scene must be a closing card (${closers.join(' or ')})`);

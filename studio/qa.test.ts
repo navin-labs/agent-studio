@@ -90,6 +90,9 @@ assert.deepEqual(failing((x) => (x.probe!.audio = false)), ['audio: the video ha
   const long = `${'invoice '.repeat(60).trim()}.`;
   assert.match(failing((x) => (x.doc.scenes[1].vo = long)).join('\n'), /^text-limits: scene 2 .*vo needs about/m);
   assert.ok(!failing((x) => ((x.doc.scenes[1].vo = long), (x.render!.vo = x.doc.scenes.map(() => 2)))).some((e) => e.startsWith('text-limits')), 'measured 2 s fits');
+  // ui-inbox lasts at most 8 s; the shot stretches to its line, so a measured line may run 0.3 s over (8.2 passes, 8.4 fails)
+  const at = (s: number) => failing((x) => ((x.doc.scenes[1].vo = long), (x.render!.vo = x.doc.scenes.map((_, i) => (i === 1 ? s : 2))))).filter((e) => e.startsWith('text-limits'));
+  assert.deepEqual([at(8.2).length, at(8.4).length], [0, 1]);
   assert.match(failing((x) => ((x.doc.scenes[1].vo = long), (x.render!.vo = x.doc.scenes.map(() => 30)))).join('\n'), /scene 2 \(ui-inbox\): vo is 30\.0s but ui-inbox lasts at most 8s/, 'a measured clip too long still fails');
 }
 assert.match(failing((x) => (x.voice = null)).join('\n'), /^audio: rendered without its voiceover \(not a board error\): set VOICE=on in engine\/.env/m, 'a voiced channel never passes silent (sound effects only)');

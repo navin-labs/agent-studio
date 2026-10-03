@@ -21,7 +21,7 @@ export const EndCard: React.FC<PrimitiveProps<{text: string; sub?: string}>> = (
   return (
     <AbsoluteFill style={{background: th.bg}}>
       <AbsoluteFill style={{clipPath: `inset(${(1 - wipe) * 100}% 0 0 0)`, background: th.ink}}>
-        <Img src={staticFile(mark ?? 'brand/mark.png')} style={{position: 'absolute', left: 540 - 120, top: 470, width: 240, height: 240, opacity: logo, transform: `scale(${0.6 + 0.4 * logo}) rotate(${(1 - logo) * -120}deg)`, filter: !mark && isLight(th.ink) ? 'invert(1)' : undefined}} /> {/* the C1 mark is drawn for a dark card; a channel mark for its own card */}
+        {mark ? <Img src={staticFile(mark)} style={{position: 'absolute', left: 540 - 120, top: 470, width: 240, height: 240, opacity: logo, transform: `scale(${0.6 + 0.4 * logo}) rotate(${(1 - logo) * -120}deg)`, filter: mark === 'brand/mark.png' && isLight(th.ink) ? 'invert(1)' : undefined}} /> : null} {/* the C1 mark is drawn for a dark card; a channel mark for its own card; no channel, no logo */}
         <div data-tb="cta" style={{position: 'absolute', top: 780, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 30, fontFamily: TYPE.display, fontWeight: 900, fontSize: 150, letterSpacing: '-0.04em', color: th.bg, opacity: textP, transform: `translateY(${(1 - textP) * 40}px)`}}>
           {parseAccent(p.text).map((w, i) =>
             w.accent ? (

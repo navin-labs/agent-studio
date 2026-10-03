@@ -161,7 +161,8 @@ const validateBoard = (doc) => {
     if (real) doc.handle = ig;
     else if (process.env.PREVIEW_HANDLE) (doc.handle = process.env.PREVIEW_HANDLE), warnings.push(`preview handle ${doc.handle}: channel ${doc.channel} has no Instagram handle yet; this render can never be dispatched`);
     else errors.push(`channel ${doc.channel} has no Instagram handle yet (channels/${doc.channel}/channel.json): the end card would show the wrong account`);
-    if (fs.existsSync(path.join(ROOT, 'public', 'brand', doc.channel, 'mark.svg'))) doc.mark = `brand/${doc.channel}/mark.svg`; // the channel's own end-card logo
+    // the channel's own end-card logo, else the studio mark (C1); a board without a channel (demo, test) shows no logo and no account
+    doc.mark = fs.existsSync(path.join(ROOT, 'public', 'brand', doc.channel, 'mark.svg')) ? `brand/${doc.channel}/mark.svg` : 'brand/mark.png';
     // the style preset (styles/<id>.json, docs/MOTION.md): the board's own, else the channel's setting
     const styleId = doc.style ?? ch?.style;
     const sf = styleId && path.join(ROOT, '..', 'styles', `${styleId}.json`);
@@ -261,6 +262,7 @@ const ttsText = (s, extra = {}) => {
 const API_PROVIDER = (process.env.TTS_PROVIDER || (process.env.ELEVENLABS_API_KEY ? 'elevenlabs' : process.env.OPENAI_API_KEY ? 'openai' : 'none')).toLowerCase();
 const channelVoice = (script) => {
   const f = script.channel && path.join(ROOT, '..', 'channels', script.channel, 'channel.json');
+  if (!script.channel) return script.voice ?? null; // a demo or test board may name its own voice; a channel board never does
   return f && fs.existsSync(f) ? (JSON.parse(fs.readFileSync(f, 'utf8')).voice ?? null) : null;
 };
 const OPENAI_VOICE = process.env.OPENAI_TTS_VOICE || 'ash';

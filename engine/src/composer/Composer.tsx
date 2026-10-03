@@ -12,7 +12,6 @@ import {cuesOr, prog, SceneCtx} from '../primitives/atoms';
 import {PRIMITIVES} from '../primitives/index';
 import {HostCtx, KaraokeCaptions, VoiceCtx} from '../host/Host';
 import {Captions} from '../story/Captions';
-import {HANDLE} from '../theme';
 import {HandleCtx, MarkCtx, THEMES, ThemeCtx, useTheme} from '../themes';
 import {ArrowFold, FoldBand, foldClip, Thread, YearFlap} from './Signature';
 import {NO_STYLE} from './style';
@@ -173,7 +172,7 @@ export const Composer: React.FC<ComposerProps> = ({script, timing, frames: given
   const starts = frames.map((_, i) => frames.slice(0, i).reduce((a, b) => a + b, 0));
   return (
     <ThemeCtx.Provider value={th}>
-      <HandleCtx.Provider value={script.handle ?? HANDLE}>
+      <HandleCtx.Provider value={script.handle ?? ''}>
       <MarkCtx.Provider value={script.mark}>
       <HostCtx.Provider value={script.host ?? 'chiku'}>
       <SfxEnabled.Provider value={script.sfx !== false}>
