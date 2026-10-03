@@ -141,7 +141,7 @@ const validate = (doc) => {
 
 // storyboard: engine checks from src/composer/storyboard.ts, plus the shared honesty and caption checks
 const validateBoard = (doc) => {
-  const {errors, warnings} = validateStoryboard(doc);
+  const {errors, warnings} = validateStoryboard(doc, VOICE_ON ? 'later' : undefined); // voiced: each line is judged by its measured clip, per platform below
   if (!/^[a-z0-9-]+$/.test(doc.id || '')) errors.push('id must be lowercase-with-dashes');
   for (const s of allStrings(doc)) for (const [re, why] of BANNED) if (re.test(s)) errors.push(`banned: ${why} -> "${s.slice(0, 80)}"`);
   if (doc.hookPattern !== undefined && !HOOK_PATTERNS.includes(doc.hookPattern)) errors.push(`"hookPattern" must be one of: ${HOOK_PATTERNS.join(', ')}`);
@@ -486,7 +486,7 @@ const renderReel = async (script, place) => {
   // render.json: the account shown on the closer (Dispatch checks it), the style preset, the AI voice used (null = silent; the YouTube description
 // discloses it) and each scene's time span (Learn maps YouTube retention onto it)
   const at = (composition.props.frames ?? []).reduce((a, f) => [...a, a.at(-1) + f], [0]).map((f) => +(f / composition.fps).toFixed(2));
-  if (script.format === 'storyboard') fs.writeFileSync(name('render.json'), JSON.stringify({handle: script.handle || null, voice: voice ?? null, style: script.preset?.id ?? null, platform: script.variant?.platform ?? null, scenes: script.scenes.map((s, i) => ({primitive: s.primitive, start: at[i], end: at[i + 1]}))}) + '\n');
+  if (script.format === 'storyboard') fs.writeFileSync(name('render.json'), JSON.stringify({handle: script.handle || null, voice: voice ?? null, style: script.preset?.id ?? null, platform: script.variant?.platform ?? null, vo: durations, scenes: script.scenes.map((s, i) => ({primitive: s.primitive, start: at[i], end: at[i + 1]}))}) + '\n');
   console.log(c.green(`  -> ${path.relative(ROOT, outDir)}/ (${fs.readdirSync(outDir).filter((x) => !x.startsWith('.')).length} files)`));
   if (script.format !== 'storyboard') return true;
   // text boxes: measured in the browser at render time, then checked (safe area, card overflow, caption overlap)
@@ -575,7 +575,10 @@ for (const f of files) {
         failed++;
         continue;
       }
-      const verr = validateStoryboard(vs).errors;
+      // voiced: generate (or reuse) this platform's clips first, so every line is judged by its real length
+      const heard = VOICE_ON && !flags.has('--no-vo') ? await prepareVoice(vs) : null;
+      if (heard?.fresh) serveUrl = null; // clips written here are not "fresh" again in renderReel: rebuild the bundle now
+      const verr = validateStoryboard(vs, heard?.durations).errors;
       if (verr.length) {
         verr.forEach((e) => console.log(c.red(`  error: ${platform}: ${e}`)));
         failed++;

@@ -85,6 +85,13 @@ const tooLong = failing((x) => ((x.doc.scenes[0].params as {text: string}).text 
 assert.equal(tooLong.length, 1);
 assert.match(tooLong[0], /^text-limits: scene 1 \(host-hook\): host-hook.text: max 40 characters, got 41/);
 assert.deepEqual(failing((x) => (x.probe!.audio = false)), ['audio: the video has no audio stream']);
+// a voiced line is judged by its measured clip (render.json "vo"), not the word-count estimate, which overcounts a fast voice
+{
+  const long = `${'invoice '.repeat(60).trim()}.`;
+  assert.match(failing((x) => (x.doc.scenes[1].vo = long)).join('\n'), /^text-limits: scene 2 .*vo needs about/m);
+  assert.ok(!failing((x) => ((x.doc.scenes[1].vo = long), (x.render!.vo = x.doc.scenes.map(() => 2)))).some((e) => e.startsWith('text-limits')), 'measured 2 s fits');
+  assert.match(failing((x) => ((x.doc.scenes[1].vo = long), (x.render!.vo = x.doc.scenes.map(() => 30)))).join('\n'), /scene 2 \(ui-inbox\): vo is 30\.0s but ui-inbox lasts at most 8s/, 'a measured clip too long still fails');
+}
 assert.match(failing((x) => (x.voice = null)).join('\n'), /^audio: rendered without its voiceover \(not a board error\): set VOICE=on in engine\/.env/m, 'a voiced channel never passes silent (sound effects only)');
 assert.deepEqual(failing((x) => Object.assign(x.probe!, {width: 720, height: 1280, fps: 25})), ['format: frame is 720x1280, the youtube preset needs 1080x1920; 25.00 fps, needs 30']);
 assert.deepEqual(failing((x) => (x.probe = null)), ['audio: no video file', 'format: no video file', 'duration: no video file']);

@@ -34,7 +34,7 @@ export type QaInputs = {
   spec: PlatformSpec | null; // the style preset's spec for this platform (styles/<id>.json "platforms")
   style: string | null; // the style preset the board renders in (its own "style", else the channel's)
   channel: {publishers: Publisher[]; voice?: unknown} | null; // channels/<channel>/channel.json
-  render: {handle?: string | null; platform?: string | null; style?: string | null} | null; // <prefix>.render.json
+  render: {handle?: string | null; platform?: string | null; style?: string | null; vo?: (number | null)[]} | null; // <prefix>.render.json
   sha256: string | null; // of the video file
   siblings: Partial<Record<Platform, string>>; // video_sha256 of the video's other platform variants (none may be the same file)
   probe: Probe | null; // null = no video file
@@ -74,7 +74,7 @@ export const evaluate = (x: QaInputs): QaResult => {
   const p = x.probe;
 
   add('schema', validate(loadSchema('storyboard'), x.doc));
-  add('text-limits', validateStoryboard(x.doc).errors);
+  add('text-limits', validateStoryboard(x.doc, x.render?.vo ?? undefined).errors); // voiced: each line judged by its measured clip (render.json)
   // a channel with a voice never ships silent (sound effects alone pass the stream check): not a board error, the render setting is off
   add('audio', !p ? ['no video file'] : [...(p.audio ? [] : ['the video has no audio stream']), ...(x.channel?.voice && !x.voice ? ['rendered without its voiceover (not a board error): set VOICE=on in engine/.env, then render again'] : [])]);
   add('format', !p ? ['no video file'] : [

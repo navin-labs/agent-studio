@@ -92,7 +92,9 @@ export const lengthIssue = (sb: Storyboard, secs: number) => {
 };
 
 // Engine-level checks. Channel rules (CTA mix, hook patterns) live in the channel RULEBOOK and agent-studio QA.
-export const validateStoryboard = (sb: Storyboard): {errors: string[]; warnings: string[]} => {
+// vo: the measured length of each scene's voice clip once the voice exists (then a line is judged by its real length, not the
+// word-count estimate, which overcounts a fast voice); "later" when the voice will be measured before render (VOICE=on).
+export const validateStoryboard = (sb: Storyboard, vo?: (number | null)[] | 'later'): {errors: string[]; warnings: string[]} => {
   const errors: string[] = [];
   const warnings: string[] = [];
   if (sb.theme !== undefined && !THEMES[sb.theme]) errors.push(`unknown theme "${sb.theme}" (use one of: ${Object.keys(THEMES).join(', ')})`);
@@ -108,7 +110,9 @@ export const validateStoryboard = (sb: Storyboard): {errors: string[]; warnings:
     if (s.transition !== undefined && !TRANSITIONS.includes(s.transition)) errors.push(`${w}: transition must be one of ${TRANSITIONS.join(', ')}`);
     if (i === 0 && s.transition && s.transition !== 'cut') errors.push(`${w}: the first scene cannot have a transition`);
     if (s.vo !== undefined && (typeof s.vo !== 'string' || !s.vo.trim())) errors.push(`${w}: vo must be non-empty text or left out`);
-    if (s.vo && estimateSeconds(s.vo, VOICE_WPS) + TAIL_EST > spec.seconds[1]) errors.push(`${w}: vo needs about ${estimateSeconds(s.vo, VOICE_WPS).toFixed(1)}s but ${s.primitive} lasts at most ${spec.seconds[1]}s; shorten it`);
+    const heard = Array.isArray(vo) ? vo[i] : null;
+    const need = heard != null ? heard + TAIL_AUDIO : estimateSeconds(s.vo ?? '', VOICE_WPS) + TAIL_EST;
+    if (s.vo && vo !== 'later' && need > spec.seconds[1]) errors.push(`${w}: vo ${heard != null ? 'is' : 'needs about'} ${(need - (heard != null ? TAIL_AUDIO : TAIL_EST)).toFixed(1)}s but ${s.primitive} lasts at most ${spec.seconds[1]}s; shorten it`);
   });
   const closers = Object.keys(SPECS).filter((k) => SPECS[k].closer);
   if (!SPECS[sc.at(-1)?.primitive ?? '']?.closer) errors.push(`last scene must be a closing card (${closers.join(' or ')})`);
