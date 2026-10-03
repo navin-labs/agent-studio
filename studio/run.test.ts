@@ -40,7 +40,7 @@ assert.deepEqual(r.problems, []);
 assert.ok(fs.existsSync(path.join(p.recipes, 'c1-automation', '2026-W41.json')), 'C1 W41 planned');
 assert.ok(!fs.existsSync(path.join(p.recipes, 'c2-reach')) && !fs.existsSync(path.join(p.recipes, 'c3-studio')), 'channels that are not live are not touched');
 assert.ok(fs.existsSync(path.join(p.state, 'learn', 'c1-automation', 'learn.json')), 'Learn ran before planning');
-assert.match(texts()[0], /c1-automation 2026-W41: 4 recipes are ready\. Forge/);
+assert.match(texts()[0], /c1-automation 2026-W41: 3 recipes are ready\. Forge/);
 assert.equal(calls.filter((c) => c.method === 'sendVideo').length, 1, 'one message covers the video and its variants');
 
 // the next hour: nothing repeats (no replan, no resend)

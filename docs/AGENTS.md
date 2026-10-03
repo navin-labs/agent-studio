@@ -6,7 +6,7 @@ Why: every actor has one job, a fixed input and output, and a hard never-do list
 |---|---|---|---|---|
 | Feed | Pull candidate topics daily | the feeds in each channel.json (Google Trends RSS India, Reddit RSS) | `ideas/<channel>.jsonl` with source link + date | 0 (n8n + code) |
 | Recipe | Pick the shape of each slot | channel.json, fingerprints, bench list, 70/30 split | `recipes/<channel>/<week>.json` | 0 (code) |
-| Writer (Forge) | Fill the words | the week's recipes (4 at launch), top 20 ideas, RULEBOOK.md, scoreboard.md | one storyboard per recipe in `engine/content/storyboards/` | Muse only, 1 batch per channel per week |
+| Writer (Forge) | Fill the words | the week's recipes (one per posting day), top 20 ideas, RULEBOOK.md, scoreboard.md | one storyboard per recipe in `engine/content/storyboards/` | Muse only, 1 batch per channel per week |
 | Render + QA | Render and check, once per platform | storyboard, style preset | per platform variant: mp4, caption, manifest, qa JSON, contact sheet (YouTube: thumbnail) | 0 (code) |
 | Dispatch | Send approved platform variants out, each to its own (channel, platform) destination | ledger, manifests, channel.json | that channel's n8n YouTube upload; `queue/<channel>/<platform>/` items for Forge | 0 (code) |
 | Learn | Score and steer | metrics, ledger, fingerprints | scoreboard.md, bench list, 70/30 split, missing-primitive hint | 0 (code) |

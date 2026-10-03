@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import {addDays, checkNovelty, type Fingerprint, isoWeek, structureDistance, topicSimilarity, weekStart} from './novelty.ts';
-import {channelThemes, generateWeek, reachable, type Recipe, recipeDate, slotDay, toFingerprint} from './recipe.ts';
+import {channelThemes, generateWeek, postingDays, reachable, type Recipe, recipeDate, slotDay, toFingerprint} from './recipe.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 const c1 = JSON.parse(fs.readFileSync(path.join(ROOT, 'channels/c1-automation/channel.json'), 'utf8'));
@@ -26,8 +26,8 @@ const all: Recipe[] = [];
 for (const w of weeks)
   for (const ch of [c1, c2, c3]) {
     const rs = generateWeek(ch, w, history);
-    assert.equal(rs.length, ch.cadence.posts_per_week, 'one recipe per posting day (C1, C2: 4 a week; C3: 7)');
-    assert.equal(rs.filter((r) => r.experiment).length, Math.round(ch.cadence.posts_per_week * 0.3), '30% of the slots are experiments');
+    assert.equal(rs.length, postingDays(ch, w).length, 'one recipe per posting day');
+    assert.equal(rs.filter((r) => r.experiment).length, Math.round(rs.length * 0.3), '30% of the slots are experiments');
     for (const r of rs) {
       assert.deepEqual(validate(schema, r), [], `${r.id} breaks recipe.schema.json`);
       assert.equal(r.transitions.length, r.primitives.length);
@@ -84,6 +84,14 @@ assert.deepEqual([1, 2, 3, 4, 5, 6, 7].map((s) => slotDay(s, 7)), [0, 1, 2, 3, 4
   const first = generateWeek(c1, '2026-W41', []);
   assert.deepEqual(first.map((x) => [recipeDate(x), x.launch ?? false]), [['2026-10-05', true], ['2026-10-07', false], ['2026-10-09', false], ['2026-10-11', false]]);
   assert.ok(generateWeek(c1, '2026-W42', first.map(toFingerprint)).every((x) => !x.launch), 'only the first week has a launch video');
+}
+// every other day from the launch (the real C1 and C2): never two days in a row, also across weeks; the launch week starts at its start day
+{
+  const alt = {...c1, cadence: {posts_per_week: 4, every_days: 2, start: '2026-10-04'}};
+  assert.deepEqual([postingDays(alt, '2026-W39'), postingDays(alt, '2026-W40'), postingDays(alt, '2026-W41'), postingDays(alt, '2026-W42')], [[], ['2026-10-04'], ['2026-10-06', '2026-10-08', '2026-10-10'], ['2026-10-12', '2026-10-14', '2026-10-16', '2026-10-18']]);
+  const launchWeek = generateWeek(alt, '2026-W40', []);
+  assert.deepEqual(launchWeek.map((x) => [recipeDate(x), x.launch]), [['2026-10-04', true]]);
+  assert.deepEqual(generateWeek(alt, '2026-W41', launchWeek.map(toFingerprint)).map((x) => [recipeDate(x), x.launch ?? false]), [['2026-10-06', false], ['2026-10-08', false], ['2026-10-10', false]]);
 }
 
 // style presets: one setting switches the look (theme, transitions) and is recorded on every recipe; setting it back rolls back

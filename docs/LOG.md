@@ -371,3 +371,8 @@ Next: Forge shortlists launch ideas through the feed (plus YouTube-sourced ideas
 Did: launch picks approved through the feed (Forge added 5 YouTube-sourced ideas, all 70 ideas schema-valid): C1 youtube-udhaar-bahi-khata, C2 youtube-qr-code-built-by-hand. C2 launches with C1 (launch_gate updated) in c2-archive-gold-v1; recipe test reads each channel's preset theme. 2026-W41 recipes planned for both (Mon 5, Wed 7, Fri 9, Sun 11 Oct; slot 1 "launch": true). Watcher handover: old reelwatch unloaded, studiowatch restarted on the current code.
 Decisions: ADR 24.
 Next: Forge writes W41 (both channels); renders, QA, Telegram approval; hourly loop install; DISPATCH_LIVE on and both channels live before Mon 12:30 IST (C1 Facebook slot).
+
+## 2026-10-04, session 30: launch today, every other day
+Did: launch moved to Sun 4 Oct 2026 for C1 and C2. New cadence option (channel.json cadence every_days + start; studio/recipe.ts postingDays): C1 and C2 post every other day from the launch (4, 6, 8, 10 Oct ...), 3 or 4 a week, never two days in a row. Recipes re-planned: 2026-W40 (launch, 4 Oct, "launch": true) and 2026-W41 (6, 8, 10 Oct) for both; the earlier W41 plan moved aside (nothing had been written from it). Writer skill, rulebooks, SETUP, recipe RULES, AGENTS, WORKFLOW updated; tests cover the new days (also across weeks) and the launch week.
+Decisions: ADR 25.
+Next: Forge reinstalls the Writer skill and writes W40 then W41; DISPATCH_LIVE on (Navin); both channels live and the hourly loop installed; approvals on Telegram before 12:30 IST (C1 Facebook slot).

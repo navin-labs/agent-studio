@@ -21,7 +21,7 @@ const lines = (f: string, rows: unknown[]) => fs.writeFileSync(f, rows.map((r) =
 // 4 weeks of published C1 videos (planned by the real generator, so they pass the novelty rules)
 const topics = ['supplier bills typed by hand', 'invoice reminders chased on whatsapp', 'dispatch updates for customers', 'attendance sheet kept on paper'];
 let history: Fingerprint[] = [];
-for (const w of ['2026-W37', '2026-W38', '2026-W39', '2026-W40']) history = [...history, ...generateWeek(c1, w, history).map(toFingerprint)];
+for (const w of ['2026-W37', '2026-W38', '2026-W39', '2026-W40']) history = [...history, ...generateWeek({...c1, cadence: {posts_per_week: 7}}, w, history).map(toFingerprint)]; // sample history: 7 a week
 const fps = history.map((f, i) => ({...f, topic_text: topics[i % 4]}));
 const hours = ['18', '19', '20', '21'];
 const at = (i: number) => `${fps[i].date}T${hours[i % 4]}:00:00+05:30`;

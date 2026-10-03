@@ -9,7 +9,7 @@ Why: turn a manual task an Indian SMB owns into a lead (DM AUDIT) or a follow.
 | CTA | Kind follow or dm-audit, about 1 in 5 dm-audit (Weekly Writer skill; Navin may change it). Each platform video says it its own way (style preset `platforms`): YouTube "Subscribe" or "DM AUDIT on Instagram", Instagram "Follow" or "DM AUDIT", Facebook "Follow the page" or "DM AUDIT on Instagram" |
 | Formats | host (Chiku) and explainer, 8 shots each, both 40 to 60 s, no exceptions (the length check measures every platform video) |
 | Themes | night only (one channel, one look: Night Signal, the banner and Chiku's stage) |
-| Cadence | 4 a week at launch (every other day: Mon, Wed, Fri, Sun; channel.json `cadence.posts_per_week`); daily (7) after 14 clean days. The first video is the launch video (the channel promise) |
+| Cadence | every other day from the launch (Sun 4 Oct 2026: 4, 6, 8, 10 Oct ...; 3 or 4 a week, never two days in a row; channel.json `cadence.every_days` 2 and `start`); daily after 14 clean days (`every_days` 1). The first video is the launch video (the channel promise) |
 | Publisher | Three platform videos per approved video: Instagram @theautomationguynavin (Forge queue), YouTube @theautomationguynavin (its own n8n workflow, `agent-studio-youtube-c1-automation`), Facebook page 1429203763599559 (Forge queue, posted to the page by its ID; username pending, retry 2026-10-05: until then the end card names no account) |
 
 ## Writing rules (from the Forge skill)

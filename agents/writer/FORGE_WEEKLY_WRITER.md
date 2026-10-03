@@ -7,10 +7,10 @@ All paths are absolute. The project is `~/Dev/projects/agent-studio` (below: `ST
 ---
 
 ## When
-Once a week per live channel. Every Thursday the studio writes `recipes/<channel>/<next week>.json` and Telegram says "<channel> <week>: N recipes are ready" (N is the channel's `cadence.posts_per_week`: 4 at launch, one every other day: Mon, Wed, Fri, Sun; each recipe has its posting `date`). Run this skill for that channel and week (or when Navin says "write week <YYYY-Www> for <channel>"). Channels: `c1-automation`, `c2-reach`. (`c3-studio` is not open yet: it has no style preset, so its boards cannot render. Do not write C3 boards until Navin opens it.)
+Once a week per live channel. Every Thursday the studio writes `recipes/<channel>/<next week>.json` and Telegram says "<channel> <week>: N recipes are ready" (N is the number of posting days that week: the channels post every other day from their launch, so 3 or 4; each recipe has its posting `date`). Run this skill for that channel and week (or when Navin says "write week <YYYY-Www> for <channel>"). Channels: `c1-automation`, `c2-reach`. (`c3-studio` is not open yet: it has no style preset, so its boards cannot render. Do not write C3 boards until Navin opens it.)
 
 ## Read (in this order, nothing else)
-1. `STUDIO/recipes/<channel>/<week>.json`: the week's recipes (4 at launch). Each fixes `id`, `theme`, `style`, `hook_pattern`, the shot list (`primitives`) and `transitions`. **Never change any of them.**
+1. `STUDIO/recipes/<channel>/<week>.json`: the week's recipes (3 or 4: one per posting day). Each fixes `id`, `theme`, `style`, `hook_pattern`, the shot list (`primitives`) and `transitions`. **Never change any of them.**
 2. `STUDIO/ideas/<channel>.jsonl`: the idea list, one JSON per line. The feed adds new ideas every morning (each with its source link); newest are at the bottom.
 3. `STUDIO/state/learn/<channel>/scoreboard.md` if it exists: what worked. Lean on proven topics and hook words; avoid the bench.
 4. `STUDIO/channels/<channel>/RULEBOOK.md`: honesty, CTA and hashtag rules.

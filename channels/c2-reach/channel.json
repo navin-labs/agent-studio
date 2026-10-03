@@ -28,7 +28,9 @@
   ],
   "style": "c2-archive-gold-v1",
   "cadence": {
-    "posts_per_week": 4
+    "posts_per_week": 4,
+    "every_days": 2,
+    "start": "2026-10-04"
   },
   "publishers": [
     {

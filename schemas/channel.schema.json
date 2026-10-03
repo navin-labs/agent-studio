@@ -138,6 +138,17 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 14
+        },
+        "every_days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7,
+          "description": "post every N days counted from start (2 = every other day, never two days in a row); with start, it decides the posting days and posts_per_week is only the weekly average"
+        },
+        "start": {
+          "type": "string",
+          "format": "date",
+          "description": "the first posting day (the launch video), for every_days"
         }
       }
     },

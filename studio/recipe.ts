@@ -10,7 +10,7 @@ import {boardFormat, HOOK_PATTERNS, LENGTH} from '../engine/src/composer/storybo
 import {SPECS} from '../engine/src/primitives/specs.ts';
 import {addDays, checkNovelty, type Fingerprint, type Violation, weekStart} from './novelty.ts';
 
-export type Channel = {id: string; themes?: string[]; style?: string; host?: string; cadence?: {posts_per_week: number}};
+export type Channel = {id: string; themes?: string[]; style?: string; host?: string; cadence?: {posts_per_week: number; every_days?: number; start?: string}};
 export type Style = {id: string; channel: string; theme: string; transitions: string[]; version: number; about: string; expect?: string};
 const ROOT = path.join(import.meta.dirname, '..');
 // A styled channel's look comes from its preset (styles/<id>.json, docs/MOTION.md); an unstyled one lists its themes.
@@ -92,6 +92,15 @@ const pick = <T,>(r: () => number, xs: readonly T[]) => xs[Math.floor(r() * xs.l
 export const recipeHash = (theme: string, primitives: string[], hook: string) => createHash('sha1').update(`${theme}|${primitives.join('>')}|${hook}`).digest('hex').slice(0, 12);
 // Posting days spread over the week: 7 a week is every day, 4 is Mon, Wed, Fri, Sun (alternate days), 3 is Mon, Thu, Sun.
 export const slotDay = (slot: number, perWeek: number) => (perWeek > 1 ? Math.round(((slot - 1) * 6) / (perWeek - 1)) : 0);
+// The posting days of a week: every `every_days` days from `start` when both are set (2 = every other day, so never two days in a
+// row, also across weeks), otherwise posts_per_week spread over the week.
+export const postingDays = (ch: Channel, week: string): string[] => {
+  const c = ch.cadence;
+  const week7 = Array.from({length: 7}, (_, i) => addDays(weekStart(week), i));
+  if (c?.every_days && c.start) return week7.filter((d) => d >= c.start! && Math.round((Date.parse(d) - Date.parse(c.start!)) / 86_400_000) % c.every_days! === 0);
+  const n = c?.posts_per_week ?? 7;
+  return Array.from({length: n}, (_, i) => week7[slotDay(i + 1, n)]);
+};
 export const recipeDate = (r: Pick<Recipe, 'week' | 'slot' | 'date'>) => r.date ?? addDays(weekStart(r.week), r.slot - 1);
 export const toFingerprint = (r: Recipe): Fingerprint => ({id: r.id, channel: r.channel, date: recipeDate(r), primitives: r.primitives, opening: r.opening, theme: r.theme, hook_pattern: r.hook_pattern, hash: r.fingerprint});
 
@@ -109,7 +118,8 @@ const formatsFor = (ch: Channel, style?: Style | null) =>
 export const generateWeek = (ch: Channel, week: string, history: Fingerprint[], opts: {bench?: string[]; proven?: string[]; leaks?: string[]; seed?: string; style?: Style | null; hooks?: string[]; removed?: string[]; guidance?: Guidance | null} = {}): Recipe[] => {
   const r = rng(opts.seed ?? `${ch.id}|${week}`);
   const style = opts.style !== undefined ? opts.style : ch.style ? loadStyle(ch.style) : null;
-  const n = ch.cadence?.posts_per_week ?? 7;
+  const days = postingDays(ch, week);
+  const n = days.length;
   // removed: primitives Navin took out of this channel's grammar (a Tier 2 tap, studio/improve.ts); bench: Learn's 2-week rest
   const allowed = (p: string) => SPECS[p]?.channels.includes(ch.id as never) && !opts.bench?.includes(p) && !opts.removed?.includes(p);
   const formats = formatsFor(ch, style);
@@ -146,7 +156,7 @@ export const generateWeek = (ch: Channel, week: string, history: Fingerprint[], 
         channel: ch.id,
         week,
         slot,
-        date: addDays(weekStart(week), slotDay(slot, n)),
+        date: days[slot - 1],
         theme,
         opening: primitives[0],
         primitives,
