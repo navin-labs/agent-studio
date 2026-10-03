@@ -366,3 +366,8 @@ Open questions: Forge to reinstall Weekly Writer (now 114 lines) and Queue Publi
 ## 2026-10-04, session 28: launch look, posting times, feed fix
 Did: C1 style set to c1-night-signal-v1 (Navin); tests read the channel's preset theme. Posting times saved to state/learn/posting-times.json (IST, Forge's recommendations approved by Navin; Learn retunes with data): C1 YouTube 19:00, Instagram 20:30, Facebook 12:30; C2 YouTube 20:00, Instagram 21:00, Facebook 21:00. Feed: Reddit answered 403 "Blocked" to the browser-like User-Agent, so since 2026-10-02 only Google Trends added ideas (the studio correctly refused the block pages, 400); studio/feed.ts now sends a descriptive bot User-Agent, verified 200 with 25 entries; approve receiver restarted.
 Next: Forge shortlists launch ideas through the feed (plus YouTube-sourced ideas); Navin picks; plan C1 2026-W41; go-live.
+
+## 2026-10-04, session 29: C1 and C2 launch together; week 41 planned
+Did: launch picks approved through the feed (Forge added 5 YouTube-sourced ideas, all 70 ideas schema-valid): C1 youtube-udhaar-bahi-khata, C2 youtube-qr-code-built-by-hand. C2 launches with C1 (launch_gate updated) in c2-archive-gold-v1; recipe test reads each channel's preset theme. 2026-W41 recipes planned for both (Mon 5, Wed 7, Fri 9, Sun 11 Oct; slot 1 "launch": true). Watcher handover: old reelwatch unloaded, studiowatch restarted on the current code.
+Decisions: ADR 24.
+Next: Forge writes W41 (both channels); renders, QA, Telegram approval; hourly loop install; DISPATCH_LIVE on and both channels live before Mon 12:30 IST (C1 Facebook slot).

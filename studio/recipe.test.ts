@@ -41,7 +41,7 @@ for (const r of all) assert.deepEqual(checkNovelty(toFingerprint(r), history.fil
 const c1all = all.filter((r) => r.channel === 'c1-automation');
 assert.ok(c1all.some((r) => r.primitives[0] === 'host-hook') && c1all.some((r) => r.primitives[0] !== 'host-hook'), 'C1 mixes host and composed videos');
 assert.ok(c1all.every((r) => r.theme === channelThemes(c1)[0]), 'C1 renders in its style preset theme only');
-assert.ok(all.filter((r) => r.channel === 'c2-reach').every((r) => r.theme === 'archive'), 'C2 renders in Archive Gold only');
+assert.ok(all.filter((r) => r.channel === 'c2-reach').every((r) => r.theme === channelThemes(c2)[0]), 'C2 renders in its style preset theme only');
 
 // seeded: same inputs, same week; another seed, another week
 assert.deepEqual(generateWeek(c1, '2026-W41', []), generateWeek(c1, '2026-W41', []));

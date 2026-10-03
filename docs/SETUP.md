@@ -94,7 +94,7 @@ The old "Instagram Growth Pipeline" skill (reel-engine) is replaced by these thr
 5. Approve. Within the hour the loop dispatches each approved variant: YouTube scheduled through C1's own n8n workflow, Instagram and Facebook (to the page by its ID) into `queue/c1-automation/<platform>/` for Forge at the posting time (19:00 IST until Learn has data).
 6. Forge posts, writes `<item>.posted.json`; the loop marks that variant published (YouTube once its scheduled time has passed). Forge reports metrics at 24h and 7d; n8n reads YouTube views; Learn uses them from the next Thursday.
 
-C2 after C1 has run 14 days with no missed posts (Phase D1). C3 once it has a style preset and 20 approved videos exist (D2).
+C1 and C2 launch together in 2026-W41 (Navin, 2026-10-04): set both channels live in step 2 and plan both in step 3. C3 once it has a style preset and 20 approved videos exist (D2).
 
 ## Daily life
 - Telegram is the control panel: videos to approve (one message per video, its variants listed), "recipes ready", and "agent-studio needs you" when something fails or a variant is refused at dispatch (with the exact reason).
