@@ -230,8 +230,8 @@ export const runLearn = (channel: string, week: string, p: Paths = PATHS, now = 
   fs.writeFileSync(learnFile(channel, p), JSON.stringify(r.learned, null, 2) + '\n');
   appendJsonl(changesFile(p), changes);
   fs.writeFileSync(path.join(dir, 'scoreboard.md'), scoreboard(r));
-  if (Object.keys(r.times).length) all[channel] = r.times;
-  else delete all[channel];
+  // only platforms with evidence change; a time set by hand (no data yet) stays until Learn has better
+  if (Object.keys(r.times).length) all[channel] = {...all[channel], ...r.times};
   fs.writeFileSync(tf, JSON.stringify(all, null, 2) + '\n');
   return {...r, changes};
 };

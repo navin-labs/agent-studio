@@ -43,6 +43,9 @@ const rare = [...uses].filter(([x]) => !['stamp-hit', 'chat-pop', 'end-card'].in
 const unmeasured = new Set(fps.filter((f) => f.primitives.includes(rare)).slice(MIN_N - 1).map((f) => f.id));
 lines(metricsFile(p), metrics.filter((m) => !unmeasured.has(m.storyboard_id)));
 
+// times set by hand (Navin, before any data) survive a Learn run that has no evidence for them
+fs.mkdirSync(path.join(p.state, 'learn'), {recursive: true});
+fs.writeFileSync(path.join(p.state, 'learn/posting-times.json'), JSON.stringify({'c1-automation': {facebook: '12:30'}, 'c2-reach': {youtube: '20:00'}}));
 const r = runLearn('c1-automation', '2026-W41', p);
 const prim = new Map(r.tables.primitive.map((x) => [x.value, x]));
 assert.ok(fps.filter((f) => f.primitives.includes('stamp-hit')).length >= MIN_N, 'the sample has enough stamp-hit videos to judge');
@@ -55,6 +58,10 @@ const thinRows = r.tables.primitive.filter((x) => x.n < MIN_N);
 assert.ok(thinRows.length, 'the sample has a primitive with too few videos');
 for (const x of thinRows) assert.ok(!r.learned.proven.includes(x.value) && !r.learned.bench.some((b) => b.primitive === x.value), `${x.value}: too few videos, shown but not judged`);
 assert.deepEqual(JSON.parse(fs.readFileSync(path.join(p.state, 'learn/posting-times.json'), 'utf8'))['c1-automation'].youtube, '21:00');
+{
+  const t = JSON.parse(fs.readFileSync(path.join(p.state, 'learn/posting-times.json'), 'utf8'));
+  assert.deepEqual([t['c1-automation'].facebook, t['c2-reach'].youtube], ['12:30', '20:00'], 'hand-set times without evidence are kept');
+}
 const board = fs.readFileSync(path.join(p.state, 'learn/c1-automation/scoreboard.md'), 'utf8');
 for (const h of ['## By primitive', '## By theme', '## By hook pattern', '## By topic word', '## By posting hour', 'Bench (until 2026-W43)']) assert.ok(board.includes(h), h);
 assert.ok(!board.includes('99.90%'), 'the 24h numbers were replaced by 7d');

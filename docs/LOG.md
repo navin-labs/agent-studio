@@ -376,3 +376,4 @@ Next: Forge writes W41 (both channels); renders, QA, Telegram approval; hourly l
 Did: launch moved to Sun 4 Oct 2026 for C1 and C2. New cadence option (channel.json cadence every_days + start; studio/recipe.ts postingDays): C1 and C2 post every other day from the launch (4, 6, 8, 10 Oct ...), 3 or 4 a week, never two days in a row. Recipes re-planned: 2026-W40 (launch, 4 Oct, "launch": true) and 2026-W41 (6, 8, 10 Oct) for both; the earlier W41 plan moved aside (nothing had been written from it). Writer skill, rulebooks, SETUP, recipe RULES, AGENTS, WORKFLOW updated; tests cover the new days (also across weeks) and the launch week.
 Decisions: ADR 25.
 Next: Forge reinstalls the Writer skill and writes W40 then W41; DISPATCH_LIVE on (Navin); both channels live and the hourly loop installed; approvals on Telegram before 12:30 IST (C1 Facebook slot).
+- Learn no longer erases hand-set posting times (found on the first live tick; regression test in learn.test.ts).
