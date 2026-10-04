@@ -8,6 +8,31 @@ A deterministic, human-governed content operations system that turns sourced top
 ![Platform: macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)
 ![State: files + JSONL](https://img.shields.io/badge/state-files%20%2B%20JSONL-informational.svg)
 
+## Demo
+<table><tr>
+<td valign="top">
+
+https://github.com/user-attachments/assets/0b320102-7cf2-4a57-982e-5fe07f4671e2
+
+</td>
+<td valign="top">
+
+**A generated sample from the pipeline**, rendered by the engine and passed by QA. It is a verification render, not a channel post.
+
+- **Topic:** chasing unpaid invoices. Payment reminders typed by hand versus a reminder flow that runs itself every morning (illustrative example data).
+- **Shows:** a question hook, the manual pile, a reminder typed in a chat UI, a before/after split, the automated flow, the sheet updating itself, a counter dropping to zero, the YouTube end card.
+- **Channel and platform:** `c1-automation`, YouTube variant ("Subscribe" CTA, YouTube end card and thumbnail). The Instagram and Facebook variants of the same board differ in CTA, end card and caption.
+- **Format:** 44.18 s (the channel allows 40 to 60 s), 1080x1920, 30 fps, voiced.
+- **Rendering:** Remotion (React) from `engine/test/style-c1.json`; style preset `c1-night-signal-v1`; recipe `style-test-c1`, hook pattern "question"; voice Kokoro `af_heart` at 1.15, run locally (the caption discloses the AI voice).
+- **Shots:** 8 scenes: word-stack-slam, pile-drop, ui-chat, before-after-split, flow-run, ui-sheet, counter-drop, end-card.
+- **QA:** 12 of 12 checks passed ([qa-c1.txt](docs/proof/qa-c1.txt)).
+- **Why this one:** the richer of the two verified boards (7 distinct primitives against C2's 5), so one file exercises voice measurement, text fit, the platform CTA rules and the end card.
+
+The player is a re-encoded preview (4.3 MB; GitHub caps inline video at 10 MB). The original, byte-for-byte, is [c1-automation-youtube-2026-10-04-style-c1.mp4](docs/proof/demo/c1-automation-youtube-2026-10-04-style-c1.mp4) (12.3 MB); its SHA-256 (`4923596f…dfcae4c2`) equals `video_sha256` in [c1-youtube.json](docs/proof/manifests/c1-youtube.json).
+
+</td>
+</tr></table>
+
 ## What this is
 Agent Studio runs a small portfolio of short-video channels on YouTube, Instagram and Facebook from one Mac. Each week it plans the videos in code, has an AI agent write the words, renders one video per platform with a React motion engine and a local voice, checks every file with deterministic QA, and sends each passing video to its owner on Telegram. Nothing is published until that person taps Approve, and dispatch re-verifies everything right before sending.
 
@@ -139,24 +164,6 @@ Run on 2026-10-04, Node 26.0.0, macOS on Apple silicon. Logs: [docs/proof/](docs
 | `node studio/simulate.ts` | exit 0: 2 videos x 3 variants approved with one tap each and routed to their own channel; 10 refusal cases refused; a second run uploads and queues nothing |
 
 The test suites cover the failure paths, not only the happy path: replayed, tampered and expired approvals; a video changed after approval; a variant rejected while dispatch is running; misrouted, unmanifested and already-queued variants; refused versus unknown uploads; a crash between claim and queue write; torn ledger lines; metrics for posts that were never dispatched.
-
-## Demo
-https://github.com/user-attachments/assets/0b320102-7cf2-4a57-982e-5fe07f4671e2
-
-A generated sample from the pipeline: a test storyboard rendered by the engine and passed by QA. The player above is a re-encoded preview (4.3 MB, same resolution, frame rate and length) because GitHub caps inline video at 10 MB. The original, byte-for-byte, is **[c1-automation-youtube-2026-10-04-style-c1.mp4](docs/proof/demo/c1-automation-youtube-2026-10-04-style-c1.mp4)** (12.3 MB); its SHA-256 (`4923596f…dfcae4c2`) equals `video_sha256` in [docs/proof/manifests/c1-youtube.json](docs/proof/manifests/c1-youtube.json).
-
-| | |
-|---|---|
-| Topic | Chasing unpaid invoices: payment reminders typed by hand versus a reminder flow that runs itself every morning (illustrative example data) |
-| What it shows | A question hook, the manual pile, a reminder typed in a chat UI, a before/after split, the automated flow (unpaid list read, reminder written, sent), the sheet updating itself, a counter dropping to zero, and the YouTube end card |
-| Channel and platform | `c1-automation` (small-business automation), YouTube variant: "Subscribe" CTA, YouTube end card and thumbnail. The Instagram and Facebook variants of the same board differ in CTA, end card and caption, and are not committed |
-| Duration and format | 44.18 s (the channel allows 40 to 60 s), 1080x1920, 30 fps, with voice |
-| Rendering | Remotion (React) from `engine/test/style-c1.json`; style preset `c1-night-signal-v1` (night-signal theme); recipe `style-test-c1`, hook pattern "question"; voice: Kokoro `af_heart` at 1.15, run locally; the caption discloses the AI voice |
-| Shots | 8 scenes, 7 primitives plus the end card: word-stack-slam, pile-drop, ui-chat, before-after-split, flow-run, ui-sheet, counter-drop, end-card |
-| QA | 12 of 12 checks passed ([docs/proof/qa-c1.txt](docs/proof/qa-c1.txt)) |
-| Why this one | The C1 board is the richer of the two verified boards (7 distinct primitives against C2's 5, including the UI mockups and the flow diagram), so one file exercises voice measurement, text fit, the platform CTA rules and the end card; the YouTube variant also carries the generated thumbnail |
-
-It is a verification render, not a channel post: live channel output is not part of the repository.
 
 ## Current status
 | Area | State |
