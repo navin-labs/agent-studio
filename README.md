@@ -10,25 +10,23 @@ A deterministic, human-governed content operations system that turns sourced top
 
 ## Demo
 <table><tr>
-<td valign="top">
+<td width="360" valign="top">
 
 https://github.com/user-attachments/assets/0b320102-7cf2-4a57-982e-5fe07f4671e2
 
 </td>
 <td valign="top">
 
-**A generated sample from the pipeline**, rendered by the engine and passed by QA. It is a verification render, not a channel post.
+**A generated sample from the pipeline**: a test storyboard rendered by the engine and passed by QA (a verification render, not a channel post).
 
-- **Topic:** chasing unpaid invoices. Payment reminders typed by hand versus a reminder flow that runs itself every morning (illustrative example data).
-- **Shows:** a question hook, the manual pile, a reminder typed in a chat UI, a before/after split, the automated flow, the sheet updating itself, a counter dropping to zero, the YouTube end card.
-- **Channel and platform:** `c1-automation`, YouTube variant ("Subscribe" CTA, YouTube end card and thumbnail). The Instagram and Facebook variants of the same board differ in CTA, end card and caption.
-- **Format:** 44.18 s (the channel allows 40 to 60 s), 1080x1920, 30 fps, voiced.
-- **Rendering:** Remotion (React) from `engine/test/style-c1.json`; style preset `c1-night-signal-v1`; recipe `style-test-c1`, hook pattern "question"; voice Kokoro `af_heart` at 1.15, run locally (the caption discloses the AI voice).
-- **Shots:** 8 scenes: word-stack-slam, pile-drop, ui-chat, before-after-split, flow-run, ui-sheet, counter-drop, end-card.
+- **Topic:** chasing unpaid invoices: payment reminders typed by hand versus a reminder flow that runs itself every morning (illustrative example data).
+- **Platform:** `c1-automation`, YouTube variant ("Subscribe" CTA and end card). The same board also renders Instagram and Facebook variants with their own CTA, end card and caption.
+- **Format:** 44.18 s (allowed 40 to 60 s), 1080x1920, 30 fps, local Kokoro voice.
+- **Built from:** `engine/test/style-c1.json`, style `c1-night-signal-v1`, recipe `style-test-c1`; 8 shots: word-stack-slam, pile-drop, ui-chat, before-after-split, flow-run, ui-sheet, counter-drop, end-card.
 - **QA:** 12 of 12 checks passed ([qa-c1.txt](docs/proof/qa-c1.txt)).
-- **Why this one:** the richer of the two verified boards (7 distinct primitives against C2's 5), so one file exercises voice measurement, text fit, the platform CTA rules and the end card.
+- **Why this one:** the richer of the two verified boards (7 distinct primitives against 5), so one file exercises voice measurement, text fit and the platform CTA rules.
 
-The player is a re-encoded preview (4.3 MB; GitHub caps inline video at 10 MB). The original, byte-for-byte, is [c1-automation-youtube-2026-10-04-style-c1.mp4](docs/proof/demo/c1-automation-youtube-2026-10-04-style-c1.mp4) (12.3 MB); its SHA-256 (`4923596f…dfcae4c2`) equals `video_sha256` in [c1-youtube.json](docs/proof/manifests/c1-youtube.json).
+The player is a 4.3 MB re-encode (GitHub's inline limit is 10 MB). The original is [c1-automation-youtube-2026-10-04-style-c1.mp4](docs/proof/demo/c1-automation-youtube-2026-10-04-style-c1.mp4); its SHA-256 matches [c1-youtube.json](docs/proof/manifests/c1-youtube.json).
 
 </td>
 </tr></table>
