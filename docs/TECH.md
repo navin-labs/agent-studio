@@ -44,7 +44,7 @@ One repo (ADR 7).
 |---|---|
 | `engine/` | Motion library (primitives), `themes.ts`, Composer, renderer, gate, watcher |
 | root | Schemas, recipes, novelty, QA, approval page, dispatch, learn, channel config, docs |
-| `~/Dev/projects/reel-engine` | Old live engine (v1). Read-only; retired at task B4b |
+| `reel-engine` (separate, v1) | The engine before it was copied into `engine/` (ADR 7). Retired at go-live; never modified by this repo |
 
 ## Stack
 | Layer | Choice |
@@ -157,7 +157,7 @@ Not taken, on purpose: its AI video-generation core (our composed brand formats 
 | Forge writes only JSON into content folders and its own queue/inbox files; never edits engine code | Forge skill standing rules |
 | Ideas only from feeds with a source link | Writer rules; `meta.source` required by storyboard schema |
 
-## Approval (B4)
+## Approval
 | Part | Where |
 |---|---|
 | Telegram (main path) | `studio/telegram.ts`: one message per QA-passed video with its passing variant's video, each platform variant's status (ready with its CTA, or held with why) and one **Approve (<platforms>)** button; "Approve all" once the week is shown. Taps count only from TELEGRAM_CHAT_ID in that private chat and go through the same signed approval as the links |

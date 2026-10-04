@@ -77,6 +77,7 @@ export const post = async (route: string, raw: string, tooBig = false, opts?: {p
     const r = record(Array.isArray(j) ? j : [j], opts?.paths);
     return {status: r.errors.length ? 400 : 200, body: r};
   }
+  if (route !== '/feed') return {status: 404, body: {errors: [`no POST route ${route}`]}};
   try {
     if (typeof j?.url !== 'string') throw new Error('send {"url": "<feed url>"} (the Mac fetches it) or {"url", "body": "<the feed text>"}');
     // {url}: the Mac fetches (Reddit blocks the n8n container); {url, body}: n8n already fetched it
@@ -124,10 +125,10 @@ else if (import.meta.main) {
   const port = Number(process.env.APPROVE_PORT ?? 5680);
   http
     .createServer((req, res) => {
-      // POST from n8n: /metrics (YouTube statistics rows) and /feed ({url}: the Mac fetches that listed feed; or {url, body}). Both are checked
-      // here before anything is written; a body over 5 MB is refused.
+      // POST from n8n: /metrics (YouTube statistics rows), /experiment-days (experiment analytics) and /feed ({url}: the Mac fetches that
+      // listed feed; or {url, body}). post() routes them (unknown routes: 404) and checks each before anything is written; a body over 5 MB is refused.
       const route = (req.url ?? '').split('?')[0];
-      if (req.method === 'POST' && (route === '/metrics' || route === '/feed')) {
+      if (req.method === 'POST') {
         let raw = '';
         let big = false;
         req.on('data', (c) => (raw.length + c.length > 5_000_000 ? (big = true) : (raw += c)));

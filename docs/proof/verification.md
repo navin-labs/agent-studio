@@ -53,8 +53,8 @@ YouTube publishes each scheduled upload at its time; the agent's Queue Publisher
 cd engine && npm install && npm run check
 VOICE=on npm run make -- test/style-c1.json test/style-c2.json test/demo.json
 cd ..
-node studio/qa.ts engine/test/style-c1.json --out engine/test/out --recipes engine/test/recipes --date <render date>
-node studio/qa.ts engine/test/style-c2.json --out engine/test/out --recipes engine/test/recipes --date <render date>
+node studio/qa.ts engine/test/style-c1.json --out engine/test/out --recipes engine/test/recipes --date $(date +%F)
+node studio/qa.ts engine/test/style-c2.json --out engine/test/out --recipes engine/test/recipes --date $(date +%F)
 node studio/simulate.ts
 ```
 Voiceover needs the local voice setup (docs/INSTALL.md section 4).

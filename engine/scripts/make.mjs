@@ -78,7 +78,7 @@ const BANNED = [
 
 const STORY_TYPES = new Set(['hook', 'beat', 'cta']);
 const STORY_TEMPLATES = {'pile-to-flow': 6, 'invoice-chase': 6}; // invoice-chase = old name, same template
-const VOICE_ON = process.env.VOICE === 'on'; // ponytail: voiceover parked, silent by default // template -> number of scenes it animates
+const VOICE_ON = process.env.VOICE === 'on'; // silent unless VOICE=on in engine/.env (production renders with it on)
 
 const allStrings = (obj, out = []) => {
   if (typeof obj === 'string') out.push(obj);

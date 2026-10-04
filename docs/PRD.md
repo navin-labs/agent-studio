@@ -50,4 +50,4 @@ Why: publish original, sourced, on-brand motion videos on 3 channels every day, 
 | False claims hurt trust | Forge honesty rules and banned phrases, enforced by the gate |
 | Approval fatigue | One weekly batch page per channel, approve-all button |
 | Channels compete for attention | Distinct roles, KPIs and CTAs; channels cross-link |
-| Plans disagree on voice, publishing, CTA ratio | Listed as open questions in LOG.md; resolve before Phase A |
+| Plans disagree on voice, publishing, CTA ratio | Voice and publishing resolved (local voices; YouTube via n8n, Instagram and Facebook via the Forge queue: DECISIONS.md 18, 19); the C1 CTA ratio stays open in `channels/c1-automation/channel.json` |

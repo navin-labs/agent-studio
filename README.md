@@ -1,146 +1,195 @@
-# agent-studio
+# Agent Studio
 
-An autonomous short-video studio: it turns sourced topics into motion-design videos, renders a version for each platform (YouTube, Instagram, Facebook), checks every file, and publishes nothing until a person approves that exact video on Telegram.
+A deterministic, human-governed content operations system that turns sourced topics into platform-specific short videos, verifies every file independently, and publishes only the exact bytes a person approved.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Status: production](https://img.shields.io/badge/status-production-brightgreen.svg)
-![Node 26](https://img.shields.io/badge/node-26-green.svg)
-![Checks: 12 suites](https://img.shields.io/badge/checks-12%20suites%20passing-brightgreen.svg)
+![Node 26](https://img.shields.io/badge/node-26-339933.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6.svg)
+![Platform: macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)
+![State: files + JSONL](https://img.shields.io/badge/state-files%20%2B%20JSONL-informational.svg)
 
-**In production since 4 October 2026**, running two live channels on one Mac, every other day, on YouTube, Instagram and Facebook. The owner's only daily task is tapping Approve.
+## What this is
+Agent Studio runs a small portfolio of short-video channels on YouTube, Instagram and Facebook from one Mac. Each week it plans the videos in code, has an AI agent write the words, renders one video per platform with a React motion engine and a local voice, checks every file with deterministic QA, and sends each passing video to its owner on Telegram. Nothing is published until that person taps Approve, and dispatch re-verifies everything right before sending.
 
-## Demo
-[![Demo render: contact sheet](docs/proof/demo/contact.png)](docs/proof/demo/demo.mp4)
+| Automated | Human-controlled |
+|---|---|
+| Topic intake from listed feeds, weekly planning, novelty rules | Approving each video (one Telegram tap per video, or "Approve all" for videos already shown) |
+| Writing the storyboard (AI) and fixing it until QA passes | Taking an approval back before it goes out (`node studio/ledger.ts reject <id>`) |
+| Rendering three platform variants, voice, captions, thumbnails | Turning a channel live, and turning dispatch live (two separate switches) |
+| QA, routing, dispatch, retries, publish confirmation, metrics intake | Resolving an upload whose result is unknown (the system never retries it blind) |
+| Small, logged tuning (posting times, benched shots) from metrics | Any larger change Learn proposes (applied only on a tap) |
 
-[Watch the demo (MP4, 21 s, 7.3 MB)](docs/proof/demo/demo.mp4): a neutral board about the pipeline itself, rendered by this engine with a local voice (`engine/test/demo.json`). Live channel output is not part of the repo.
+It has run in production since 4 October 2026: two channels live, posting every other day ([docs/proof/live.txt](docs/proof/live.txt)).
 
-## How it works
+## Architecture
 ```mermaid
 flowchart LR
-  F["Feeds + agent research<br/>Google Trends, Reddit, YouTube"] --> I[("Ideas<br/>with source links")]
-  I --> R["Recipe<br/>code picks shots, theme, hook"]
-  R --> W["Write<br/>the one AI step"]
-  W --> E["Render x3<br/>Remotion + local voice"]
-  E --> Q{"QA per platform<br/>12 checks, no AI"}
-  Q -- fail --> W
-  Q -- pass --> T["Telegram<br/>you tap Approve"]
-  T --> D{"Dispatch<br/>re-checks everything"}
-  D -->|YouTube| N["n8n, the channel's own workflow<br/>private, scheduled"]
-  D -->|Instagram, Facebook| P["Queue<br/>posted by the agent at its time"]
-  N & P -. "metrics 24 h, 7 d" .-> L["Learn<br/>tunes recipes, times"]
-  L --> R
+  F["Feed<br/>listed RSS/Atom feeds"] --> R["Recipe<br/>code: shots, theme, hook, novelty"]
+  R --> W["Writer<br/>AI agent writes the words"]
+  W --> S["Storyboard<br/>schema-checked JSON"]
+  S --> E["Platform render x3<br/>Remotion + local voice"]
+  E --> Q{"QA per variant<br/>12 deterministic checks"}
+  Q -- "fails: exact error" --> W
+  Q -- passes --> H["Human approval<br/>Telegram tap"]
+  H --> L[("Ledger<br/>append-only, SHA-256 bound")]
+  L --> D{"Dispatch<br/>re-verifies, fails closed"}
+  D -->|YouTube| N["n8n workflow<br/>one per channel"]
+  D -->|Instagram, Facebook| P["Per-channel queue<br/>posted by the agent"]
+  N & P --> X["Platform"]
+  X -. "metrics 24 h, 7 d" .-> M["Learn<br/>scores shots, times, CTAs"]
+  M --> R
 ```
-- **Code decides, AI writes.** Shot lists, themes, hook patterns, novelty rules, QA, routing and learning are deterministic code. An AI agent writes only the words, following the skills in `agents/`.
-- **The Mac is the source of truth.** n8n relays (YouTube upload and stats, feed trigger, approval webhook) and asks the Mac before every upload.
-- **Fail closed.** Every outward step re-checks its inputs right before acting and refuses with a reason on Telegram.
 
-A day in production, step by step: [docs/OPERATIONS.md](docs/OPERATIONS.md).
+- **The Mac is the source of truth.** State is JSON and JSONL files in the repo's `state/`; n8n is a relay that holds platform credentials and asks the Mac before every upload.
+- **Code decides, AI writes.** Planning, QA, approval, routing and learning are plain TypeScript. The AI agent fills in words and runs fixed posting skills.
+- **One render per platform.** Each video becomes three independent files with their own call to action, end card, caption and approval line.
 
-## Features
-- **Motion engine** (`engine/`): Remotion + React primitives in 5 families, WCAG AA themes, a composer, measured text-fit QA, a host character format, versioned style presets per channel.
-- **Three platform versions per video**: each with its own call to action (Subscribe, Follow, Follow the page), end-card account, caption and file names.
-- **Voice**: local open-source voices (Kokoro), measured per line; no paid voice API.
-- **QA per platform**: format, measured duration, voice present, line lengths against each shot, safe zones, naming, manifest integrity, CTA wording, destination, SEO, novelty.
-- **Approval bound to the file**: one tap approves a video's passing versions, each recorded with its SHA-256; a re-render needs a new approval.
-- **Autonomous loop**: the watcher renders as boards arrive, a passing video reaches Telegram within a minute, an approval dispatches within a minute, and anything due today or tomorrow that is not on its way raises an alert.
-- **Self-improving**: metrics feed Learn, which adjusts recipes and posting times by itself (logged with evidence) and proposes bigger changes for a one-tap decision.
+## Engineering principles
+| Principle | How it is enforced |
+|---|---|
+| Deterministic execution | Recipes, QA, routing and learning are pure functions over files; no model call decides a state transition. The same inputs give the same plan. |
+| Human-in-the-loop governance | `applyApproval` (`studio/ledger.ts`) is the only code path that writes `approved`, and only from a signed link or a tap from the owner's own Telegram chat. |
+| Fail-closed behaviour | Every outward step re-checks its inputs immediately before acting and refuses with a reason; an unclear result is treated as "unknown", never as success. |
+| Hash-bound approval | An approval records the SHA-256 of the exact video approved; a re-render needs a new approval, and dispatch sends only those bytes. |
+| Platform isolation | A (channel, platform) pair has exactly one route: YouTube through that channel's own n8n workflow, Instagram and Facebook through that channel's own queue folder. |
+| Idempotent dispatch | A variant is claimed (`dispatching`) before any call; each step is written before the next; a second run sends nothing; a crash resumes without re-uploading. |
+| Append-only state | The ledger, fingerprints and metrics are JSONL; the latest line per key wins; a torn last line from a crash is ignored, a broken line elsewhere stops everything. |
+| Schema contracts | Every exchanged file (idea, recipe, storyboard, manifest, QA result, ledger line, queue item, metrics) has a JSON Schema, checked by an in-repo validator that throws on unsupported keywords. |
+| Independent QA | QA reads the rendered files, not the renderer's claims: it probes the MP4, measures text boxes from the real browser render and recomputes hashes. No vision model, no `--force`. |
+| Reproducibility | Test boards, recipes and fixtures are in the repo; `npm run check` and `studio/simulate.ts` reproduce the verification on any Mac with Node 26. |
+
+## Pipeline
+1. **Feed** (`studio/feed.ts`): the Mac fetches only feeds listed in a `channel.json`, parses RSS/Atom, validates each idea against `idea.schema.json`, dedupes per channel and appends to `ideas/<channel>.jsonl` with its source link.
+2. **Recipe** (`studio/recipe.ts`, `studio/novelty.ts`): code picks each posting day's shot list, theme, transitions and hook pattern; a draw that breaks a novelty rule against recent fingerprints is redrawn.
+3. **Writer** (AI, `agents/writer/FORGE_WEEKLY_WRITER.md`): the agent writes one storyboard per recipe from the top ideas, within measured text limits, and runs the engine's `--check` gate before saving.
+4. **Render** (`engine/`): the watcher renders each saved board once per platform from the channel's style preset, with a per-channel local voice measured line by line.
+5. **QA** (`studio/qa.ts`): 12 checks per variant (schema, text limits, audio, format, duration, safe zones, fingerprint, naming, manifest, CTA, destination, SEO). A failing variant is held alone; the exact error goes back to the Writer.
+6. **Approval** (`studio/telegram.ts`, `studio/ledger.ts`): each passing video reaches Telegram once; a tap writes one ledger line per passing variant with its hash.
+7. **Dispatch** (`studio/dispatch.ts`): an hourly tick (and one right after a tap) plans, re-verifies and sends; YouTube as a private scheduled upload, Instagram and Facebook as queue items for the agent's posting skill.
+8. **Publish and learn** (`studio/metrics.ts`, `studio/learn.ts`, `studio/improve.ts`): confirmations and metrics are accepted only for posts that were actually dispatched; Learn benches weak shots and tunes posting times with logged evidence, and proposes larger changes for a tap.
+
+## Platform variants
+| Platform | Call to action | Route | End card |
+|---|---|---|---|
+| YouTube | Subscribe | The channel's own n8n workflow (`agent-studio-youtube-<channel>`), private upload with a scheduled publish time | The channel's YouTube handle |
+| Instagram | Follow (or "DM AUDIT") | `queue/<channel>/instagram/`, posted by the agent's Queue Publisher skill | The channel's Instagram handle |
+| Facebook | Follow the page | `queue/<channel>/facebook/`, posted to the page by its numeric ID | The page's handle, or none while the username is pending |
+
+Variants are independent because the platforms disagree on what is correct: YouTube must never say "Follow", Instagram and Facebook must never say "Subscribe", and each end card must name that platform's own account. Rendering each variant separately means each one is checked, approved, hashed, routed and retried on its own; a Facebook problem never holds the YouTube upload.
+
+## Safety model
+- **Signed approvals.** Approval links are HMAC-SHA256 over channel, week, ids, approver and expiry, single-use and expiring; the secret lives only in `.env`. Telegram taps count only from the configured private chat and go through the same `applyApproval`.
+- **Hash verification.** QA records the hash of the file it checked; approval records the hash it approved; dispatch recomputes the hash of the bytes it is about to send and refuses on any difference.
+- **Dispatch gates.** Right before sending: a valid ledger line still in the state the plan saw, the channel owns the board, the manifest matches the (channel, platform, video), exactly one publisher with the right route, the destination unchanged since render, QA passing for this exact file, the channel live, not already queued, and the YouTube SEO preflight.
+- **Two switches.** A channel sends only with `"live": true` in its `channel.json`, and dispatch sends only with both `--live` and `DISPATCH_LIVE=on`. Experiments that change live YouTube titles need `EXPERIMENTS=on`.
+- **Unknown uploads.** If n8n's answer is not a clear success or a clear refusal, the variant stays `dispatching` and is never resent automatically; the owner checks YouTube Studio and answers with a Telegram button or `node studio/dispatch.ts --resolve <id> <youtube id | none>`.
+- **Defence in depth.** Each n8n upload workflow accepts only its own channel's jobs and asks the Mac's `/dispatch-check` before uploading; the receiver listens on 127.0.0.1 only and never logs a query string.
+- **Refusal behaviour.** Every refusal carries a reason, is reported on Telegram (the same alert at most every 6 hours) and writes nothing.
+
+## AI boundary
+| Uses AI | Deterministic code |
+|---|---|
+| Writing each storyboard's words: hook, voice lines, on-screen text, caption (the Writer skill) | Choosing shots, theme, transitions, hook pattern and novelty (Recipe) |
+| Fixing a storyboard after a QA error message | Every QA check, including text fit measured in the real render |
+| Executing the posting and metrics-reporting skills through the agent's Meta connector, for items the queue manifest names | Approval verification, the ledger, routing, dispatch gates, retries, hash checks |
+| Speech synthesis with local open-source TTS models (Kokoro by default) | Learn's scoring and the bounds on what it may change by itself |
+
+The agent never chooses what is published, where, or when: the queue manifest names the account or page, the time and the video hash, and only approved, re-verified variants reach the queue.
+
+## Repository structure
+| Path | Contents |
+|---|---|
+| `studio/` | Orchestrator: feed, recipe, novelty, QA, ledger, approval receiver, Telegram, dispatch, metrics, learn, improve, experiments, simulation; `*.test.ts` beside each module |
+| `engine/` | Remotion renderer: primitives, themes (WCAG AA gate), composer, text-fit measurement, render and watch scripts, local TTS bridge, test boards |
+| `schemas/` | JSON Schemas for every exchanged file, the in-repo validator and samples |
+| `styles/` | Versioned style presets with each platform's spec (size, CTA, end card, caption, route) |
+| `channels/` | One folder per channel: `channel.json` (publishers, voice, cadence, live switch, feeds) and its rulebook |
+| `agents/` | Each stage's contract (`RULES.md`) and the agent skills (Writer, Queue Publisher, Metrics Reporter) |
+| `n8n/` | Exported n8n workflows: approval relay, per-channel YouTube upload, stats and packaging, feed trigger |
+| `brand/` | Channel brand assets |
+| `docs/` | Install, setup, operations, technical design, decisions, motion rules, proof pack |
+| `state/`, `recipes/`, `ideas/`, `queue/`, `inbox/` | Runtime data, ignored by git |
+
+## Quick start
+Requirements: macOS 14+ and Node 26. Voiced renders also need Python 3.12 with `uv` and `espeak-ng` (docs/INSTALL.md section 4); n8n and Telegram are only needed to run it live.
+```bash
+git clone https://github.com/navin-labs/agent-studio.git
+cd agent-studio/engine
+npm install
+npm run check                     # types, theme contrast, text QA, schema samples, 12 test suites (no renders)
+npm run make -- test/demo.json    # a silent smoke render into engine/test/out/demo/
+```
+Reproduce the QA and the production simulation (needs the local voice, because a voiced channel never passes QA silent):
+```bash
+VOICE=on npm run make -- test/style-c1.json test/style-c2.json
+cd ..
+node studio/qa.ts engine/test/style-c1.json --out engine/test/out --recipes engine/test/recipes --date $(date +%F)
+node studio/qa.ts engine/test/style-c2.json --out engine/test/out --recipes engine/test/recipes --date $(date +%F)
+node studio/simulate.ts           # a full cycle on those renders in a temp sandbox; Telegram and n8n are fakes, nothing is sent
+```
+Running it for real (channels, n8n, Telegram, the agent, launchd services): [docs/INSTALL.md](docs/INSTALL.md), then [docs/SETUP.md](docs/SETUP.md).
+
+## Verification
+Run on 2026-10-04, Node 26.0.0, macOS on Apple silicon. Logs: [docs/proof/](docs/proof/README.md).
+
+| Command | Result |
+|---|---|
+| `cd engine && npm run check` | exit 0: `tsc` clean; 41 theme contrast pairs pass, 0 fail; text QA ok; 19 schema samples valid; 12 of 12 test suites pass |
+| `node studio/qa.ts` on `style-c1` and `style-c2` | YouTube, Instagram and Facebook pass on both boards: 12 of 12 checks per variant |
+| `node studio/simulate.ts` | exit 0: 2 videos x 3 variants approved with one tap each and routed to their own channel; 10 refusal cases refused; a second run uploads and queues nothing |
+
+The test suites cover the failure paths, not only the happy path: replayed, tampered and expired approvals; a video changed after approval; a variant rejected while dispatch is running; misrouted, unmanifested and already-queued variants; refused versus unknown uploads; a crash between claim and queue write; torn ledger lines; metrics for posts that were never dispatched.
+
+## Demo
+**[c1-automation-youtube-2026-10-04-style-c1.mp4](docs/proof/demo/c1-automation-youtube-2026-10-04-style-c1.mp4)** (MP4, 44 s, 12.3 MB)
+
+A generated sample from the pipeline: a test storyboard rendered by the engine and passed by QA, committed byte-for-byte. Its SHA-256 (`4923596f…dfcae4c2`) equals `video_sha256` in [docs/proof/manifests/c1-youtube.json](docs/proof/manifests/c1-youtube.json).
+
+| | |
+|---|---|
+| Topic | Chasing unpaid invoices: payment reminders typed by hand versus a reminder flow that runs itself every morning (illustrative example data) |
+| What it shows | A question hook, the manual pile, a reminder typed in a chat UI, a before/after split, the automated flow (unpaid list read, reminder written, sent), the sheet updating itself, a counter dropping to zero, and the YouTube end card |
+| Channel and platform | `c1-automation` (small-business automation), YouTube variant: "Subscribe" CTA, YouTube end card and thumbnail. The Instagram and Facebook variants of the same board differ in CTA, end card and caption, and are not committed |
+| Duration and format | 44.18 s (the channel allows 40 to 60 s), 1080x1920, 30 fps, with voice |
+| Rendering | Remotion (React) from `engine/test/style-c1.json`; style preset `c1-night-signal-v1` (night-signal theme); recipe `style-test-c1`, hook pattern "question"; voice: Kokoro `af_heart` at 1.15, run locally; the caption discloses the AI voice |
+| Shots | 8 scenes, 7 primitives plus the end card: word-stack-slam, pile-drop, ui-chat, before-after-split, flow-run, ui-sheet, counter-drop, end-card |
+| QA | 12 of 12 checks passed ([docs/proof/qa-c1.txt](docs/proof/qa-c1.txt)) |
+| Why this one | The C1 board is the richer of the two verified boards (7 distinct primitives against C2's 5, including the UI mockups and the flow diagram), so one file exercises voice measurement, text fit, the platform CTA rules and the end card; the YouTube variant also carries the generated thumbnail |
+
+It is a verification render, not a channel post: live channel output is not part of the repository.
+
+## Current status
+| Area | State |
+|---|---|
+| Implemented and verified locally | Everything in the pipeline above, by `npm run check`, QA on the test boards, and the sandbox simulation |
+| In production | Since 2026-10-04 on the maintainer's Mac: C1 and C2 live, services under launchd, 8 n8n workflows active. Launch-day state: each channel's launch video dispatched as a scheduled YouTube upload plus queued Instagram and Facebook posts ([docs/proof/live.txt](docs/proof/live.txt)) |
+| Depends on external accounts | YouTube OAuth credentials in n8n, a Telegram bot, an AI agent with a Meta (Instagram/Facebook) posting connector and scheduled tasks; none of these are in the repo |
+| Not yet exercised in production | Learn and the Tier 2 proposals on real metrics (verified on fixtures until the first 24 h and 7 d readings arrive); title and thumbnail experiments |
+| Off by default | `DISPATCH_LIVE` (dry run), each channel's `live`, `EXPERIMENTS` |
+| Open | Facebook usernames pending (pages post by page ID meanwhile); channel KPI targets; C1's CTA mix; the third channel (`c3-studio`) has no style preset yet |
+| Not provided | Hosted CI: verification runs locally. Automated end-to-end tests against live platforms: the simulation uses fakes by design |
+
+## Design trade-offs
+- **Filesystem and JSONL state, not a database.** One writer process at a time (a run lock), a few hundred rows a week, and files that n8n, the agent and a person can all read and diff. A database would add a server to run and back up for no gain at this scale; the cost is that it does not scale to many concurrent writers.
+- **Mac-first, local execution.** Rendering needs a browser and a GPU-friendly machine, voices run locally, and launchd keeps the services up. The cost is one machine as a single point of failure; renders are copied to Google Drive, and the loop reports a missing or stopped watcher on Telegram.
+- **n8n as a relay, not the brain.** n8n holds the platform OAuth credentials and handles uploads and schedules; every decision stays in tested TypeScript on the Mac, and each workflow asks the Mac before acting. The cost is two systems to deploy; the workflows are exported in `n8n/`.
+- **Deterministic simulation instead of live end-to-end tests.** The simulation runs real renders through real QA, approval, ledger and dispatch code with fake Telegram and n8n. Live platform behaviour is covered by the fail-closed design (unknown results are never retried) rather than by tests that would post publicly.
+- **Not a generic agent framework.** The AI does the one job that benefits from language generation; everything that can be wrong in a costly way (what is published, where, and whether it was approved) is ordinary code with tests. The system is deliberately specific to its channels, platforms and formats.
 
 ## Documentation
 | Guide | For |
 |---|---|
 | [docs/INSTALL.md](docs/INSTALL.md) | A clean Mac to a running studio: tools, voice, configuration, n8n, the AI agent, services, verification |
-| [docs/SETUP.md](docs/SETUP.md) | Your channels and accounts, and going live |
+| [docs/SETUP.md](docs/SETUP.md) | Channels, accounts and going live |
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | Daily cycle, Telegram messages, health checks, troubleshooting |
 | [docs/TECH.md](docs/TECH.md) | Technical design: variants, contracts, QA, approval, dispatch, learning, security |
-| [docs/MOTION.md](docs/MOTION.md) | Motion rules and style presets |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Architecture decision records |
-| [agents/](agents/) | Each stage's contract (`RULES.md`) and the agent skills (Writer, Queue Publisher, Metrics Reporter) |
-| [n8n/README.md](n8n/README.md) | The n8n workflows |
-| [docs/proof/](docs/proof/README.md) | Verification logs, the demo, the production state |
+| [docs/AGENTS.md](docs/AGENTS.md), [agents/](agents/) | Each actor's job, inputs, outputs and never-do list; the agent skills |
+| [docs/MOTION.md](docs/MOTION.md), [engine/README.md](engine/README.md) | Motion rules, style presets, the render engine and voices |
+| [n8n/README.md](n8n/README.md) | The n8n workflows and the Mac endpoints they call |
+| [docs/proof/](docs/proof/README.md) | Verification logs, render manifests, the demo, the production snapshot |
 
-## Quickstart
-Requirements: macOS 14+, Node 26, Docker (n8n), Python 3.12 with uv and espeak-ng for the voice. Full guide: [docs/INSTALL.md](docs/INSTALL.md).
-```bash
-git clone https://github.com/navin-labs/agent-studio.git
-cd agent-studio
-cp .env.example .env && cp engine/.env.example engine/.env   # fill in by name; never commit
-cd engine && npm install
-npm run check                                                 # types, themes, text QA, schemas, 12 test suites
-npm run make -- test/demo.json                                # renders the demo into engine/test/out/demo/
-cd .. && node studio/simulate.ts                              # a full production cycle in a sandbox, nothing sent
-```
-
-## Which AI agent runs the writing and posting
-The skills in `agents/` are plain text. The agent needs file access to this repo, scheduled tasks, Instagram/Facebook posting and insights (for example a Meta Graph API connector), and web access. In production: Forge. Claude Code (scheduled tasks, plus a posting connector) and other agents with the same four capabilities can run them. Setup: [docs/INSTALL.md](docs/INSTALL.md) section 7.
-
-## Configuration
-Configuration is by name; values never appear in the repo. Templates: `.env.example` and `engine/.env.example`.
-
-**Studio** (`.env`)
-| Variable | Purpose |
-|---|---|
-| `APPROVAL_SECRET` | `<16+ random characters>`: signs approval links, verifies Telegram taps |
-| `APPROVAL_WEBHOOK_URL` | `<n8n approval webhook URL>` |
-| `TELEGRAM_BOT_TOKEN` | `<bot token>`: approvals and alerts |
-| `TELEGRAM_CHAT_ID` | `<chat id>`: the one private chat whose taps count |
-| `DISPATCH_LIVE` | `on` sends; anything else is a dry run |
-| `EXPERIMENTS` | `on` allows YouTube title and thumbnail tests; default off |
-| `APPROVE_PORT`, `STUDIO_STATE`, `STUDIO_RECIPES`, `N8N_WEBHOOK_BASE` | Optional overrides |
-
-**Engine** (`engine/.env`)
-| Variable | Purpose |
-|---|---|
-| `VOICE` | `on` renders voiceover; exactly one line (the first wins) |
-| `TTS_PROVIDER`, `OPENAI_*`, `ELEVENLABS_*` | Optional paid voice providers instead of the local voice |
-| `RENDER_COPY_DIR` | Optional `<folder>` where finished renders are copied |
-| `PREVIEW_HANDLE`, `REMOTION_BROWSER_EXECUTABLE` | Optional |
-
-Per channel (`channels/<id>/channel.json`): publishers (handles, Facebook page IDs, each YouTube channel's own n8n webhook), voice, style, cadence, live switch.
-
-## Safety model
-1. **QA per platform.** A failing version is held alone; QA records the hash of the file it checked.
-2. **Approval per file.** Signed, single-use, expiring links and Telegram taps; each approval records the video's hash.
-3. **Dispatch fails closed.** Right before sending: valid ledger line, the channel owns the board, manifest matches, one valid publisher, destination unchanged, QA passing for this exact file, hash equals the approved hash, channel live, not already queued.
-4. **Switches.** A channel sends only with `"live": true`, and only when `DISPATCH_LIVE=on`.
-5. **Never twice.** A version is claimed before sending; an unclear upload result is never retried by itself.
-6. **Per-channel routing.** Each YouTube channel has its own n8n workflow that accepts only its own jobs; Instagram and Facebook items go to per-channel queue folders, posted to the account or page their manifest names.
-
-## Verification
-Verified on 2026-10-04 with Node 26.0.0 ([docs/proof](docs/proof/README.md)):
-
-| Check | Result |
-|---|---|
-| `npm run check` | exit 0: `tsc` clean; 41 theme contrast pairs pass; textcheck ok; 19 schema samples ok; 12 of 12 suites pass |
-| `node studio/qa.ts` on both test boards | YouTube, Instagram, Facebook pass, 36 of 36 checks per board |
-| `node studio/simulate.ts` | all 6 versions approved and routed to their own channel; 10 refusal cases refused; a second run sends nothing |
-| Production | 2 channels live; launch videos dispatched on 2026-10-04 to YouTube (scheduled), Instagram and Facebook (queued) |
-
-| Test board | YouTube | Instagram | Facebook | Allowed |
-|---|---|---|---|---|
-| style-c1 | 44.18 s | 43.99 s | 44.35 s | 40 to 60 s |
-| style-c2 | 30.59 s | 30.61 s | 30.66 s | 25 to 45 s |
-
-## Repository layout
-| Path | Contents |
-|---|---|
-| `engine/` | Remotion renderer, primitives, themes, composer, render and watch scripts, test boards |
-| `studio/` | Orchestrator: feed, recipe, novelty, QA, ledger, approval receiver, Telegram, dispatch, metrics, learn, improve, simulation; `*.test.ts` beside each module |
-| `schemas/` | JSON Schemas for every file the pipeline exchanges, with an in-repo validator and samples |
-| `styles/` | Versioned style presets, with the per-platform spec |
-| `channels/<id>/` | `channel.json` and the channel's rulebook |
-| `agents/` | Stage contracts and the agent skills |
-| `n8n/` | Exported n8n workflows |
-| `brand/` | Brand assets for the end cards |
-| `docs/` | Install, setup, operations, technical design, decisions, motion rules, log, proof |
-| `state/`, `recipes/`, `ideas/`, `queue/`, `inbox/` | Runtime data, ignored by git |
-
-## Contributing
-Issues and pull requests are welcome.
-- Keep changes small; match the surrounding style.
-- `cd engine && npm run check` must pass; re-render and check any render a change touches.
-- Primitives use theme role tokens only; no raw colours outside `engine/src/themes.ts`.
-- No new dependencies without an issue first.
-- Never commit `.env` files, credentials or runtime data.
+Configuration is by variable name only; values never appear in the repo. Templates: [.env.example](.env.example) and [engine/.env.example](engine/.env.example).
 
 ## License
-MIT. See [LICENSE](LICENSE). Third-party parts keep their own licences: Remotion has its own terms (free for individuals and small companies, a company licence beyond that); fonts are under the SIL Open Font License; icons are Lucide (ISC). See `engine/README.md`, "Licences".
+MIT, see [LICENSE](LICENSE). Third-party parts keep their own licences: Remotion has its own terms (free for individuals and small companies, a company licence beyond that); fonts are under the SIL Open Font License; icons are Lucide (ISC). See `engine/README.md`, "Licences".

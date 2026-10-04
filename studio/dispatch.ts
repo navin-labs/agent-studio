@@ -14,7 +14,7 @@ import {appendJsonl, currentStatus, findVideo, type LedgerEntry, ledgerFile, lke
 import {ownWebhook, pending, sendable, type Platform, PLATFORMS, queueDir, queueFile, ROUTE, type Variant, youtubeWebhookPath} from './variant.ts';
 import {captionOf, categoryOf, seoCheck, youtubeMeta} from './seo.ts';
 
-// Posting times come from data: Learn (B6) writes the best hour per channel and platform to state/learn/posting-times.json,
+// Posting times come from data: Learn (studio/learn.ts) writes the best hour per channel and platform to state/learn/posting-times.json,
 // e.g. {"c1-automation": {"youtube": "18:30", "instagram": "20:00"}} (IST). Until there is data, DEFAULT_TIME.
 export const DEFAULT_TIME = '19:00';
 const IST = '+05:30';
@@ -166,6 +166,8 @@ export const dispatch = async (pl: Plan, opts: {live: boolean; hold?: boolean; f
   const keys = [...new Set([...pl.youtube.map((j) => lkey(j.storyboard_id, 'youtube')), ...pl.resume, ...pl.queue.map((q) => lkey(q.storyboard_id, q.platform))])];
   for (const key of keys) {
     let e = currentStatus(p).get(key)!;
+    // uploads before this one can take minutes: a variant rejected (or otherwise changed) since plan() is left as it is now
+    if (e?.status !== (pl.resume.includes(key) ? 'dispatching' : 'approved')) continue;
     const approved = e;
     const id = e.storyboard_id;
     const r = findVideo(id, p)!.variants[e.platform]!;

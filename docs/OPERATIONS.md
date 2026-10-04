@@ -41,24 +41,24 @@ sequenceDiagram
 | Thursday 12:00 | Next week's boards written | agent, Weekly Writer |
 | per video | Approve on Telegram | you |
 
-Posting days: every other day from each channel's `cadence.start` (`channels/<id>/channel.json`). Posting times per channel and platform: `state/learn/posting-times.json`; Learn changes a time only when it has evidence.
+Posting days: every other day from each channel's `cadence.start` (`channels/c1-automation/channel.json`, `channels/c2-reach/channel.json`). Posting times per channel and platform: `state/learn/posting-times.json`; Learn changes a time only when it has evidence.
 
 ## What Telegram tells you
 | Message | Meaning | What to do |
 |---|---|---|
 | A video with Approve | Rendered, voiced, passed QA on every listed platform | Watch it; tap Approve, or ignore it to skip |
-| `Approved: <id> (...)` | Recorded; dispatch starts within a minute | Nothing |
-| `<channel> <week>: N recipes are ready` | Next week is planned | Nothing; the agent writes it |
-| `agent-studio needs you: ... not written yet` | A video due today or tomorrow has no board | Ask the agent to run its Board Keeper |
-| `... fails QA: <error>` | The board keeps failing a check | Usually the agent fixes it within the hour; if it repeats, forward the error to the agent |
-| `... ready, waiting for your Approve` | A video due soon is not approved | Approve it, or let it skip |
-| `... blocked <id> <platform>: <reason>` | Dispatch refused, for the reason given | Fix the cause it names (often a channel setting), or ignore if intended |
+| `Approved: c1-2026-w41-1 (instagram, youtube, facebook)` | Recorded; dispatch starts within a minute | Nothing |
+| `c1-automation 2026-W42: 4 recipes are ready` | Next week is planned | Nothing; the agent writes it |
+| `agent-studio needs you: c1-2026-w41-1 (2026-10-06): not written yet` | A video due today or tomorrow has no board | Ask the agent to run its Board Keeper |
+| `c1-2026-w41-1 (2026-10-06): fails QA: c1 video is 38.8s, needs 40 to 60s` | The board keeps failing a check | Usually the agent fixes it within the hour; if it repeats, forward the error to the agent |
+| `c1-2026-w41-1 (2026-10-06): ready, waiting for your Approve on Telegram` | A video due soon is not approved | Approve it, or let it skip |
+| `blocked c1-2026-w41-1 instagram: the video changed after it was approved` | Dispatch refused, for the reason given | Fix the cause it names (often a channel setting), or ignore if intended |
 | `YouTube did not answer clearly` with Uploaded / Not uploaded | Upload result unknown; never retried by itself | Check YouTube Studio, then tap the matching button |
 
 The same alert repeats at most every 6 hours.
 
 To stop things:
-- Take back an approval before it posts: `node studio/ledger.ts reject <id>`.
+- Take back an approval before it posts: `node studio/ledger.ts reject c1-2026-w41-1` (the video id from its Telegram message).
 - Pause a channel: `"live": false` in its `channel.json`.
 - Pause all sending: `DISPATCH_LIVE=off` in `.env`.
 
@@ -77,7 +77,7 @@ cd engine && npm run check                 # all checks
 |---|---|---|
 | Videos rendered silent | `VOICE=on` missing from `engine/.env` (the watcher reads that file, not your shell) | QA now fails a silent render for a channel with a voice. Set `VOICE` with the command in `docs/INSTALL.md` section 5, then re-render |
 | Approve taps had no effect | The Telegram poller hung on a dropped connection | Every Telegram call has a timeout; the poller recovers by itself. If taps still do nothing: `launchctl kickstart -k gui/$(id -u)/com.theautomationguy.approve` |
-| YouTube upload marked "unknown" though it uploaded | The n8n workflow read the video id from the wrong field | Workflows read `uploadId`. For an old case, find the id in the n8n execution, then `node studio/dispatch.ts --resolve <id> <youtube id>` |
+| YouTube upload marked "unknown" though it uploaded | The n8n workflow read the video id from the wrong field | Workflows read `uploadId`. For an old case, find the id in the n8n execution, then `node studio/dispatch.ts --resolve c1-2026-w41-1 QL_4Qj5fCmo` (video id, then the YouTube id) |
 | A resolved upload never counted as published | The claim did not keep its publish time | Claims record `scheduled_for` |
 | Approved posting times vanished | Learn rewrote the file with no data | Learn changes only platforms with evidence |
 | A board stuck between "line too long" and "video too short" | Line length was estimated from words, which miscounts a fast voice | Lines are judged by their measured voice clip, with a 0.5 s hold allowed (the shot stretches to its line; the voice is never cut) |

@@ -95,6 +95,8 @@ assert.equal((await post('/feed', JSON.stringify({url: 'https://evil.example/rss
 assert.ok(!fetched, 'an unlisted URL is never fetched');
 assert.equal((await post('/feed', JSON.stringify({url: 'https://evil.example/rss', body: reddit}), false, {paths: p, root: tmp})).status, 400);
 assert.equal((await post('/feed', 'x', true)).status, 413);
+// every POST the server receives goes through post(): an unknown route is 404, never the feed handler
+assert.equal((await post('/nope', JSON.stringify({url: REDDIT, body: reddit}), false, {paths: p, root: tmp})).status, 404);
 
 fs.rmSync(tmp, {recursive: true});
 console.log('feed ok: RSS and Atom items become schema-valid ideas with their own links, per channel, once; the Mac fetches listed feeds only; blocked, unknown and junk feeds write nothing');

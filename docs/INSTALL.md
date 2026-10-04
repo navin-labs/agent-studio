@@ -2,7 +2,7 @@
 
 This guide takes a new machine to the same state as the production install: every service running, every check green, and the first video waiting for your approval on Telegram. Then follow `docs/SETUP.md` to connect your own channels and go live, and `docs/OPERATIONS.md` for daily operation.
 
-No value in this repo is a credential. Wherever a value is needed you will see `<placeholder>`; real values go only in `.env` files (ignored by git) or in n8n's own credential store.
+No value in this repo is a credential. Where a secret is needed, this guide says where to get it; secret values go only in `.env` files (ignored by git) or in n8n's own credential store.
 
 ## 1. What runs where
 ```mermaid
@@ -50,6 +50,7 @@ npm install
 npm run check    # types, themes, text QA, schemas, 12 test suites: must end without errors
 ```
 The studio (`studio/`) has no dependencies of its own. Remotion downloads a headless Chromium on the first render.
+The code finds its files relative to the clone. The agent skills (section 7) and `docs/SETUP.md` assume the clone is at `~/Dev/projects/agent-studio` (`STUDIO`); clone there, or change the `STUDIO` line at the top of each skill (the only edit a skill needs).
 
 ## 4. Voice (local, one time)
 ```bash
@@ -58,7 +59,7 @@ uv venv --python 3.12 .venv-voice/kokoro
 VIRTUAL_ENV=.venv-voice/kokoro uv pip install "kokoro>=0.9.4" "transformers>=4.45" soundfile pip "en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl"
 .venv-voice/kokoro/bin/python scripts/tts_local.py --engine kokoro --voice af_heart --speed 1.15 --text "Hello." --out /tmp/a.wav
 ```
-Each channel picks its voice in `channels/<id>/channel.json` (`"voice": {"engine": "kokoro", "voice": "<built-in id>", "speed": <n>}`). Other engines: `engine/README.md` "Voice".
+Each channel picks its voice in its `channel.json`, for example `channels/c1-automation/channel.json`: `"voice": {"engine": "kokoro", "voice": "af_heart", "speed": 1.15}`. Other engines: `engine/README.md` "Voice".
 
 ## 5. Configuration files
 Copy the templates and fill in values. Never commit or paste these files.
@@ -69,10 +70,10 @@ cp engine/.env.example engine/.env
 **`.env` (studio)**
 | Name | Value |
 |---|---|
-| `APPROVAL_SECRET` | `<16+ random characters>`, for example from `openssl rand -hex 24` |
+| `APPROVAL_SECRET` | 16+ random characters: run `openssl rand -hex 24` and paste the output |
 | `APPROVAL_WEBHOOK_URL` | `http://localhost:5678/webhook/agent-studio-approve` |
-| `TELEGRAM_BOT_TOKEN` | `<token from @BotFather>` |
-| `TELEGRAM_CHAT_ID` | `<your private chat id with the bot>` (send the bot a message, then read `chat.id` from `https://api.telegram.org/bot<token>/getUpdates` in your own browser) |
+| `TELEGRAM_BOT_TOKEN` | the token @BotFather gives you when you create the bot (`/newbot`) |
+| `TELEGRAM_CHAT_ID` | your private chat with the bot: send the bot any message, then open `https://api.telegram.org/bot` followed by your token and `/getUpdates` in your own browser; the number at `chat.id` is the value |
 | `DISPATCH_LIVE` | `off` while installing; `on` at go-live (the last line with this name wins) |
 | `EXPERIMENTS` | `off` (YouTube title and thumbnail tests; leave off unless you want them) |
 
@@ -80,7 +81,7 @@ cp engine/.env.example engine/.env
 | Name | Value |
 |---|---|
 | `VOICE` | `on`. Exactly one `VOICE=` line: the engine reads the **first** line with a name. Without it every render is silent, and QA refuses silent renders for a channel that has a voice. |
-| `RENDER_COPY_DIR` | optional, `<folder>`: where finished renders are copied. Default: Google Drive for desktop, `My Drive/Reel Engine` |
+| `RENDER_COPY_DIR` | optional: the folder finished renders are copied to. Default: Google Drive for desktop, `My Drive/Reel Engine` |
 
 To set `VOICE` safely without opening the file:
 ```bash
@@ -94,11 +95,11 @@ cd engine && sed -i '' '/^VOICE=/d' .env && printf '\nVOICE=on\n' >> .env && gre
    - one **YouTube Analytics** OAuth2 credential per channel (stats).
 3. Import and publish every file in `n8n/`, then restart n8n (an import unpublishes a workflow until the restart):
    ```bash
-   for f in n8n/*.json; do docker cp "$f" <n8n container>:/tmp/x.json && docker exec <n8n container> n8n import:workflow --input=/tmp/x.json; done
-   docker exec <n8n container> n8n publish:workflow --id=<workflow id>   # each id in the files
-   docker restart <n8n containers>
+   for f in n8n/*.json; do docker cp "$f" n8n_main:/tmp/x.json && docker exec n8n_main n8n import:workflow --input=/tmp/x.json; done
+   for id in agStudioApprove1 agStudioFeed1 agStudioYoutube1 agStudioYoutube2 agStudioYtStats1 agStudioYtStats2 agStudioPack1 agStudioPack2; do docker exec n8n_main n8n publish:workflow --id=$id; done
+   docker restart n8n_main n8n_worker   # the container names of a standard n8n queue-mode setup; use yours
    ```
-4. Point each YouTube channel at its own upload webhook in `channels/<id>/channel.json`: `http://localhost:5678/webhook/agent-studio-youtube-<channel id>`. There is no shared default.
+4. Point each YouTube channel at its own upload webhook in its `channel.json`: C1 `http://localhost:5678/webhook/agent-studio-youtube-c1-automation`, C2 `http://localhost:5678/webhook/agent-studio-youtube-c2-reach`. There is no shared default.
 5. Phone-verify each YouTube channel (youtube.com/verify) so scheduled uploads and custom thumbnails are allowed. Shorts show a frame of the video, not a custom thumbnail.
 
 Details per workflow: `n8n/README.md`.
@@ -142,8 +143,8 @@ Keep the Mac on power and awake (System Settings > Battery > Options > prevent a
 ```bash
 cd engine && npm run check && cd ..
 cd engine && VOICE=on npm run make -- test/style-c1.json test/style-c2.json && cd ..
-node studio/qa.ts engine/test/style-c1.json --out engine/test/out --recipes engine/test/recipes --date <render date>
-node studio/qa.ts engine/test/style-c2.json --out engine/test/out --recipes engine/test/recipes --date <render date>
+node studio/qa.ts engine/test/style-c1.json --out engine/test/out --recipes engine/test/recipes --date $(date +%F)
+node studio/qa.ts engine/test/style-c2.json --out engine/test/out --recipes engine/test/recipes --date $(date +%F)
 node studio/simulate.ts      # a full production cycle in a sandbox: fake Telegram, fake n8n, nothing sent
 node studio/dispatch.ts --live   # with DISPATCH_LIVE=off: "dry run", nothing sent
 ```

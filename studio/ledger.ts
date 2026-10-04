@@ -60,8 +60,6 @@ export const ledgerFile = (p = PATHS) => path.join(p.state, 'ledger.jsonl');
 export const fingerprintFile = (p = PATHS) => path.join(p.state, 'fingerprints.jsonl');
 // The latest line per variant, keyed lkey(id, platform).
 export const currentStatus = (p = PATHS) => new Map(readLines<LedgerEntry>(ledgerFile(p)).map((e) => [lkey(e.storyboard_id, e.platform), e]));
-// The variants of one video that have reached `status` (or any later one).
-export const variantsOf = (id: string, p = PATHS) => [...currentStatus(p).values()].filter((e) => e.storyboard_id === id);
 export const readFingerprints = (p = PATHS) => [...new Map(readLines<Fingerprint>(fingerprintFile(p)).map((f) => [f.id, f])).values()]; // one per video
 
 // ---- signed approvals ----

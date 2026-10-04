@@ -70,7 +70,7 @@ export const FORMATS = {
     beats: [['word-stack-slam', 'zoom-dive', 'split-flap', 'highlighter-swipe', 'counter-drop'], ['pile-drop', 'conveyor', 'counter-drop', 'before-after-split'], ['split-flap', 'highlighter-swipe', 'word-stack-slam'], ['maze-to-line', 'before-after-split', 'conveyor', 'zoom-dive'], ['counter-drop', 'word-stack-slam', 'split-flap'], ['end-card']],
   },
 } as const;
-export const EXPERIMENT_SHARE = 0.3; // 70% proven, 30% experiments (Learn fills in what "proven" means in B6)
+export const EXPERIMENT_SHARE = 0.3; // 70% proven, 30% experiments (Learn decides what "proven" means: studio/learn.ts)
 // A shot list must be able to reach the channel's length floor (storyboard.ts LENGTH: C1 40 s): its shots' maximum seconds add up to
 // the floor plus headroom, since no line may run past its shot's maximum and real lines rarely fill every shot to the last frame.
 export const FILL = 0.9;

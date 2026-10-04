@@ -299,6 +299,17 @@ fs.writeFileSync(queueFile(p.queue, qv('facebook'), 'manifest.json'), JSON.strin
 assert.match(markPublished(p, NOW).problems[0], /its manifest is malformed/);
 assert.equal(status('v-approved', 'facebook'), 'dispatched', 'a mismatch is never trusted');
 
+// rejected after the plan was made (while earlier uploads ran): nothing of it is claimed, uploaded or queued
+video('v-race');
+ledger(all('v-race'));
+const race = plan(p, NOW);
+const only = <T extends {storyboard_id: string}>(xs: T[]) => xs.filter((x) => x.storyboard_id === 'v-race');
+assert.deepEqual([only(race.youtube).length, only(race.queue).length], [1, 2], 'v-race is planned on every platform');
+reject(['v-race'], p);
+const raced = await dispatch({...race, youtube: only(race.youtube), queue: only(race.queue), resume: []}, {live: true, fetch: noCall, paths: p, now: NOW});
+assert.deepEqual([raced.sent, status('v-race'), status('v-race', 'instagram'), status('v-race', 'facebook')], [[], 'rejected', 'rejected', 'rejected']);
+assert.ok(!fs.existsSync(queueFile(p.queue, {channel: 'c1-automation', date: DATE, id: 'v-race', platform: 'instagram'}, 'manifest.json')));
+
 // taking back a video that is partly out: only the variants still waiting are rejected; what was sent is left as it is
 video('v-partly');
 ledger([{storyboard_id: 'v-partly', status: 'dispatched', ...ok}, {storyboard_id: 'v-partly', platform: 'instagram', status: 'approved', ...ok}]);

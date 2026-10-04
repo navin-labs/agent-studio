@@ -13,29 +13,29 @@ Cadence: every other day from the launch (Sun 4 Oct 2026: 4, 6, 8, 10 Oct ...; 3
 
 | Platform | Says | Goes to |
 |---|---|---|
-| YouTube | Subscribe (C1's audit funnel: "DM AUDIT on Instagram") | that channel's own n8n upload workflow (`http://localhost:5678/webhook/agent-studio-youtube-<channel>`), private with a scheduled publish time |
-| Instagram | Follow (or DM AUDIT) | `queue/<channel>/instagram/`, posted by Forge's Queue Publisher |
-| Facebook | Follow the page (or "DM AUDIT on Instagram") | `queue/<channel>/facebook/`, posted by Forge to the page by its ID |
+| YouTube | Subscribe (C1's audit funnel: "DM AUDIT on Instagram") | that channel's own n8n upload workflow (C1 `http://localhost:5678/webhook/agent-studio-youtube-c1-automation`, C2 `...-youtube-c2-reach`), private with a scheduled publish time |
+| Instagram | Follow (or DM AUDIT) | `queue/c1-automation/instagram/` (each channel its own), posted by Forge's Queue Publisher |
+| Facebook | Follow the page (or "DM AUDIT on Instagram") | `queue/c1-automation/facebook/` (each channel its own), posted by Forge to the page by its ID |
 
 One Telegram tap approves a video and every variant that passed QA; a variant that failed is held alone. Details: docs/TECH.md "Variants".
 
 ## 1. Accounts and channel files (Navin)
-For each channel you launch, fill its `channels/<id>/channel.json`:
+For each channel you launch, fill its `channel.json` (`channels/c1-automation/channel.json`, `channels/c2-reach/channel.json`):
 
 | Channel | Makes | Accounts | Still to fill in |
 |---|---|---|---|
 | `c1-automation` | Automation leads: host (Chiku) and explainer videos, 40 to 60 s, night theme only | Instagram + YouTube @theautomationguynavin (claimed; YouTube webhook `agent-studio-youtube-c1-automation`), Facebook page 1429203763599559 (username pending, retry 2026-10-05) | Facebook `handle` once the username is claimed (replaces `pending_retry_2026-10-05`); `kpi.target` |
 | `c2-reach` | Backstory: business and tech history, 25 to 45 s, archive theme only | Instagram + YouTube @backstory.minute (claimed; YouTube webhook `agent-studio-youtube-c2-reach`), Facebook page "Backstory.minute" 1320532171147125 (username pending, retry 2026-10-05) | Facebook `handle` once the username is claimed; `kpi.target` |
-| `c3-studio` | Motion leads (gated, phase D2): needs a style preset before it can render | Instagram #3 | handle; style preset; `kpi.target`; cadence |
+| `c3-studio` | Motion leads (gated until 20 videos are approved): needs a style preset before it can render | Instagram #3 | handle; style preset; `kpi.target`; cadence |
 
 - Handles look like `@name` (letters, digits, `.` and `_`). The render step refuses a channel without a real Instagram handle, so an end card can never show the wrong account.
-- Facebook: `{"platform": "facebook", "handle": "@...", "via": "forge-queue", "page_id": "<digits>"}` in `publishers`. While the username is pending (`pending_...`) the Facebook variant renders with no account on its end card and still posts, to the page by its `page_id` (decided 2026-10-04); without a `page_id` QA holds it ("held for Navin") and nothing is sent to Facebook. After you claim the username: fill `handle`, then re-save the week's boards (or wait for the next week) so the Facebook variants render with the page's name.
-- YouTube: every YouTube publisher has `"via": "n8n"` and its own `"webhook": "http://localhost:5678/webhook/agent-studio-youtube-<channel id>"`. There is no shared default: a channel without its own webhook sends nothing to YouTube.
+- Facebook: `{"platform": "facebook", "handle": "@...", "via": "forge-queue", "page_id": "1429203763599559"}` in `publishers` (the page's numeric ID; this one is C1's). While the username is pending (`pending_...`) the Facebook variant renders with no account on its end card and still posts, to the page by its `page_id` (decided 2026-10-04); without a `page_id` QA holds it ("held for Navin") and nothing is sent to Facebook. After you claim the username: fill `handle`, then re-save the week's boards (or wait for the next week) so the Facebook variants render with the page's name.
+- YouTube: every YouTube publisher has `"via": "n8n"` and its own `"webhook": "http://localhost:5678/webhook/agent-studio-youtube-c1-automation"` (C2: `...-c2-reach`). There is no shared default: a channel without its own webhook sends nothing to YouTube.
 - A new channel starts with `"live": false`; set it to true at go-live (step 6).
 - Check: `npm run check` in `engine/` (validates every channel.json, every style preset, and that each publisher's route matches its platform).
 
 ## 2. Secrets (Navin, in `STUDIO/.env`, never shared in chat)
-Set: `APPROVAL_SECRET`, `APPROVAL_WEBHOOK_URL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, and `DISPATCH_LIVE=off` (dispatch is a dry run until step 6 turns it on). `YOUTUBE_WEBHOOK_URL` is no longer read (each channel's webhook is in its channel.json); you can delete that line.
+Set: `APPROVAL_SECRET`, `APPROVAL_WEBHOOK_URL`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, and `DISPATCH_LIVE=off` (dispatch is a dry run until step 6 turns it on).
 In `engine/.env`: `VOICE=on` (and `RENDER_COPY_DIR` only if Drive for desktop has several accounts). Voices are local (engine/README.md "Voice"); no voice API key is needed. The variable names are in `.env.example` and `engine/.env.example`.
 
 ## 3. n8n (http://localhost:5678)
@@ -47,24 +47,24 @@ All workflows were imported from `n8n/` and published on 2026-10-03; the deploye
 | agent-studio: YouTube upload (C1) | POST `agent-studio-youtube-c1-automation` | ETHAN personal AI assistant (C1's YouTube) |
 | agent-studio: YouTube upload (C2 Backstory) | POST `agent-studio-youtube-c2-reach` | YouTube C2 Backstory |
 | agent-studio: YouTube stats (C1), (C2 Backstory) | daily 10:00 | that channel's YouTube + "YouTube Analytics C1" / "YouTube Analytics C2" |
-| agent-studio: YouTube packaging (C1), (C2 Backstory) | POST `agent-studio-packaging-<channel>` | that channel's YouTube; changes nothing unless `EXPERIMENTS=on` and the Mac says the change is due |
+| agent-studio: YouTube packaging (C1), (C2 Backstory) | POST `agent-studio-packaging-c1-automation`, `agent-studio-packaging-c2-reach` | that channel's YouTube; changes nothing unless `EXPERIMENTS=on` and the Mac says the change is due |
 | agent-studio: feed | daily 07:00 | none |
 | agent-studio: credential check (read-only) | by hand | all four; proves each credential belongs to the right channel |
 
-Each upload workflow takes only its own channel's YouTube jobs and asks the Mac (`/dispatch-check?id=&channel=&platform=youtube`) before every upload; anything else gets `{uploaded: false}` and nothing is uploaded. After changing a workflow file: `docker cp n8n/<file>.json n8n_main:/tmp/x.json && docker exec n8n_main n8n import:workflow --input=/tmp/x.json && docker exec n8n_main n8n publish:workflow --id=<id>`, then restart n8n (`docker restart n8n_main n8n_worker`); import unpublishes a workflow until then.
+Each upload workflow takes only its own channel's YouTube jobs and asks the Mac (`/dispatch-check?id=&channel=&platform=youtube`) before every upload; anything else gets `{uploaded: false}` and nothing is uploaded. After changing a workflow file: `docker cp n8n/youtube-upload.json n8n_main:/tmp/x.json && docker exec n8n_main n8n import:workflow --input=/tmp/x.json && docker exec n8n_main n8n publish:workflow --id=agStudioYoutube1` (the file's workflow id; `docs/INSTALL.md` section 6 imports all of them), then restart n8n (`docker restart n8n_main n8n_worker`); import unpublishes a workflow until then.
 Custom thumbnails need each YouTube channel phone-verified at youtube.com/verify.
 
 ## 4. Forge (Navin installs the skills, names as below)
 | Skill name in Forge | File | Schedule in Forge |
 |---|---|---|
 | Weekly Writer | `agents/writer/FORGE_WEEKLY_WRITER.md` | Thursday 12:00 IST, for each live channel and next week (the studio writes the recipes Thursday morning and says so on Telegram) |
-| Queue Publisher | `agents/publisher/FORGE_QUEUE_PUBLISHER.md` (reads `queue/<channel>/<platform>/` manifests) | every hour |
+| Queue Publisher | `agents/publisher/FORGE_QUEUE_PUBLISHER.md` (reads the manifests in `queue/c1-automation/instagram/` and every other channel and platform folder) | every hour |
 | Metrics Reporter | `agents/learn/FORGE_METRICS_REPORTER.md` | every day |
 
 The old "Instagram Growth Pipeline" skill (reel-engine) is replaced by these three: remove it from Forge. If an older copy of these skills is installed, install these versions again (the queue layout changed on 2026-10-03).
 
 ## 5. The Mac
-1. Watcher handover (finishes B4b). Do it in this order, so Forge never writes into a folder nothing renders:
+1. Watcher (replaces the old v1 watcher, if one is installed). Do it in this order, so Forge never writes into a folder nothing renders:
    1. Install the three Forge skills (step 4). Forge now writes to `engine/content/storyboards/`.
    2. Stop the old v1 watcher (reel-engine):
       ```
@@ -82,28 +82,28 @@ The old "Instagram Growth Pipeline" skill (reel-engine) is replaced by these thr
 6. Optional rehearsal, any time: render the two test boards and run the production simulation (sandbox only, nothing sent):
    ```
    cd engine && VOICE=on npm run make -- test/style-c1.json test/style-c2.json && cd ..
-   node studio/qa.ts engine/test/style-c1.json --out engine/test/out --recipes engine/test/recipes --date <render date>
-   node studio/qa.ts engine/test/style-c2.json --out engine/test/out --recipes engine/test/recipes --date <render date>
+   node studio/qa.ts engine/test/style-c1.json --out engine/test/out --recipes engine/test/recipes --date $(date +%F)
+   node studio/qa.ts engine/test/style-c2.json --out engine/test/out --recipes engine/test/recipes --date $(date +%F)
    node studio/simulate.ts
    ```
 
 ## 6. Go live, one channel at a time
 1. Turn dispatch on: add a last line `DISPATCH_LIVE=on` to `agent-studio/.env` (the last DISPATCH_LIVE line wins): `echo 'DISPATCH_LIVE=on' >> .env` in `STUDIO`. Check: `node studio/dispatch.ts --live` no longer says "--live ignored".
 2. Set `"live": true` in `channels/c1-automation/channel.json`.
-3. Plan the launch week and the next by hand, in that order: `node studio/recipe.ts <channel> <week>` writes one recipe per posting day from the channel's `cadence.start`; the first is the launch video (`"launch": true`, posted first on all three platforms). Then tell Forge: "Run Weekly Writer for c1-automation, week <week>". From then on the Thursday tick plans next week by itself (Telegram: "c1-automation <week>: 4 recipes are ready").
+3. Plan the launch week and the next by hand, in that order: `node studio/recipe.ts c1-automation 2026-W41` writes one recipe per posting day from the channel's `cadence.start`; the first is the launch video (`"launch": true`, posted first on all three platforms). Then tell Forge: "Run Weekly Writer for c1-automation, week 2026-W41". From then on the Thursday tick plans next week by itself (Telegram: "c1-automation 2026-W42: 4 recipes are ready").
 4. Forge writes the week; each board renders three platform videos and QA checks each; each video arrives on Telegram once, listing its variants (ready with its CTA, or held with why) and an **Approve** button.
-5. Approve. Within the hour the loop dispatches each approved variant: YouTube scheduled through C1's own n8n workflow, Instagram and Facebook (to the page by its ID) into `queue/c1-automation/<platform>/` for Forge at the posting time (19:00 IST until Learn has data).
-6. Forge posts, writes `<item>.posted.json`; the loop marks that variant published (YouTube once its scheduled time has passed). Forge reports metrics at 24h and 7d; n8n reads YouTube views; Learn uses them from the next Thursday.
+5. Approve. Within the hour the loop dispatches each approved variant: YouTube scheduled through C1's own n8n workflow, Instagram and Facebook (to the page by its ID) into `queue/c1-automation/instagram/` and `queue/c1-automation/facebook/` for Forge at the posting time (19:00 IST until Learn has data).
+6. Forge posts, writes the item's `.posted.json` (for example `c1-automation-instagram-2026-10-06-c1-2026-w41-1.posted.json`); the loop marks that variant published (YouTube once its scheduled time has passed). Forge reports metrics at 24h and 7d; n8n reads YouTube views; Learn uses them from the next Thursday.
 
-C1 and C2 launch together on Sun 4 Oct 2026 (Navin): both channels live in step 2; 2026-W40 (the launch, 4 Oct) and 2026-W41 (6, 8, 10 Oct) planned for both in step 3. C3 once it has a style preset and 20 approved videos exist (D2).
+C1 and C2 launch together on Sun 4 Oct 2026 (Navin): both channels live in step 2; 2026-W40 (the launch, 4 Oct) and 2026-W41 (6, 8, 10 Oct) planned for both in step 3. C3 once it has a style preset and 20 approved videos exist.
 
 ## Daily life
 - Telegram is the control panel: videos to approve (one message per video, its variants listed), "recipes ready", and "agent-studio needs you" when something fails, a variant is refused at dispatch, or anything posting today or tomorrow is not on its way: not written yet, failing QA (with its first error), or ready and waiting for your Approve. The same alert repeats at most every 6 hours.
-- Every render is copied to Google Drive: My Drive > Reel Engine > <channel> > <date> > <video id> > youtube | instagram | facebook.
-- `state/learn/<channel>/scoreboard.md`: what works, what is benched, best posting hours.
+- Every render is copied to Google Drive: My Drive > Reel Engine > c1-automation (or c2-reach) > 2026-10-06 > c1-2026-w41-1 > youtube | instagram | facebook.
+- `state/learn/c1-automation/scoreboard.md` (and c2-reach): what works, what is benched, best posting hours.
 - Nothing posts without your Approve tap. A channel stops at once with `"live": false`; all dispatch stops with `DISPATCH_LIVE=off`.
-- "YouTube did not answer clearly" on Telegram: the studio will not send that video again by itself. Look in YouTube Studio, then tap **Uploaded** (and reply with the video ID or link) or **Not uploaded** (it goes out again next hour). From the Mac: `node studio/dispatch.ts --resolve <id> <video id | none>`.
-- Change your mind before a video goes out: `node studio/ledger.ts reject <id>` (all its approved variants).
+- "YouTube did not answer clearly" on Telegram: the studio will not send that video again by itself. Look in YouTube Studio, then tap **Uploaded** (and reply with the video ID or link) or **Not uploaded** (it goes out again next hour). From the Mac: `node studio/dispatch.ts --resolve c1-2026-w41-1 QL_4Qj5fCmo` (the video id, then the YouTube id, or `none`).
+- Change your mind before a video goes out: `node studio/ledger.ts reject c1-2026-w41-1` (all its approved variants).
 
 ## What is not automated (on purpose)
 - Approval: always Navin.
