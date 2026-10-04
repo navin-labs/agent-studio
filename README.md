@@ -141,9 +141,9 @@ Run on 2026-10-04, Node 26.0.0, macOS on Apple silicon. Logs: [docs/proof/](docs
 The test suites cover the failure paths, not only the happy path: replayed, tampered and expired approvals; a video changed after approval; a variant rejected while dispatch is running; misrouted, unmanifested and already-queued variants; refused versus unknown uploads; a crash between claim and queue write; torn ledger lines; metrics for posts that were never dispatched.
 
 ## Demo
-**[c1-automation-youtube-2026-10-04-style-c1.mp4](docs/proof/demo/c1-automation-youtube-2026-10-04-style-c1.mp4)** (MP4, 44 s, 12.3 MB)
+https://github.com/user-attachments/assets/0b320102-7cf2-4a57-982e-5fe07f4671e2
 
-A generated sample from the pipeline: a test storyboard rendered by the engine and passed by QA, committed byte-for-byte. Its SHA-256 (`4923596f…dfcae4c2`) equals `video_sha256` in [docs/proof/manifests/c1-youtube.json](docs/proof/manifests/c1-youtube.json).
+A generated sample from the pipeline: a test storyboard rendered by the engine and passed by QA. The player above is a re-encoded preview (4.3 MB, same resolution, frame rate and length) because GitHub caps inline video at 10 MB. The original, byte-for-byte, is **[c1-automation-youtube-2026-10-04-style-c1.mp4](docs/proof/demo/c1-automation-youtube-2026-10-04-style-c1.mp4)** (12.3 MB); its SHA-256 (`4923596f…dfcae4c2`) equals `video_sha256` in [docs/proof/manifests/c1-youtube.json](docs/proof/manifests/c1-youtube.json).
 
 | | |
 |---|---|
