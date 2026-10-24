@@ -5,9 +5,9 @@
     "duotone-story": {"name": "B. Duotone Story", "reference": "Video-28089", "assets": "photo cut-out", "fx": "src/fx/duotone.tsx"},
     "network-line": {"name": "C. Network Line", "reference": "Video-40262", "assets": "none (code-native)", "fx": "src/fx/network.tsx"},
     "flat-journey": {"name": "D. Flat Journey", "reference": "Video-45335", "assets": "illustration plates", "fx": "src/fx/journey.tsx"},
-    "memory-windows": {"name": "E. Memory Windows", "reference": "Video-84390", "assets": "dream scene + footage windows", "fx": "src/fx/windows.tsx"},
-    "doodle-footage": {"name": "F. Doodle on Footage", "reference": "Video-90405", "assets": "footage plate", "fx": "src/fx/doodle.tsx"},
-    "ambient-scenes": {"name": "G. Ambient Scenes", "reference": "Video-65602, Video-40696", "assets": "painted or pixel scenes", "fx": "src/fx/ambient.tsx"}
+    "memory-windows": {"name": "E. Memory Windows", "reference": "Video-84390", "assets": "dream scene + footage windows", "fx": "src/fx/windows.tsx", "band": {"hook": 148, "perS": 35}},
+    "doodle-footage": {"name": "F. Doodle on Footage", "reference": "Video-90405", "assets": "footage plate", "fx": "src/fx/doodle.tsx", "band": {"hook": 103, "perS": 68}},
+    "ambient-scenes": {"name": "G. Ambient Scenes", "reference": "Video-65602, Video-40696", "assets": "painted or pixel scenes", "fx": "src/fx/ambient.tsx", "band": {"hook": 28, "perS": 10}}
   },
   "looks": {
     "photo-bw": {"medium": "studio photograph, plain light background, soft shadow", "grade": "bw", "texture": "grain", "motion": "smooth", "formats": ["editorial-object"], "suits": ["editorial", "dark-luxe", "nordic", "bauhaus"], "fit": ["any"]},
@@ -32,6 +32,10 @@
     "dream-3d": {"medium": "dreamy glowing 3D game world, soft light, clouds, no text", "grade": "none", "texture": "grain", "motion": "smooth", "formats": ["memory-windows"], "suits": ["gold-dream", "midnight-neon", "sunset"], "fit": ["wonder", "science", "any"]},
     "lofi-film-doodle": {"medium": "real footage", "grade": "film", "texture": "film", "motion": "stepped", "formats": ["doodle-footage"], "suits": ["film", "sunset", "nordic"], "fit": ["feelings", "people", "any"]},
     "painted-night": {"medium": "painted night city scene, cinematic, moody light, no people, no text", "grade": "none", "texture": "grain", "motion": "smooth", "formats": ["ambient-scenes"], "suits": ["sodium-night", "midnight-neon", "dark-luxe"], "fit": ["mood", "city", "any"]},
+    "watercolour-night": {"medium": "loose watercolour painting of a quiet night street scene, wet reflections, soft bleeding edges, no people, no text", "grade": "none", "texture": "paper", "motion": "smooth", "formats": ["ambient-scenes"], "suits": ["sodium-night", "dark-luxe", "indigo-pixel"], "fit": ["mood", "history", "any"]},
+    "ink-noir": {"medium": "black ink and grey wash noir illustration of a night scene, strong shadows, one warm light source, no people, no text", "grade": "none", "texture": "paper", "motion": "smooth", "formats": ["ambient-scenes"], "suits": ["dark-luxe", "sodium-night", "midnight-neon"], "fit": ["history", "mood", "any"]},
+    "pastel-dream": {"medium": "soft pastel claymation miniature diorama, rounded shapes, glowing light, no people, no text", "grade": "none", "texture": "grain", "motion": "smooth", "formats": ["memory-windows"], "suits": ["pastel", "gold-dream", "sunset"], "fit": ["wonder", "automation", "any"]},
+    "cosmic-painting": {"medium": "dreamlike oil painting, rich impasto brush texture, glowing cinematic light, deep blue and gold, no people, no text", "grade": "none", "texture": "grain", "motion": "smooth", "formats": ["memory-windows"], "suits": ["midnight-neon", "gold-dream", "dark-luxe"], "fit": ["science", "history", "any"]},
     "pixel-night": {"medium": "detailed pixel art night scene, lo-fi, warm window lights, no people, no text", "grade": "none", "texture": "none", "motion": "stepped", "formats": ["ambient-scenes"], "suits": ["indigo-pixel", "sodium-night", "midnight-neon"], "fit": ["mood", "city", "any"]}
   },
   "rules": {"lookWindow": 6, "suitWindow": 3, "formatWindow": 1, "hookWindow": 1, "structureWindow": 2, "ctaWindow": 2, "fingerprintWindow": 8, "fingerprintMax": 3}

@@ -15,6 +15,7 @@ import {loadSchema, validate} from '../schemas/validate.ts';
 import {readFingerprints} from './ledger.ts';
 import {checkNovelty, type Fingerprint} from './novelty.ts';
 import {creativeErrors, type MotionFacts, motionErrors} from './creative.ts';
+import {CATALOGUE} from './styles.ts';
 import {AI_VOICE, captionOf, seoCheck, youtubeMeta} from './seo.ts';
 import {ctaKind, file, findVariants, ownWebhook, pending, sendable, type Platform, PLATFORMS, prefix, ROUTE, type Variant, variantDir, youtubeWebhookPath} from './variant.ts';
 import {type Recipe, recipeDate, recipeHash} from './recipe.ts';
@@ -103,7 +104,8 @@ export const evaluate = (x: QaInputs): QaResult => {
     if (r.hook_pattern !== fp.hook_pattern) recipeErrors.push(`hook pattern ${fp.hook_pattern} differs from recipe ${r.id} (${r.hook_pattern})`);
     if (r.transitions.join('>') !== tr.join('>')) recipeErrors.push(`transitions differ from recipe ${r.id}: ${tr.join(' > ')} vs ${r.transitions.join(' > ')}`);
   }
-  add('fingerprint', [...recipeErrors, ...checkNovelty(fp, x.history.filter((h) => h.id !== fp.id), {themes: x.themes}).map((v) => `${v.rule}: ${v.error}`)]);
+  // a film's shots are not template primitives: its uniqueness is the creative gate's (style fingerprint or brief, and review)
+  add('fingerprint', [...recipeErrors, ...checkNovelty(fp, x.history.filter((h) => h.id !== fp.id), {themes: x.themes}).filter((v) => !(x.doc.film && v.rule === 'structure')).map((v) => `${v.rule}: ${v.error}`)]);
 
   const v = x.variant;
   const name = (kind: string) => path.basename(file(x.outDir, v, kind));
@@ -176,7 +178,7 @@ export const evaluate = (x: QaInputs): QaResult => {
   if (seo.warnings.length) checks.at(-1)!.warning = seo.warnings.join('; ');
   // an authored film: designed first seconds and no dead stretches (measured on the file), mastered loudness, and a creative
   // direction that was unique when briefed and passed its review (a primitive board passes both: not a film)
-  add('motion', x.doc.film ? motionErrors(x.motion ?? null) : []);
+  add('motion', x.doc.film ? motionErrors(x.motion ?? null, (CATALOGUE.formats[x.doc.film] as {band?: {hook: number}} | undefined)?.band?.hook) : []);
   add('creative', x.doc.film ? (x.creative ?? ['the creative ledger was not read']) : []);
 
   return {storyboard_id: x.doc.id, platform: v.platform, pass: checks.every((c) => c.pass), checks, video_path: file(x.outDir, v, 'mp4'), contact_sheet_path: file(x.outDir, v, 'contact.png'), ...(x.sha256 ? {video_sha256: x.sha256} : {})};

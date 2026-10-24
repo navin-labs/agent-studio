@@ -1,4 +1,4 @@
-// Director stage: turns a Writer's board into an authored film (agents/director/DIRECTOR.md), one board at a time, in order, so
+// Director stage: turns a Writer's board into a format film (agents/director/DIRECTOR.md: style, assets, direction), one board at a time, in order, so
 // each film is checked against the ones made just before it. The creative work runs in a headless Claude Code session
 // (`claude -p`): the Director authors (agents/director/DIRECTOR.md), then a Critic who never saw the code judges the rendered film
 // (CRITIC.md; its review is the binding one) and a failing film gets up to two revision rounds on the critic's notes. This file only prepares the working copy, starts the session, and verifies the outcome independently:
@@ -11,6 +11,7 @@ import {spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {creativeErrors, readFilms} from './creative.ts';
+import {boardDirectionErrors} from './direction.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 const WORK = path.join(ROOT, 'engine/test/films');
@@ -43,7 +44,7 @@ export const direct = (board: string, opts: {test?: boolean; model?: string; jud
     return spawnSync('claude', ['-p', prompt, '--model', opts.model ?? process.env.DIRECTOR_MODEL ?? 'opus', '--permission-mode', 'acceptEdits', '--setting-sources', 'project,local', '--append-system-prompt', priorities, '--allowedTools', tools],
       {cwd: ROOT, stdio: ['ignore', 'pipe', 'inherit'], encoding: 'utf8', maxBuffer: 1 << 26, timeout: 3 * 3600_000});
   };
-  const AUTHOR = 'Read Write Edit Glob Grep Bash(node:*) Bash(npm run:*) Bash(npx tsc:*) Bash(ls:*) Bash(cd:*) Bash(mkdir:*) Bash(cp:*) Bash(cat:*)';
+  const AUTHOR = 'Read Write Edit Glob Grep Bash(node:*) Bash(npm run:*) Bash(npx tsc:*) Bash(ls:*) Bash(cd:*) Bash(mkdir:*) Bash(cp:*) Bash(cat:*) mcp__stitch__generate_screen_from_text mcp__stitch__download_file mcp__stitch__get_screen';
   const CRITIC = 'Read Write Glob Bash(node:*) Bash(ls:*) Bash(mkdir:*) Bash(cat:*)'; // no Edit: the critic never touches the film
   const BOARD = `engine/test/films/${id}.json`;
   let r = opts.judgeOnly || opts.revise ? {status: 0} : session(`Follow agents/director/DIRECTOR.md exactly for BOARD = ${BOARD}. Work autonomously; make every creative decision yourself. Finish with step 7 and the reply it asks for.`, AUTHOR, 'reply');
@@ -58,7 +59,7 @@ export const direct = (board: string, opts: {test?: boolean; model?: string; jud
     if (!judged) break;
     if ((e?.status === 'reviewed' && !(opts.revise && round === 1)) || round > ROUNDS) break;
     const notes = e?.review ? `Generic or crude: ${e.review.generic}\n\nFixes, most important first: ${e.review.remove}\n\nKeep (exceptional): ${e.review.exceptional}\n\nScores: ${JSON.stringify(e.review.scores)}` : '(no notes recorded)';
-    r = session(`Your film for BOARD = ${BOARD} was judged by an independent critic and did not pass. Its notes:\n\n${notes}\n\nFix what it names, most important first, following agents/director/DIRECTOR.md (sections 5 to 7: preview renders, look, your own review, full render, QA). Do not change the direction unless the critic says the direction itself fails.`, AUTHOR, `revise-${round}`);
+    r = session(`Your film for BOARD = ${BOARD} was judged by an independent critic and did not pass. Its notes:\n\n${notes}\n\nFix what it names, most important first, following agents/director/DIRECTOR.md (sections 3 to 6: assets, direction, preview, full render, QA). Fix in the direction and the assets; keep the style.`, AUTHOR, `revise-${round}`);
   }
   // verify, never trust the session's own account
   const done = JSON.parse(fs.readFileSync(work, 'utf8'));
@@ -67,6 +68,7 @@ export const direct = (board: string, opts: {test?: boolean; model?: string; jud
     ...(judged ? [] : ['the critic recorded no review']),
     ...(done.film && fs.existsSync(path.join(ROOT, 'engine/src/films', `${done.film}.tsx`)) ? [] : ['no film file']),
     ...(fs.readFileSync(path.join(ROOT, 'engine/src/films/index.ts'), 'utf8').includes(`'${done.film}'`) ? [] : ['film not registered in index.ts']),
+    ...(done.direction ? boardDirectionErrors(done) : []),
     ...(done.film ? creativeErrors(done, readFilms()) : []),
     ...(['scenes', 'caption', 'hashtags', 'meta'] as const).filter((k) => JSON.stringify(doc[k]) !== JSON.stringify(done[k])).map((k) => `the director changed the Writer's ${k}`),
   ];

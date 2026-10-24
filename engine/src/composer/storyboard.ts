@@ -1,5 +1,6 @@
 // Storyboard: the Composer's input. A list of primitive shots, each with the vo line shown as captions (and voiced when VOICE=on).
 // Pure data + timing + validation, no React, so make.mjs and agent-studio QA can use it.
+import type {Direction} from '../fx/direction';
 import {parseAccent, wordStarts} from '../lib/text.ts';
 import type {StylePreset} from './style.ts';
 import {estimateSeconds, FPS, LEAD, TAIL_AUDIO, TAIL_EST, VOICE_WPS} from '../lib/timing.ts';
@@ -40,6 +41,7 @@ export type Storyboard = {
   style?: string; // the style preset id (styles/<id>.json); unset: the channel's style
   film?: string; // an authored film (src/films/index.ts) renders this board instead of the primitive shots (Director)
   brief?: Brief; // the film's creative brief (src/films/brief.ts)
+  direction?: Direction; // a format film ("film": "<format id>"): style, one shot per voice line, music (src/fx/direction.ts)
   scene?: Scene; // an effect-driven film ("film": "scene"): shots of src/fx effects on the voice beats (src/fx/scene.ts)
   channel?: string;
   handle?: string; // render-time only (not in the file): the channel's Instagram handle, added by make.mjs

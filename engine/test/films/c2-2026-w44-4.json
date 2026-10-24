@@ -1,0 +1,211 @@
+{
+  "format": "storyboard",
+  "id": "c2-2026-w44-4",
+  "channel": "c2-reach",
+  "theme": "gold-dream",
+  "style": "c2-archive-gold-v1",
+  "hookPattern": "confession",
+  "scenes": [
+    {
+      "primitive": "word-stack-slam",
+      "params": {
+        "text": "I never thanked *Mary Anderson*."
+      },
+      "vo": "Every driver on earth owes Mary Anderson, and almost nobody knows why."
+    },
+    {
+      "primitive": "pile-drop",
+      "transition": "cut",
+      "params": {
+        "item": {
+          "title": "WIPER",
+          "id": "W-",
+          "pill": "1903",
+          "amount": false
+        },
+        "count": 18,
+        "start": 1
+      },
+      "vo": "In 1902, snow fell on a New York streetcar, so the driver kept stopping to wipe the glass by hand."
+    },
+    {
+      "primitive": "highlighter-swipe",
+      "transition": "ink-wipe",
+      "params": {
+        "text": "In *1903*, *Mary Anderson* patented the wiper."
+      },
+      "vo": "But in 1903, Mary Anderson won US patent 743,801 for a lever that swept a rubber blade."
+    },
+    {
+      "primitive": "conveyor",
+      "transition": "cut",
+      "params": {
+        "item": {
+          "title": "WIPER",
+          "id": "W-",
+          "pill": "NEW",
+          "amount": false
+        },
+        "node": {
+          "icon": "check",
+          "label": "Wipers standard",
+          "sub": "Cadillac, 1922"
+        },
+        "count": 12
+      },
+      "vo": "Car makers said it had no value. Her patent expired in 1920, yet two years later Cadillac made wipers standard."
+    },
+    {
+      "primitive": "counter-drop",
+      "transition": "ink-wipe",
+      "params": {
+        "label": "PROFIT",
+        "icon": "chart",
+        "from": 100,
+        "to": 0,
+        "tone": "ok"
+      },
+      "vo": "She never earned a penny, yet every driver on earth still uses her idea."
+    },
+    {
+      "primitive": "end-card",
+      "transition": "ink-wipe",
+      "params": {
+        "text": "*Follow*",
+        "sub": "More backstories every week."
+      }
+    }
+  ],
+  "caption": "Mary Anderson invented the windshield wiper in 1903\n\nSnow fell on a New York streetcar, and the driver kept stopping to wipe the glass by hand.\n\nShe won US patent 743801 on November 10, 1903. Car makers said no, the patent expired in 1920, and Cadillac made wipers standard in 1922.\n\nSend this to whoever drives in the rain.\nSource: https://en.wikipedia.org/wiki/Mary_Anderson_(inventor)",
+  "hashtags": [
+    "#history",
+    "#inventions",
+    "#backstory"
+  ],
+  "meta": {
+    "source": "https://en.wikipedia.org/wiki/Mary_Anderson_(inventor)",
+    "idea_id": "google-trends-wiper-anderson",
+    "recipe_id": "c2-2026-w44-4",
+    "hero_metaphor": "the snowy streetcar",
+    "year": "1903",
+    "devices": [
+      "novelty",
+      "reveal",
+      "contrast",
+      "proof",
+      "stakes",
+      "number",
+      "loop"
+    ],
+    "proof": {
+      "fact": "US patent 743,801 (1903), Mary Anderson's window-cleaning device",
+      "source": "https://patents.google.com/patent/US743801A/en"
+    },
+    "structure": "story",
+    "cta": "question"
+  },
+  "film": "memory-windows",
+  "direction": {
+    "style": {
+      "format": "memory-windows",
+      "look": "cosmic-painting",
+      "suit": "gold-dream",
+      "hook": "contradiction",
+      "structure": "story",
+      "cta": "question"
+    },
+    "shots": [
+      {
+        "plate": "plates/c2-2026-w44-4/1.jpg",
+        "push": 0.18,
+        "origin": "40% 60%",
+        "windows": [
+          {
+            "photo": "props/mary-anderson-inventor/mary-anderson-inventor.jpg",
+            "at": "Mary",
+            "x": 300,
+            "y": 560,
+            "w": 430,
+            "h": 530,
+            "from": "left",
+            "tilt": -5
+          }
+        ]
+      },
+      {
+        "plate": "plates/c2-2026-w44-4/1.jpg",
+        "push": 0.3,
+        "origin": "41% 64%",
+        "windows": [
+          {
+            "photo": "props/streetcar-snow-1900s/streetcar-snow-1900s.jpg",
+            "at": "streetcar",
+            "x": 700,
+            "y": 540,
+            "w": 600,
+            "h": 400,
+            "from": "right",
+            "tilt": 4
+          }
+        ]
+      },
+      {
+        "plate": "plates/c2-2026-w44-4/1.jpg",
+        "push": 0.12,
+        "origin": "41% 64%",
+        "windows": [
+          {
+            "photo": "props/anderson-window-cleaning-device/anderson-window-cleaning-device.jpg",
+            "at": "patent",
+            "x": 540,
+            "y": 760,
+            "w": 600,
+            "h": 860,
+            "from": "below",
+            "tilt": -2
+          }
+        ],
+        "sparks": "swept"
+      },
+      {
+        "plate": "plates/c2-2026-w44-4/2.jpg",
+        "push": 0.25,
+        "origin": "45% 60%",
+        "windows": [
+          {
+            "photo": "props/cadillac-type-61/cadillac-type-61.jpg",
+            "at": "Cadillac",
+            "x": 540,
+            "y": 430,
+            "w": 760,
+            "h": 400,
+            "from": "below",
+            "tilt": 3,
+            "pos": "50% 27%"
+          }
+        ]
+      },
+      {
+        "plate": "plates/c2-2026-w44-4/2.jpg",
+        "push": 0.1,
+        "origin": "45% 60%",
+        "windows": [
+          {
+            "photo": "props/mary-anderson-inventor/mary-anderson-inventor.jpg",
+            "at": "She",
+            "x": 760,
+            "y": 540,
+            "w": 380,
+            "h": 470,
+            "from": "right",
+            "tilt": 5
+          }
+        ]
+      }
+    ],
+    "music": {
+      "caption": "warm solo piano and soft strings, nostalgic and tender, a quiet music-box motif, gentle swell into the reveal, fades out warmly",
+      "bpm": 84
+    }
+  }
+}

@@ -147,8 +147,8 @@ export const beats = async (boardFile) => {
 };
 export const score = async (boardFile) => {
   const doc = JSON.parse(fs.readFileSync(boardFile, 'utf8'));
-  const m = doc.brief?.music;
-  if (!m?.caption) throw new Error('the board has no brief.music.caption');
+  const m = doc.brief?.music ?? doc.direction?.music;
+  if (!m?.caption) throw new Error('the board has no brief.music or direction.music caption');
   const {total} = await beats(boardFile);
   const ace = process.env.ACESTEP_DIR ?? path.join(process.env.HOME, 'Dev/tools/ace-step');
   const name = `film-${doc.id}`;

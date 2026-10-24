@@ -94,12 +94,12 @@ export const Envelope: React.FC<{t: number; x: number; y: number; at: number; ti
 };
 
 // Handwritten words: each word lands as it is spoken, slightly tilted, ink with a paper halo so it reads on any footage.
-export const Hand: React.FC<{t: number; at: number; end: number; text: string; dur: number; y?: number; size?: number}> = ({t, at, end, text, dur, y = 1430, size = 74}) => {
+export const Hand: React.FC<{t: number; at: number; end: number; text: string; dur: number; y?: number; size?: number}> = ({t, at, end, text, dur, y = 1460, size = 74}) => {
   const th = useTheme();
   if (t < at - 0.1 || t > end) return null;
   const words = text.split(' ');
   return (
-    <div style={{position: 'absolute', left: 90, right: 90, top: y, textAlign: 'center', fontFamily: '"Bradley Hand", "Chalkboard SE", cursive', fontWeight: 700, fontSize: size, lineHeight: 1.12, color: th.ink, textShadow: `0 0 10px ${th.surface}, 0 0 4px ${th.surface}, 0 0 2px ${th.surface}`, opacity: k(t, [end - 0.2, end], [1, 0])}}>
+    <div data-tb="caption" style={{position: 'absolute', left: 90, right: 130, bottom: 1920 - y, textAlign: 'center', fontFamily: '"Bradley Hand", "Chalkboard SE", cursive', fontWeight: 700, fontSize: size, lineHeight: 1.12, color: th.ink, textShadow: `0 0 10px ${th.surface}, 0 0 4px ${th.surface}, 0 0 2px ${th.surface}`, opacity: k(t, [end - 0.2, end], [1, 0])}}>
       {words.map((w, i) => {
         const wt = at + (i / words.length) * dur;
         return <span key={i} style={{display: 'inline-block', marginRight: '0.24em', opacity: t >= wt ? 1 : 0, rotate: `${jit(wt, i, 4)}deg`, scale: String(k(t, [wt, wt + 0.15], [1.25, 1], BACK))}}>{w}</span>;

@@ -502,6 +502,17 @@
         }
       }
     },
+    "direction": {
+      "type": "object",
+      "description": "A format film (\"film\": \"<format id>\"): the chosen style, one shot per voice line, the music (engine/src/fx/direction.ts; validated by studio/direction.ts); written by the Director",
+      "required": ["style", "shots"],
+      "properties": {
+        "style": {"type": "object", "required": ["format", "look", "suit"]},
+        "music": {"type": "object", "required": ["caption", "bpm"]},
+        "footage": {"type": "string"},
+        "shots": {"type": "array", "minItems": 1, "items": {"type": "object"}}
+      }
+    },
     "scene": {
       "type": "object",
       "description": "An effect-driven film (\"film\": \"scene\"): shots of engine/src/fx effects placed on the voice beats (engine/src/fx/scene.ts); written by the Director",

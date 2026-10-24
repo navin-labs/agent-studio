@@ -3,7 +3,7 @@
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
-import {CATALOGUE, chooseStyle, combos, type Style, styleErrors} from './styles.ts';
+import {CATALOGUE, chooseStyle, combos, readyCatalogue, type Style, styleErrors} from './styles.ts';
 
 const themes = fs.readFileSync(path.join(import.meta.dirname, '../engine/src/themes.ts'), 'utf8');
 for (const [id, l] of Object.entries(CATALOGUE.looks)) for (const s of l.suits) assert.ok(themes.includes(`'${s}'`) || themes.includes(`  ${s}: {`), `look ${id}: suit ${s} is not a theme in themes.ts`);
@@ -25,4 +25,12 @@ assert.match(styleErrors({...base, look: 'painted-night', suit: 'sodium-night', 
 assert.match(styleErrors({...base, format: 'network-line', look: 'light-network', suit: 'signal'}, [base]).join(), /hook number was used/);
 const part2 = chooseStyle([{...base, series: 'night-shift'}], 'automation', 1, CATALOGUE, {hook: 'question', structure: 'before-after', cta: 'follow-series', series: 'night-shift'});
 assert.deepStrictEqual([part2.format, part2.look, part2.suit], [base.format, base.look, base.suit], 'part 2 of a series stays in its world');
-console.log(`styles ok: ${combos().length} combinations; 60 films used ${looks.size} looks, ${suits.size} suits, all ${formats.size} formats, no repeats inside the windows`);
+// unattended films use only formats with a renderer; 30 of them in a row never run out of fresh combinations
+const ready = readyCatalogue(), made: Style[] = [];
+for (let i = 0; i < 30; i++) {
+  const s = chooseStyle(made, 'automation', i + 3, ready, {hook: ['question', 'number', 'contradiction', 'you', 'scene'][i % 5], structure: ['story', 'essay', 'teardown', 'before-after', 'myth-bust', 'countdown', 'gag'][i % 7], cta: ['none', 'save', 'question', 'comment-keyword'][i % 4]});
+  assert.ok(Object.keys(ready.formats).includes(s.format), `ready film ${i} uses ${s.format}`);
+  assert.deepStrictEqual(styleErrors(s, made, ready), [], `ready film ${i}: ${JSON.stringify(s)}`);
+  made.push(s);
+}
+console.log(`styles ok: ${combos().length} combinations (${combos(ready).length} with a renderer); 60 films used ${looks.size} looks, ${suits.size} suits, all ${formats.size} formats, no repeats inside the windows`);

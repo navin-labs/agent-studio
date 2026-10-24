@@ -16,8 +16,9 @@ clip, _, prep = open_clip.create_model_and_transforms("ViT-B-32", pretrained="la
 tok = open_clip.get_tokenizer("ViT-B-32")
 OTHERS = ["a person", "a painting or a drawing", "text, a logo or a sign", "a screenshot or a phone screen", "green leaves", "furniture", "an empty background"]
 
-def match(img, noun):  # probability the cut-out shows the noun rather than a usual wrong pick
-    labels = [f"a photo of a {noun}"] + [o for o in OTHERS if noun.split()[-1] not in o]
+def match(img, noun, photo=False):  # probability the image shows the noun rather than a usual wrong pick
+    # a window or plate may be an archival drawing or painting of the thing; a cut-out object may not
+    labels = [f"a photo of a {noun}"] + [o for o in OTHERS if noun.split()[-1] not in o and not (photo and "drawing" in o)]
     with torch.no_grad():
         i = clip.encode_image(prep(img).unsqueeze(0))
         t = clip.encode_text(tok(labels))
@@ -28,7 +29,7 @@ for job in json.load(open(sys.argv[1])):
         img = Image.open(job["src"]).convert("RGB")
         img.thumbnail((2048, 2048))
         if job.get("photo"):  # a whole photo (a window or plate): only whether it shows the noun matters
-            m = match(img, job.get("noun", ""))
+            m = match(img, job.get("noun", ""), True)
             print(json.dumps({"out": job["out"], "w": img.width, "h": img.height, "score": round(m, 3), "match": round(m, 3), "why": [] if m >= 0.5 else [f"may not be a {job.get('noun')} ({m:.0%})"]}), flush=True)
             continue
         cut = remove(img, session=session)  # RGBA

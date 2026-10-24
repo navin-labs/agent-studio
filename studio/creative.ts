@@ -6,6 +6,7 @@
 //   node studio/creative.ts check <board.json>           the board's brief against recent films: pass, or each rule it breaks
 //   node studio/creative.ts brief <board.json>           check, then record the brief (status briefed)
 //   node studio/creative.ts review <board.json> <review.json>   record the creative review (bound to the film's source)
+//   node studio/creative.ts style <board.json>           a format film: choose its style (studio/styles.ts), write it into the board, record it
 import {createHash} from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -13,12 +14,15 @@ import type {Storyboard} from '../engine/src/composer/storyboard.ts';
 import {type Brief, COORDS, type Coords} from '../engine/src/films/brief.ts';
 import {appendJsonl, PATHS, readJsonl} from './ledger.ts';
 import {topicSimilarity} from './novelty.ts';
+import {hookType} from './script.ts';
+import {chooseStyle, readyCatalogue, type Style, styleErrors} from './styles.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 export const SCORES = ['first_frame', 'hook_3s', 'visual_storytelling', 'composition', 'typography', 'motion', 'cinematography', 'metaphor', 'transitions', 'originality', 'authored', 'premium', 'sound', 'restraint', 'memorability'] as const;
 export const ANTI_SLOP = ['not_generic_ai_tool', 'not_canva_template', 'composition_not_reusable', 'metaphor_specific_to_story', 'opening_not_common', 'has_memorable_moment', 'works_muted', 'works_without_captions'] as const;
 export type Review = {scores: Record<(typeof SCORES)[number], number>; anti_slop: Record<(typeof ANTI_SLOP)[number], boolean>; generic: string; exceptional: string; remove: string; verdict: 'pass' | 'fail'; film_sha?: string};
-export type FilmEntry = {id: string; channel: string; film: string; theme: string; brief: Brief; status: 'poc' | 'briefed' | 'reviewed' | 'rejected'; review?: Review; at: string};
+// an authored film has a brief; a format film (fx/direction.ts) has a style instead
+export type FilmEntry = {id: string; channel: string; film: string; theme: string; brief?: Brief; style?: Style; status: 'poc' | 'briefed' | 'reviewed' | 'rejected'; review?: Review; at: string};
 
 export const LIMITS = {minDiffPrev: 5, maxSameRecent: 6, recent: 5, hookRun: 2, textSim: 0.5, textWindow: 10, musicSim: 0.6, musicWindow: 3, minScore: 6, minMean: 7.5};
 
@@ -37,7 +41,7 @@ export type Violation = {rule: string; error: string};
 // The brief against the films before it (oldest first; rejected films do not count, they were never made).
 export const checkCreative = (brief: Brief, theme: string, before: FilmEntry[]): Violation[] => {
   const v: Violation[] = [];
-  const made = before.filter((f) => f.status !== 'rejected');
+  const made = before.filter((f) => f.status !== 'rejected' && f.brief) as (FilmEntry & {brief: Brief})[];
   const prev = made.at(-1);
   const recent = made.slice(-LIMITS.recent);
   if (prev) {
@@ -88,12 +92,13 @@ export const reviewErrors = (r: Review | undefined, sha: string): string[] => {
 // Temporal QA thresholds (calibrated 2026-10-08 on the live renders, which open on a blank frame, and four authored POCs).
 export const MOTION = {firstFrameContrast: 12, changeBy03: 1.0, hookActivity: 40, longestStill: 2.5, lufs: [-15.5, -12.5], truePeak: -1.0};
 export type MotionFacts = {first_frame_contrast: number; change_by_0_3s: number; hook_activity: number; longest_still: number; longest_still_at: number; lufs: number; true_peak: number};
-export const motionErrors = (m: MotionFacts | null): string[] => {
+// hookFloor: a format's own floor for the first 3 s (studio/looks.json band; a calm format opens quieter than the default)
+export const motionErrors = (m: MotionFacts | null, hookFloor = MOTION.hookActivity): string[] => {
   if (!m) return ['no motion.json: render the film again'];
   return [
     ...(m.first_frame_contrast >= MOTION.firstFrameContrast ? [] : [`frame 0 is nearly flat (contrast ${m.first_frame_contrast}): the first frame must already show something`]),
     ...(m.change_by_0_3s >= MOTION.changeBy03 ? [] : [`nothing visibly changes by 0.3 s (${m.change_by_0_3s})`]),
-    ...(m.hook_activity >= MOTION.hookActivity ? [] : [`the first 3 s barely move (activity ${m.hook_activity}, needs ${MOTION.hookActivity})`]),
+    ...(m.hook_activity >= hookFloor ? [] : [`the first 3 s barely move (activity ${m.hook_activity}, needs ${hookFloor})`]),
     ...(m.longest_still <= MOTION.longestStill ? [] : [`${m.longest_still} s with no visible change from ${m.longest_still_at} s (max ${MOTION.longestStill})`]),
     ...(m.lufs >= MOTION.lufs[0] && m.lufs <= MOTION.lufs[1] ? [] : [`loudness ${m.lufs} LUFS, needs ${MOTION.lufs[0]} to ${MOTION.lufs[1]}`]),
     ...(m.true_peak <= MOTION.truePeak ? [] : [`true peak ${m.true_peak} dBTP > ${MOTION.truePeak}`]),
@@ -102,6 +107,12 @@ export const motionErrors = (m: MotionFacts | null): string[] => {
 
 // QA's creative check for a film board: its brief is the one recorded, it was unique when briefed, and it passed review.
 export const creativeErrors = (doc: Storyboard, films = readFilms(), root = ROOT): string[] => {
+  if (doc.direction) {
+    const i = films.findIndex((f) => f.id === doc.id);
+    if (i < 0 || JSON.stringify(films[i].style) !== JSON.stringify(doc.direction.style)) return ['the style is not the one recorded (node studio/creative.ts style <board>)'];
+    const earlier = films.slice(0, i).filter((f) => f.channel === films[i].channel && f.style && f.status !== 'rejected').map((f) => f.style!);
+    return [...styleErrors(doc.direction.style, earlier), ...reviewErrors(films[i].review, filmSha(doc, root))];
+  }
   if (!doc.brief) return ['a film board needs its brief'];
   const i = films.findIndex((f) => f.id === doc.id);
   if (i < 0) return ['the brief is not in the creative ledger (node studio/creative.ts brief <board>)'];
@@ -111,6 +122,7 @@ export const creativeErrors = (doc: Storyboard, films = readFilms(), root = ROOT
 };
 
 const line = (f: FilmEntry) => {
+  if (!f.brief) return `${f.id} [${f.status}] ${Object.values(f.style ?? {}).join(' / ')}`;
   const c = f.brief.coords;
   return `${f.id} [${f.status}${f.review ? ` ${(SCORES.reduce((a, s) => a + f.review!.scores[s], 0) / SCORES.length).toFixed(1)}` : ''}] theme ${f.theme}\n  world: ${f.brief.world}\n  metaphor: ${f.brief.metaphor}\n  hook: ${f.brief.hook}\n  coords: ${keys.map((k) => c[k]).join(' / ')}\n  music: ${f.brief.music.caption} (${f.brief.music.bpm} bpm)`;
 };
@@ -137,12 +149,26 @@ if (import.meta.main) {
     if (!e) (console.error('record the brief first'), process.exit(2));
     const r = {...(JSON.parse(fs.readFileSync(b, 'utf8')) as Review), film_sha: filmSha(doc)};
     const errs = reviewErrors(r, r.film_sha!);
-    appendJsonl(filmsFile(), [{...e, brief: doc.brief!, review: r, status: errs.length ? 'briefed' : 'reviewed', at: new Date().toISOString()}]);
+    appendJsonl(filmsFile(), [{...e, ...(doc.brief ? {brief: doc.brief} : {}), review: r, status: errs.length ? 'briefed' : 'reviewed', at: new Date().toISOString()}]);
     errs.forEach((x) => console.log(`FAIL ${x}`));
     console.log(errs.length ? 'review recorded: NOT passing, keep working' : 'review recorded: passing');
     process.exit(errs.length ? 1 : 0);
+  } else if (cmd === 'style' && a) {
+    // the story's own axes come from the script; format, look and suit are chosen against the channel's recent films
+    const doc = load(a) as Storyboard & {channel: string; meta?: {structure?: string; cta?: string; series?: {name: string}; fit?: string}};
+    const before = films.filter((f) => f.id !== doc.id && f.channel === doc.channel && f.style && f.status !== 'rejected').map((f) => f.style!);
+    const story = {hook: hookType(doc.scenes.find((s) => s.vo)?.vo ?? ''), structure: doc.meta?.structure, cta: doc.meta?.cta, ...(doc.meta?.series ? {series: doc.meta.series.name} : {})};
+    const fit = doc.meta?.fit ?? (doc.channel.startsWith('c2') ? 'history' : 'automation');
+    const seed = [...doc.id].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) % 2147483646, 7) + 1;
+    const cat = readyCatalogue();
+    const style = chooseStyle(before, fit, seed, cat, story);
+    const out = {...doc, film: style.format, theme: style.suit, direction: {...(doc as {direction?: object}).direction, style, shots: (doc as {direction?: {shots?: unknown[]}}).direction?.shots ?? []}};
+    fs.writeFileSync(a, JSON.stringify(out, null, 2) + '\n');
+    appendJsonl(filmsFile(), [{id: doc.id, channel: doc.channel, film: style.format, theme: style.suit, style, status: 'briefed', at: new Date().toISOString()} satisfies FilmEntry]);
+    const look = cat.looks[style.look];
+    console.log(JSON.stringify({style, format: cat.formats[style.format], look}, null, 1));
   } else {
-    console.error('usage: node studio/creative.ts history [n] | check <board> | brief <board> | review <board> <review.json>');
+    console.error('usage: node studio/creative.ts history [n] | check <board> | brief <board> | review <board> <review.json> | style <board>');
     process.exit(2);
   }
 }

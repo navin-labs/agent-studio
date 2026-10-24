@@ -4,6 +4,7 @@
 //   node studio/styles.ts choose <channel> <fit> [seed]   a fresh combination for this channel, from the films ledger
 import fs from 'node:fs';
 import path from 'node:path';
+import {FORMAT_FILMS} from '../engine/src/fx/direction.ts';
 
 // seeded draw (the same Park-Miller generator the film kit uses), so a choice is reproducible
 const rng = (seed: number) => () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
@@ -14,6 +15,13 @@ const AXES = ['format', 'look', 'suit', 'hook', 'structure', 'cta'] as const;
 type Look = {medium: string; grade: string; texture: string; motion: string; formats: string[]; suits: string[]; fit: string[]};
 export type Catalogue = {formats: Record<string, {name: string}>; looks: Record<string, Look>; rules: {lookWindow: number; suitWindow: number; formatWindow: number; hookWindow: number; structureWindow: number; ctaWindow: number; fingerprintWindow: number; fingerprintMax: number}};
 export const CATALOGUE: Catalogue = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, 'looks.json'), 'utf8'));
+
+// only the formats that have a renderer (engine/src/films/<format>.tsx), for films made unattended
+export const readyCatalogue = (c = CATALOGUE): Catalogue => {
+  const ready = new Set(FORMAT_FILMS as readonly string[]);
+  const looks = Object.fromEntries(Object.entries(c.looks).map(([id, l]) => [id, {...l, formats: l.formats.filter((f) => ready.has(f))}]).filter(([, l]) => (l as Look).formats.length));
+  return {...c, formats: Object.fromEntries(Object.entries(c.formats).filter(([f]) => ready.has(f))), looks};
+};
 
 // every allowed combination
 export const combos = (c = CATALOGUE): Style[] =>
@@ -27,7 +35,9 @@ export const styleErrors = (s: Style, recent: Style[], c = CATALOGUE): string[] 
   if (!c.formats[s.format]) e.push(`format "${s.format}" is not in studio/looks.json`);
   if (!l.formats.includes(s.format)) e.push(`look ${s.look} is not made for format ${s.format} (${l.formats.join(', ')})`);
   if (!l.suits.includes(s.suit)) e.push(`look ${s.look} does not wear suit ${s.suit} (${l.suits.join(', ')})`);
-  const r = c.rules;
+  // a small catalogue (only the formats with a renderer) gets windows it can satisfy: a look or suit may return after the rest
+  const n = (k: 'looks' | 'suits') => (k === 'looks' ? Object.keys(c.looks).length : new Set(Object.values(c.looks).flatMap((x) => x.suits)).size);
+  const r = {...c.rules, lookWindow: Math.min(c.rules.lookWindow, n('looks') - 2), suitWindow: Math.min(c.rules.suitWindow, n('suits') - 2)};
   // a series keeps one world (its format, look and suit) across parts; the idea changes, the world is the brand
   const world = recent.filter((x) => !(s.series && x.series === s.series));
   if (world.slice(-r.lookWindow).some((x) => x.look === s.look)) e.push(`look ${s.look} was used in the channel's last ${r.lookWindow} films`);
