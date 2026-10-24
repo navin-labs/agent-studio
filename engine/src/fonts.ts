@@ -23,6 +23,10 @@ export const ensureFonts = () => {
       loadFont({family: 'JetBrains Mono', url: staticFile('fonts/jetbrains-mono-latin-600-normal.woff2'), weight: '600'}),
       loadFont({family: 'JetBrains Mono', url: staticFile('fonts/jetbrains-mono-latin-700-normal.woff2'), weight: '700'}),
       loadFont({family: 'VT323', url: staticFile('fonts/vt323-latin-400-normal.woff2'), weight: '400'}),
+      // the film formats' display and editorial voices (OFL, docs/CREATIVE_BIBLE.md section 11)
+      loadFont({family: 'Anton', url: staticFile('fonts/anton-latin-400-normal.woff2'), weight: '400'}),
+      loadFont({family: 'Instrument Serif', url: staticFile('fonts/instrument-serif-latin-400-normal.woff2'), weight: '400'}),
+      loadFont({family: 'Instrument Serif', url: staticFile('fonts/instrument-serif-latin-400-italic.woff2'), weight: '400', style: 'italic'}),
     ]),
   )
     .then(() => continueRender(handle))

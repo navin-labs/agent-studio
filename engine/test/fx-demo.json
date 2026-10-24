@@ -1,0 +1,25 @@
+{
+  "format": "storyboard",
+  "id": "fx-demo",
+  "theme": "paper",
+  "film": "scene",
+  "hookPattern": "myth",
+  "voice": {"engine": "kokoro", "voice": "am_michael", "speed": 1},
+  "scenes": [
+    {"primitive": "word-stack-slam", "params": {"text": "1941. A dog. *Burrs.*"}, "vo": "In 1941, a dog came home from the Alps covered in burrs."},
+    {"primitive": "word-stack-slam", "params": {"text": "Tiny *hooks*."}, "vo": "Under a microscope, every burr was covered in tiny hooks."},
+    {"primitive": "word-stack-slam", "params": {"text": "Hook and *loop*."}, "vo": "Those hooks became the fastener we now call Velcro."},
+    {"primitive": "end-card", "params": {"text": "*Demo*", "sub": "agent-studio, effect engine F1"}}
+  ],
+  "scene": {
+    "shots": [
+      {"beat": 0, "fx": "title", "props": {"text": "1941. A dog. *Burrs.*"}, "camera": {"from": [540, 900, 1], "to": [540, 960, 1.12]}, "focal": "burr"},
+      {"beat": 1, "fx": "orbit", "props": {"prop": "specimen", "turns": 0.45}, "focal": "burr"},
+      {"beat": 2, "fx": "prim:split-flap", "props": {"label": "US PATENT GRANTED", "text": "1955", "sub": "Hook and loop"}},
+      {"beat": 3, "fx": "prim:end-card", "props": {"text": "*Demo*", "sub": "agent-studio, effect engine F1"}}
+    ]
+  },
+  "caption": "F1 foundation demo: three effects placed on the voice by scene.json. Test render, not a channel post.",
+  "hashtags": ["#remotion", "#motiondesign", "#history"],
+  "meta": {"source": "https://patents.google.com/patent/US2717437A/en", "idea_id": "fx-demo", "recipe_id": "fx-demo"}
+}

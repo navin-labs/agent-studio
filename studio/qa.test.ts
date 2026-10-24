@@ -65,7 +65,14 @@ for (const pf of ['youtube', 'instagram', 'facebook'] as const) {
   assert.ok(ok.pass, `${pf}: ${JSON.stringify(ok.checks.filter((c) => !c.pass))}`);
   assert.equal(ok.platform, pf);
 }
-assert.deepEqual(evaluate(good()).checks.map((c) => c.name), ['schema', 'text-limits', 'audio', 'format', 'duration', 'safe-zones', 'fingerprint', 'naming', 'manifest', 'cta', 'destination', 'seo'], 'every check runs, in order');
+assert.deepEqual(evaluate(good()).checks.map((c) => c.name), ['schema', 'text-limits', 'audio', 'format', 'duration', 'safe-zones', 'fingerprint', 'naming', 'manifest', 'cta', 'destination', 'seo', 'motion', 'creative'], 'every check runs, in order');
+// an authored film is held on its temporal QA and its creative gate (a primitive board passes both)
+{
+  const filmed = (x: Partial<QaInputs>) => evaluate({...good(), doc: {...good().doc, film: 'x'}, ...x}).checks.filter((c) => !c.pass).map((c) => c.name);
+  assert.deepEqual(filmed({motion: null, creative: []}), ['motion']);
+  assert.ok(!evaluate({...good(), doc: {...good().doc, film: 'x', theme: 'paper'}, creative: [], motion: {first_frame_contrast: 40, change_by_0_3s: 3, hook_activity: 90, longest_still: 1, longest_still_at: 0, lufs: -14, true_peak: -2}}).checks.find((c) => c.name === 'fingerprint')!.error?.includes('theme'), 'a film picks its own palette');
+  assert.deepEqual(filmed({motion: {first_frame_contrast: 40, change_by_0_3s: 3, hook_activity: 90, longest_still: 1, longest_still_at: 0, lufs: -14, true_peak: -2}, creative: ['no creative review recorded']}), ['creative']);
+}
 
 // SEO preflight (studio/seo.ts): errors fail QA with a rule ID, warnings never do; C2 needs the source link and a searchable name or year
 assert.match(failing((x) => (x.doc.caption = 'Bills — done\n\nMore text.')).join(), /seo: SEO-T4/);

@@ -1,0 +1,190 @@
+{
+ "format": "storyboard",
+ "id": "c1-2026-w41-3",
+ "channel": "c1-automation",
+ "theme": "muster",
+ "style": "c1-night-signal-v1",
+ "hookPattern": "myth",
+ "scenes": [
+  {
+   "primitive": "counter-drop",
+   "params": {
+    "label": "TO PAY",
+    "icon": "rupee",
+    "from": 15,
+    "to": 0,
+    "tone": "ok"
+   },
+   "vo": "Fifteen salaries to calculate. Fifteen chances to get it wrong."
+  },
+  {
+   "primitive": "chat-pop",
+   "transition": "cut",
+   "params": {
+    "app": "STAFF",
+    "text": "Sir, my salary is short this month!"
+   },
+   "vo": "One message ruins your morning. His salary came short, and now you must explain."
+  },
+  {
+   "primitive": "ui-sheet",
+   "transition": "fold",
+   "params": {
+    "file": "SALARY.XLSX",
+    "mode": "manual",
+    "columns": [
+     "NAME",
+     "DAYS",
+     "LEAVE",
+     "PAY"
+    ],
+    "rows": [
+     [
+      "Raju",
+      "28",
+      "2",
+      "13,400"
+     ],
+     [
+      "Sita",
+      "30",
+      "0",
+      "15,000"
+     ],
+     [
+      "Mohan",
+      "26",
+      "4",
+      "11,800"
+     ]
+    ]
+   },
+   "vo": "The register holds every name, every leave, every overtime hour. You add them up, you subtract the leaves, you check and recheck."
+  },
+  {
+   "primitive": "maze-to-line",
+   "transition": "cut",
+   "params": {
+    "from": "ATTENDANCE IN",
+    "to": "SALARY OUT"
+   },
+   "vo": "Attendance in, salary out. Right now it is a maze of registers. It can be one line."
+  },
+  {
+   "primitive": "flow-run",
+   "transition": "fold",
+   "params": {
+    "nodes": [
+     {
+      "icon": "check",
+      "label": "Attendance done",
+      "sub": "On the phone"
+     },
+     {
+      "icon": "table",
+      "label": "Wages calculated",
+      "sub": "By itself"
+     },
+     {
+      "icon": "send",
+      "label": "Payslip sent",
+      "sub": "On WhatsApp"
+     },
+     {
+      "icon": "rupee",
+      "label": "Paid on time",
+      "sub": "1st, every month"
+     }
+    ],
+    "done": "PAID"
+   },
+   "vo": "Attendance marked on the phone, salary calculated by itself, payslip sent on WhatsApp. Fifteen people paid right, on the first, every month."
+  },
+  {
+   "primitive": "ui-inbox",
+   "transition": "fold",
+   "params": {
+    "title": "SALARY QUERIES",
+    "mode": "auto",
+    "rows": [
+     {
+      "from": "Raju",
+      "subject": "Salary received, thanks!"
+     },
+     {
+      "from": "Sita",
+      "subject": "Payslip looks correct"
+     },
+     {
+      "from": "Mohan",
+      "subject": "All good this month"
+     }
+    ]
+   },
+   "vo": "No salary complaints in your inbox anymore. No manual calculation mistakes. No month-end panic at all. Just paid on time, every time."
+  },
+  {
+   "primitive": "highlighter-swipe",
+   "transition": "fold",
+   "params": {
+    "text": "Myth: *salary day* is easy. Reality: it is a *week* of maths."
+   },
+   "vo": "Myth says salary day is easy. Actually, it is a full week of maths by hand."
+  },
+  {
+   "primitive": "end-card",
+   "transition": "fold",
+   "params": {
+    "text": "*Follow*",
+    "sub": "One boring task at a time, running itself."
+   }
+  }
+ ],
+ "caption": "Myth: salary day is easy.\n\nReality: fifteen salaries, each with leaves and overtime, calculated by hand. Here is how it can run: attendance on the phone, maths by itself, payslip on WhatsApp.\n\nExample data.\n\nSend this to whoever does salaries by hand.",
+ "hashtags": [
+  "#businessautomation",
+  "#smallbusinessindia",
+  "#hr",
+  "#operations"
+ ],
+ "meta": {
+  "source": "https://www.youtube.com/watch?v=GCl00xF0oBQ",
+  "idea_id": "youtube-payroll-register",
+  "recipe_id": "c1-2026-w41-3",
+  "hero_metaphor": "the salary register"
+ },
+ "film": "c1-2026-w41-3",
+ "brief": {
+  "story_core": "Paying fifteen people by hand is not one sum but hundreds of small ones, and every recheck adds more ink; the same month can run as one clean line from attendance to payslip.",
+  "emotion": "Pressure and low dread as the ballpoint keeps overwriting the same figures and a complaint lands on the page; relief and lightness when the tangle of rechecks is pulled taut into one line and the pen is finally capped and left still.",
+  "hook": "Frame 0: an extreme top-down macro of one PAY cell in a handwritten muster roll on pale ledger paper, a blue ballpoint resting in it: 13,800 is struck through and 13,600 is written over it, and the pay date above reads 1st and 5th struck out, then 7th. At 0.15 s the pen writes a third figure, 13,400, under the other two; at 0.95 s it strikes 13,600 through and jabs a question mark beside the cell; from 1.2 s the camera pulls back down the column to show fifteen cells, every one overwritten, while the pen jabs a question mark beside each row. No title, no big text.",
+  "visual_question": "Why does someone keep rewriting the same salary figure, and which one is right?",
+  "metaphor": "The pen trail: every add, subtract and recheck is one more pass of the ballpoint across the register, and its trail piles up into a maze; automation is that same single line pulled taut from attendance to salary, and the pen laid down for good.",
+  "world": "One Indian muster roll register lying open under cool daylight: ruled ledger paper with pale blue rules and a red double margin, fifteen staff names written in blue ballpoint, a 31-day attendance grid of P, A and L marks, LEAVE, OT and PAY columns, a folded complaint chit held by a steel paper clip, a capped blue ballpoint pen with a contact shadow, and at the end seven loose handwritten pages, Monday to Sunday, dropped one on another as a week.",
+  "camera": "One locked top-down camera over the paper, moving like a document camera: macro on single cells, slow tracks along a row as the pen works, a pull-back to the whole page for the maze, page turns for each new month, and one long final pull-back that reveals seven pages of a week.",
+  "motion": "Organic, hand-made: the ballpoint writes at handwriting speed with pressure pauses, jabs and backtracks, ink appears only where the pen has been; after the turn nothing is handwritten, printed marks arrive in an even mechanical cascade and the pen lies still; one taut pull where the tangled trail straightens from both ends with weight and a small overshoot.",
+  "typography": "Two families: Bradley Hand for everything the person writes (names, attendance marks, overwritten sums, the circled 15, the complaint chit), ink-roughened and revealed as written; JetBrains Mono for everything the system does (printed ticks, rolling PAY figures, PAID 1st). Handwriting versus print is the before and after. Captions are small ballpoint-blue mono lines in the lower margin of the page, hidden where the page already says the words.",
+  "material": "Theme muster: pale cool ledger paper, ballpoint blue ink, pale blue rules, the register red only for the margin and the strike-throughs, and one printed green that means automated and paid. Soft daylight from the upper left, a contact shadow under the pen and clip, paper grain multiplied.",
+  "transitions": "Every change is a camera move over the same register or a physical page event: pull-backs along the column, a track along a row, the tangle pulling straight carries the eye from attendance to salary, a page turn starts the self-running month, page turns repeat for every month after, and the last pull-back reveals the week of pages.",
+  "sound": "Rhythmic foley from the desk only: ballpoint scratch and taps under the writing, the chit landing and the paper clip snapping, a pen click when it is capped, page flips for each month, a soft stamp for PAID; the music is cut for the beat before the line goes taut so the pull lands in silence.",
+  "music": {
+   "caption": "chamber string quartet playing a tight pizzicato ostinato like a ticking ledger, with dry marimba and woodblock, anxious and busy, growing denser and faster in the middle, a sudden stop of silence, then a warm sustained legato string chorale with soft celesta, calm and relieved to the end, cinematic instrumental, no drums",
+   "bpm": 104,
+   "key": "D minor",
+   "seed": 4117
+  },
+  "payoff": "The maze of the pen trail, drawn by fifteen salaries of rechecking, is pulled taut from ATTENDANCE IN to SALARY OUT into one straight green line; later the one green salary day is buried as the camera pulls back under seven loose sheets, Monday to Sunday, a full week of blue handwriting.",
+  "coords": {
+   "luminance": "bright",
+   "temperature": "cool",
+   "rendering": "sketch",
+   "space": "macro",
+   "camera": "push-pull",
+   "motion": "organic",
+   "texture": "ink",
+   "type": "handwritten",
+   "hook": "macro",
+   "sound": "rhythmic"
+  }
+ }
+}

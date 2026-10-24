@@ -37,16 +37,9 @@
       ]
     },
     "theme": {
-      "enum": [
-        "paper",
-        "ink",
-        "mono",
-        "studio",
-        "night",
-        "archive",
-        "night-signal",
-        "archive-gold"
-      ]
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "A theme in engine/src/themes.ts (the engine rejects an unknown one); a film may add its own palette there"
     },
     "host": {
       "enum": [
@@ -210,6 +203,332 @@
       "type": "string",
       "pattern": "^c[0-9]-[a-z0-9-]+-v[0-9]+$",
       "description": "style preset id (styles/<id>.json); unset: the channel's style"
+    },
+    "film": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "An authored film (engine/src/films/index.ts) that renders this board instead of the primitive shots; written by the Director"
+    },
+    "brief": {
+      "type": "object",
+      "description": "The creative brief (engine/src/films/brief.ts): the contract between the story and its film",
+      "required": [
+        "story_core",
+        "emotion",
+        "hook",
+        "visual_question",
+        "metaphor",
+        "world",
+        "camera",
+        "motion",
+        "typography",
+        "material",
+        "transitions",
+        "sound",
+        "payoff",
+        "music",
+        "coords"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "story_core": {
+          "type": "string",
+          "minLength": 8
+        },
+        "emotion": {
+          "type": "string",
+          "minLength": 8
+        },
+        "hook": {
+          "type": "string",
+          "minLength": 8
+        },
+        "visual_question": {
+          "type": "string",
+          "minLength": 8
+        },
+        "metaphor": {
+          "type": "string",
+          "minLength": 8
+        },
+        "world": {
+          "type": "string",
+          "minLength": 8
+        },
+        "camera": {
+          "type": "string",
+          "minLength": 8
+        },
+        "motion": {
+          "type": "string",
+          "minLength": 8
+        },
+        "typography": {
+          "type": "string",
+          "minLength": 8
+        },
+        "material": {
+          "type": "string",
+          "minLength": 8
+        },
+        "transitions": {
+          "type": "string",
+          "minLength": 8
+        },
+        "sound": {
+          "type": "string",
+          "minLength": 8
+        },
+        "payoff": {
+          "type": "string",
+          "minLength": 8
+        },
+        "music": {
+          "type": "object",
+          "required": [
+            "caption",
+            "bpm"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "caption": {
+              "type": "string",
+              "minLength": 12
+            },
+            "bpm": {
+              "type": "number",
+              "minimum": 40,
+              "maximum": 200
+            },
+            "key": {
+              "type": "string"
+            },
+            "seed": {
+              "type": "number"
+            }
+          }
+        },
+        "coords": {
+          "type": "object",
+          "required": [
+            "luminance",
+            "temperature",
+            "rendering",
+            "space",
+            "camera",
+            "motion",
+            "texture",
+            "type",
+            "hook",
+            "sound"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "luminance": {
+              "type": "string",
+              "enum": [
+                "dark",
+                "mid",
+                "bright"
+              ]
+            },
+            "temperature": {
+              "type": "string",
+              "enum": [
+                "warm",
+                "neutral",
+                "cool",
+                "mono"
+              ]
+            },
+            "rendering": {
+              "type": "string",
+              "enum": [
+                "vector-illustration",
+                "painted",
+                "sketch",
+                "engraving",
+                "typographic",
+                "geometric",
+                "diagram",
+                "paper-craft",
+                "collage",
+                "procedural",
+                "photographic"
+              ]
+            },
+            "space": {
+              "type": "string",
+              "enum": [
+                "flat",
+                "layered",
+                "world-space",
+                "macro",
+                "isometric",
+                "single-object"
+              ]
+            },
+            "camera": {
+              "type": "string",
+              "enum": [
+                "locked",
+                "push-pull",
+                "tracking",
+                "scroll",
+                "handheld",
+                "cut-based",
+                "orbit"
+              ]
+            },
+            "motion": {
+              "type": "string",
+              "enum": [
+                "physical",
+                "elastic",
+                "mechanical",
+                "fluid",
+                "stepped",
+                "typographic",
+                "organic"
+              ]
+            },
+            "texture": {
+              "type": "string",
+              "enum": [
+                "clean",
+                "grain",
+                "paper",
+                "ink",
+                "film",
+                "halftone",
+                "watercolour"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "serif-editorial",
+                "grotesk",
+                "mono-technical",
+                "typewriter",
+                "display",
+                "handwritten",
+                "condensed",
+                "minimal"
+              ]
+            },
+            "hook": {
+              "type": "string",
+              "enum": [
+                "macro",
+                "scale",
+                "contradiction",
+                "transformation",
+                "misdirection",
+                "mystery",
+                "silence",
+                "typographic",
+                "physical-interaction",
+                "impossible",
+                "countdown"
+              ]
+            },
+            "sound": {
+              "type": "string",
+              "enum": [
+                "foley-led",
+                "music-led",
+                "silence-led",
+                "tonal",
+                "rhythmic"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "scene": {
+      "type": "object",
+      "description": "An effect-driven film (\"film\": \"scene\"): shots of engine/src/fx effects placed on the voice beats (engine/src/fx/scene.ts); written by the Director",
+      "required": [
+        "shots"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "look": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "grain": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "shots": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "beat",
+              "fx"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "beat": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "from": {
+                "type": "number",
+                "minimum": 0
+              },
+              "to": {
+                "type": "number",
+                "minimum": 0
+              },
+              "fx": {
+                "type": "string",
+                "pattern": "^[a-z0-9:-]+$"
+              },
+              "props": {
+                "type": "object"
+              },
+              "camera": {
+                "type": "object",
+                "required": [
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "to": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              "focal": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

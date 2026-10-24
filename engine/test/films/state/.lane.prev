@@ -1,0 +1,7 @@
+HELD c1-2026-w41-3 (0 min): director session exited 1; mean score 6.9 < 7.5; the reviewer did not pass it; QA:   FAIL audio       no video file |   FAIL format      no video file |   FAIL duration    no video file |   FA
+HELD c2-2026-w41-1 (45 min): mean score 7.3 < 7.5; the reviewer did not pass it; QA:   FAIL creative    mean score 7.3 < 7.5; the reviewer did not pass it |   FAIL creative    mean score 7.3 < 7.5; the reviewer did not p
+HELD c1-2026-w41-3 (36 min): the critic recorded no review; mean score 6.9 < 7.5; the reviewer did not pass it; QA:   FAIL audio       no video file |   FAIL format      no video file |   FAIL duration    no video file |
+HELD c2-2026-w41-2 (30 min): director session exited 1; no creative review recorded (node studio/creative.ts review <board> <review.json>); QA: 
+HELD c2-2026-w41-3 (0 min): director session exited 1; no film file; film not registered in index.ts; QA: 
+HELD c2-2026-w40-1 (0 min): director session exited 1; scores under 6: composition, premium, restraint; mean score 6.5 < 7.5; the reviewer did not pass it; QA:   FAIL creative    scores under 6: composition, premium, res
+HELD c1-2026-w41-1 (0 min): director session exited 1; scores under 6: composition, premium; mean score 6.3 < 7.5; anti-slop fails: works_without_captions; the reviewer did not pass it; QA:   FAIL creative    scores unde

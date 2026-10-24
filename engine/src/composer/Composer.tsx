@@ -15,6 +15,8 @@ import {Captions} from '../story/Captions';
 import {HandleCtx, MarkCtx, THEMES, ThemeCtx, useTheme} from '../themes';
 import {ArrowFold, FoldBand, foldClip, Thread, YearFlap} from './Signature';
 import {NO_STYLE} from './style';
+import {FILMS} from '../films/index';
+import {FilmCtx, filmContext} from '../films/kit';
 import type {TextBox} from './textcheck';
 import {captionsOn, probeFrames, sceneCues, sceneFrames, type Storyboard, type StoryboardScene, type Timing, TRANSITION_FRAMES as T, type Transition, voWordStarts} from './storyboard';
 
@@ -170,6 +172,7 @@ export const Composer: React.FC<ComposerProps> = ({script, timing, frames: given
   const frames = given ?? sceneFrames(script, timing);
   const style = script.preset ?? NO_STYLE;
   const starts = frames.map((_, i) => frames.slice(0, i).reduce((a, b) => a + b, 0));
+  if (script.film) return <FilmBoard script={script} timing={timing} frames={frames} starts={starts} />;
   return (
     <ThemeCtx.Provider value={th}>
       <HandleCtx.Provider value={script.handle ?? ''}>
@@ -195,6 +198,33 @@ export const Composer: React.FC<ComposerProps> = ({script, timing, frames: given
       </HostCtx.Provider>
       </MarkCtx.Provider>
       </HandleCtx.Provider>
+    </ThemeCtx.Provider>
+  );
+};
+
+// An authored film (Director): the film draws everything; the Composer keeps what every board shares: measured beat timing,
+// the voice clips, the platform's closer (via useFilm().cta) and the text-box probe (the film's text sits in data-scene = beat).
+const FilmBoard: React.FC<{script: Storyboard; timing?: Timing; frames: number[]; starts: number[]}> = ({script, timing, frames, starts}) => {
+  const f = useCurrentFrame();
+  const Film = FILMS[script.film!];
+  if (!Film) throw new Error(`film "${script.film}" is not registered in src/films/index.ts`);
+  const th = THEMES[script.theme ?? 'paper'];
+  const beat = starts.filter((s) => f >= s).length - 1;
+  return (
+    <ThemeCtx.Provider value={th}>
+      <FilmCtx.Provider value={filmContext(script, frames, timing, f)}>
+        <AbsoluteFill style={{background: th.bg}} data-scene={beat} data-primitive={`film:${script.film}`}>
+          <Film />
+        </AbsoluteFill>
+        {script.scenes.map((_, i) =>
+          timing?.audio?.[i] ? (
+            <Sequence key={i} from={starts[i] + LEAD} layout="none">
+              <Audio src={staticFile(timing.audio[i]!)} />
+            </Sequence>
+          ) : null,
+        )}
+        <TextProbe frames={probeFrames(script, frames, starts)} />
+      </FilmCtx.Provider>
     </ThemeCtx.Provider>
   );
 };

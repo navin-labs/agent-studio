@@ -5,6 +5,8 @@ import type {StylePreset} from './style.ts';
 import {estimateSeconds, FPS, LEAD, TAIL_AUDIO, TAIL_EST, VOICE_WPS} from '../lib/timing.ts';
 import {SPECS, validateParams} from '../primitives/specs.ts';
 import {THEMES, type ThemeName} from '../themes.ts';
+import type {Brief} from '../films/brief.ts';
+import {type Scene, sceneErrors} from '../fx/scene.ts';
 
 export const TRANSITIONS = ['cut', 'whip-pan', 'ink-wipe', 'pixel-wipe', 'fold'] as const;
 export type Transition = (typeof TRANSITIONS)[number];
@@ -36,6 +38,9 @@ export type Storyboard = {
   hashtags?: string[];
   meta?: {source?: string; idea_id?: string; recipe_id?: string; hero_metaphor?: string; title_b?: string; thumb_b?: string; year?: string}; // title_b, thumb_b: experiment arm B; year: the year-flap opener
   style?: string; // the style preset id (styles/<id>.json); unset: the channel's style
+  film?: string; // an authored film (src/films/index.ts) renders this board instead of the primitive shots (Director)
+  brief?: Brief; // the film's creative brief (src/films/brief.ts)
+  scene?: Scene; // an effect-driven film ("film": "scene"): shots of src/fx effects on the voice beats (src/fx/scene.ts)
   channel?: string;
   handle?: string; // render-time only (not in the file): the channel's Instagram handle, added by make.mjs
   mark?: string; // render-time only: the channel's end-card logo (public/brand/<channel>/mark.svg), added by make.mjs
@@ -103,6 +108,7 @@ export const validateStoryboard = (sb: Storyboard, vo?: (number | null)[] | 'lat
   if (sb.captionStyle !== undefined && !CAPTION_STYLES.includes(sb.captionStyle)) errors.push(`captionStyle must be one of: ${CAPTION_STYLES.join(', ')}`);
   const sc = Array.isArray(sb.scenes) ? sb.scenes : [];
   if (sc.length < 3 || sc.length > 12) errors.push(`storyboard needs 3 to 12 scenes, got ${sc.length}`);
+  if (sb.film === 'scene') errors.push(...(sb.scene ? sceneErrors(sb.scene, sc.length) : ['"film": "scene" needs a "scene"']));
   sc.forEach((s, i) => {
     const w = `scene ${i + 1} (${s.primitive})`;
     const spec = SPECS[s.primitive];
@@ -115,7 +121,8 @@ export const validateStoryboard = (sb: Storyboard, vo?: (number | null)[] | 'lat
     // the composer stretches a shot to its line (the voice is never cut): a measured line may run HOLD past the shot's maximum
     // (an invisible hold of the last frame); longer is dead air. The estimate has its own slack.
     const need = heard != null ? heard + TAIL_AUDIO - HOLD : estimateSeconds(s.vo ?? '', VOICE_WPS) + TAIL_EST;
-    if (s.vo && vo !== 'later' && need > spec.seconds[1]) errors.push(`${w}: vo ${heard != null ? 'is' : 'needs about'} ${(heard ?? need - TAIL_EST).toFixed(1)}s but ${s.primitive} lasts at most ${spec.seconds[1]}s; shorten it`);
+    // a film is timed by its voice alone; a primitive shot's maximum length does not apply (the video's total length still does)
+    if (!sb.film && s.vo && vo !== 'later' && need > spec.seconds[1]) errors.push(`${w}: vo ${heard != null ? 'is' : 'needs about'} ${(heard ?? need - TAIL_EST).toFixed(1)}s but ${s.primitive} lasts at most ${spec.seconds[1]}s; shorten it`);
   });
   const closers = Object.keys(SPECS).filter((k) => SPECS[k].closer);
   if (!SPECS[sc.at(-1)?.primitive ?? '']?.closer) errors.push(`last scene must be a closing card (${closers.join(' or ')})`);

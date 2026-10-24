@@ -9,3 +9,10 @@ voice/*.m4a
 .venv-voice/
 test/out/
 content/storyboards/*.json
+/public/poc/
+public/music/*.wav
+public/props/
+public/hook-test/
+public/duo-test/
+public/net-test/
+public/flat-test/

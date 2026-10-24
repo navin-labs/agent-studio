@@ -73,6 +73,29 @@ function next() {
   if (state[f] === h) return next();
   busy = true;
   const statusFile = f.replace(/\.json$/, '.status.txt');
+  // FILMS=on: a Writer board without a film goes to the Director first (studio/director.ts, about an hour). A film that passes
+  // its review comes back into this folder with "film" set and renders below like any board; one that fails is held, never
+  // rendered as primitive shots.
+  let board = null;
+  try {
+    board = JSON.parse(fs.readFileSync(f, 'utf8'));
+  } catch {}
+  if (process.env.FILMS === 'on' && board?.format === 'storyboard' && board.channel && !board.film) {
+    fs.writeFileSync(statusFile, `directing a film since ${new Date().toISOString()}\n`);
+    log(`directing ${path.relative(ROOT, f)}`);
+    const studio = path.join(ROOT, '..');
+    const d = spawn(process.execPath, [path.join(studio, 'studio/director.ts'), f], {cwd: studio});
+    const said = [];
+    d.stdout.on('data', (x) => said.push(String(x)));
+    d.on('close', (code) => {
+      state[f] = h;
+      save();
+      if (code !== 0) fs.writeFileSync(statusFile, `film held ${new Date().toISOString()} (not rendered)\n\n${said.join('')}`), log(`film held ${path.relative(ROOT, f)}`);
+      busy = false;
+      next();
+    });
+    return;
+  }
   fs.writeFileSync(statusFile, `rendering since ${new Date().toISOString()}\n`);
   log(`rendering ${path.relative(ROOT, f)}`);
   const out = [];

@@ -14,11 +14,12 @@ import {type Probe, probeVideo} from '../engine/scripts/probe.ts';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import {readFingerprints} from './ledger.ts';
 import {checkNovelty, type Fingerprint} from './novelty.ts';
+import {creativeErrors, type MotionFacts, motionErrors} from './creative.ts';
 import {AI_VOICE, captionOf, seoCheck, youtubeMeta} from './seo.ts';
 import {ctaKind, file, findVariants, ownWebhook, pending, sendable, type Platform, PLATFORMS, prefix, ROUTE, type Variant, variantDir, youtubeWebhookPath} from './variant.ts';
 import {type Recipe, recipeDate, recipeHash} from './recipe.ts';
 
-export const CHECKS = ['schema', 'text-limits', 'audio', 'format', 'duration', 'safe-zones', 'fingerprint', 'naming', 'manifest', 'cta', 'destination', 'seo'] as const;
+export const CHECKS = ['schema', 'text-limits', 'audio', 'format', 'duration', 'safe-zones', 'fingerprint', 'naming', 'manifest', 'cta', 'destination', 'seo', 'motion', 'creative'] as const;
 export type Check = {name: (typeof CHECKS)[number]; pass: boolean; error?: string; warning?: string};
 export type QaResult = {storyboard_id: string; platform: Platform; pass: boolean; checks: Check[]; video_path: string; contact_sheet_path: string; video_sha256?: string};
 type TextIssue = {level: 'error' | 'warning'; scene: number; primitive: string; text: string; problem: string};
@@ -45,6 +46,8 @@ export type QaInputs = {
   date: string;
   history: Fingerprint[]; // approved / published videos
   themes?: number; // how many themes the channel renders in (1: the theme-run rule is off)
+  motion?: MotionFacts | null; // a film's <prefix>.motion.json (temporal QA)
+  creative?: string[]; // a film's creative errors: brief recorded, unique when briefed, review passed (creative.ts)
 };
 
 export type PlatformSpec = {size: {width: number; height: number}; thumbnail: boolean; end_card: {handle: string}; caption: string; cta: Record<string, {text: string; sub?: string; say: string; line: string}>; filename: string; destination: string};
@@ -94,7 +97,8 @@ export const evaluate = (x: QaInputs): QaResult => {
     const r = x.recipe;
     const tr = x.doc.scenes.map((s) => s.transition ?? 'cut');
     if (r.primitives.join('>') !== fp.primitives.join('>')) recipeErrors.push(`shots differ from recipe ${r.id}: ${fp.primitives.join(' > ')} vs ${r.primitives.join(' > ')}`);
-    if (r.theme !== fp.theme) recipeErrors.push(`theme ${fp.theme} differs from recipe ${r.id} (${r.theme})`);
+    // a film's palette is the Director's (creative.ts keeps consecutive films apart), not the recipe's
+    if (!x.doc.film && r.theme !== fp.theme) recipeErrors.push(`theme ${fp.theme} differs from recipe ${r.id} (${r.theme})`);
     if (r.style && x.doc.style !== r.style) recipeErrors.push(`style ${x.doc.style ?? '(none)'} differs from recipe ${r.id} (${r.style}): copy the recipe's style`);
     if (r.hook_pattern !== fp.hook_pattern) recipeErrors.push(`hook pattern ${fp.hook_pattern} differs from recipe ${r.id} (${r.hook_pattern})`);
     if (r.transitions.join('>') !== tr.join('>')) recipeErrors.push(`transitions differ from recipe ${r.id}: ${tr.join(' > ')} vs ${r.transitions.join(' > ')}`);
@@ -170,6 +174,10 @@ export const evaluate = (x: QaInputs): QaResult => {
   const metaB = v.platform === 'youtube' && x.doc.meta?.title_b ? {...meta, title: x.doc.meta.title_b} : null; // experiment arm B must pass too
   add('seo', [...seo.errors, ...(metaB ? seoCheck(metaB, x.doc).errors.map((e) => `title_b: ${e}`) : [])]);
   if (seo.warnings.length) checks.at(-1)!.warning = seo.warnings.join('; ');
+  // an authored film: designed first seconds and no dead stretches (measured on the file), mastered loudness, and a creative
+  // direction that was unique when briefed and passed its review (a primitive board passes both: not a film)
+  add('motion', x.doc.film ? motionErrors(x.motion ?? null) : []);
+  add('creative', x.doc.film ? (x.creative ?? ['the creative ledger was not read']) : []);
 
   return {storyboard_id: x.doc.id, platform: v.platform, pass: checks.every((c) => c.pass), checks, video_path: file(x.outDir, v, 'mp4'), contact_sheet_path: file(x.outDir, v, 'contact.png'), ...(x.sha256 ? {video_sha256: x.sha256} : {})};
 };
@@ -221,6 +229,8 @@ export const runQa = async (boardPath: string, opts: {out?: string; date?: strin
       date,
       history: readFingerprints(), // approved videos, appended by ledger.ts on approval
       themes: ch?.style ? 1 : ch?.themes?.length,
+      motion: readJson(file(out, v, 'motion.json')),
+      creative: doc.film ? creativeErrors(doc) : [],
     });
     const res = {...r, video_path: rel(r.video_path), contact_sheet_path: rel(r.contact_sheet_path)};
     const bad = validate(loadSchema('qa'), res);

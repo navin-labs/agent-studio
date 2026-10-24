@@ -9,6 +9,7 @@
 //   --force-vo   regenerate voiceover even if files exist
 //   --no-vo      ignore voiceover, render text-only timing
 //   --force      render even if the quality gate finds errors
+//   --only=<platform>  render one platform variant (a film's preview while it is being authored; never for production)
 //   --out=<dir>  renders root (default: engine/out for the Writer's boards in content/storyboards, engine/test/out for anything else)
 //
 // Where renders go: a board from content/storyboards (the Writer's folder, what the watcher renders) is production: one render per
@@ -22,6 +23,7 @@ import path from 'node:path';
 import url from 'node:url';
 import {HOOK_PATTERNS, lengthIssue, probeFrames, validateStoryboard} from '../src/composer/storyboard.ts';
 import {probeVideo} from './probe.ts';
+import {filmstrip, master, motion} from './film.mjs';
 import {ctaKind, file as variantFile, PLATFORMS, ROUTE, variantDir} from '../../studio/variant.ts';
 import {recipeDate} from '../../studio/recipe.ts';
 import {checkTextBoxes} from '../src/composer/textcheck.ts';
@@ -46,6 +48,7 @@ if (fs.existsSync(envFile)) {
 const args = process.argv.slice(2);
 const flags = new Set(args.filter((a) => a.startsWith('--')));
 const files = args.filter((a) => !a.startsWith('--'));
+const ONLY = args.find((a) => a.startsWith('--only='))?.slice(7);
 if (!files.length) {
   console.log('Usage: npm run make -- <board or story>.json [--check|--vo-only|--force-vo|--no-vo|--force|--out=<dir>]');
   process.exit(1);
@@ -171,7 +174,8 @@ const validateBoard = (doc) => {
     else if (styleId) {
       const preset = JSON.parse(fs.readFileSync(sf, 'utf8'));
       if (preset.channel !== doc.channel) errors.push(`style ${styleId} belongs to ${preset.channel}, not ${doc.channel}`);
-      if ((doc.theme ?? 'paper') !== preset.theme) errors.push(`style ${styleId} uses theme ${preset.theme}; the board says ${doc.theme ?? 'paper'}`);
+      // a film carries its own palette (its brief); the style preset still gives the platforms and CTAs
+      if (!doc.film && (doc.theme ?? 'paper') !== preset.theme) errors.push(`style ${styleId} uses theme ${preset.theme}; the board says ${doc.theme ?? 'paper'}`);
       const bad = doc.scenes.map((s) => s.transition).filter((x) => x && !preset.transitions.includes(x));
       if (bad.length) errors.push(`style ${styleId} allows transitions ${preset.transitions.join(', ')}; the board uses ${[...new Set(bad)].join(', ')}`);
       if (preset.opener === 'year-flap' && !/^[0-9]{3,4}$/.test(doc.meta?.year ?? '')) errors.push(`style ${styleId} opens on the story's year: set meta.year (e.g. "1948")`);
@@ -440,7 +444,8 @@ const renderReel = async (script, place) => {
   const inputProps = {script, timing: {audio, durations, music}};
   const browserExecutable = findBrowser();
   const url = await getBundle();
-  const composition = await selectComposition({serveUrl: url, id: script.format === 'storyboard' ? 'Composer' : 'Story', inputProps, browserExecutable});
+  const gl = script.film ? {chromiumOptions: {gl: 'angle'}} : {}; // films may paint with p5.brush (WebGL2)
+  const composition = await selectComposition({serveUrl: url, id: script.format === 'storyboard' ? 'Composer' : 'Story', inputProps, browserExecutable, ...gl});
   const outDir = place.dir;
   const name = place.name;
   fs.mkdirSync(outDir, {recursive: true});
@@ -456,6 +461,7 @@ const renderReel = async (script, place) => {
     outputLocation: name('mp4'),
     inputProps,
     browserExecutable,
+    ...gl,
     onArtifact: ({filename, content}) => {
       if (!filename.startsWith('text-boxes-')) return;
       const m = JSON.parse(typeof content === 'string' ? content : new TextDecoder().decode(content));
@@ -470,8 +476,14 @@ const renderReel = async (script, place) => {
     },
   });
   console.log('');
+  if (script.film) {
+    // a film is mastered (-14 LUFS, true peak -1.5 dBTP) and measured over time (temporal QA reads motion.json)
+    const loud = master(name('mp4'));
+    fs.writeFileSync(name('motion.json'), JSON.stringify({...motion(name('mp4')), ...loud}) + '\n');
+    console.log(c.dim(`  film: mastered ${loud.before} -> ${loud.lufs} LUFS, peak ${loud.true_peak} dBTP; motion.json`));
+  }
   const coverFrame = Math.max(0, (composition.props.frames?.[0] ?? 30) - 6);
-  await renderStill({composition, serveUrl: url, output: name('cover.png'), frame: coverFrame, inputProps, browserExecutable});
+  await renderStill({composition, serveUrl: url, output: name('cover.png'), frame: coverFrame, inputProps, browserExecutable, ...gl});
   if (script.format === 'storyboard') {
     // YouTube thumbnails in the channel theme: arm A = the hook (control), arm B = meta.thumb_b (the experiment's variant)
     // only the platforms whose preset asks for one (YouTube); a board without a channel style keeps the legacy pair
@@ -482,8 +494,11 @@ const renderReel = async (script, place) => {
       const still = await selectComposition({serveUrl: url, id: 'Thumbnail', inputProps: props, browserExecutable});
       await renderStill({composition: still, serveUrl: url, output: file, frame: 0, inputProps: props, browserExecutable});
     }
-    const sheet = await selectComposition({serveUrl: url, id: 'BoardSheet', inputProps, browserExecutable});
-    await renderStill({composition: sheet, serveUrl: url, output: name('contact.png'), frame: 0, inputProps, browserExecutable});
+    if (script.film) filmstrip(name('mp4'), name('contact.png')); // a film's contact sheet: hook row (0 to 3 s) + every 1.5 s
+    else {
+      const sheet = await selectComposition({serveUrl: url, id: 'BoardSheet', inputProps, browserExecutable});
+      await renderStill({composition: sheet, serveUrl: url, output: name('contact.png'), frame: 0, inputProps, browserExecutable});
+    }
   }
   if (script.caption) fs.writeFileSync(name('caption.txt'), captionText(script, voice));
   // render.json: the account shown on the closer (Dispatch checks it), the style preset, the AI voice used (null = silent; the YouTube description
@@ -567,8 +582,10 @@ for (const f of files) {
     // a channel board: one render per platform, each in out/<channel>/<date>/<id>/<platform>/ (studio/variant.ts)
     console.log(c.dim(`  renders -> ${path.relative(ROOT, OUT) || '.'}/${doc.channel}/${doc.date}/${doc.id}/<platform>/`));
     // a new render replaces the old one whole: a platform that fails this time must not leave its last render (and its QA pass) behind
-    if (!flags.has('--vo-only')) for (const platform of PLATFORMS) fs.rmSync(variantDir(OUT, {channel: doc.channel, date: doc.date, id: doc.id, platform}), {recursive: true, force: true});
-    for (const platform of PLATFORMS) {
+    const platforms = ONLY ? PLATFORMS.filter((p) => p === ONLY) : PLATFORMS;
+    if (ONLY && OUT === path.join(ROOT, 'out')) throw new Error('--only is for previews: production always renders every platform');
+    if (!flags.has('--vo-only')) for (const platform of platforms) fs.rmSync(variantDir(OUT, {channel: doc.channel, date: doc.date, id: doc.id, platform}), {recursive: true, force: true});
+    for (const platform of platforms) {
       console.log(c.bold(`  ${platform}`));
       let vs;
       try {

@@ -110,7 +110,7 @@ const main = async () => {
   assert.throws(() => validate({oneOf: []}, 1), /not supported/);
 
   // engine sync
-  const {THEMES} = await import('../engine/src/themes.ts');
+  const {STYLE_THEMES} = await import('../engine/src/themes.ts');
   const {SPECS} = await import('../engine/src/primitives/specs.ts');
   const sb = await import('../engine/src/composer/storyboard.ts');
   const all = Object.keys(SAMPLES).filter((n) => n !== 'queue').map(loadSchema); // the queue carries a subset of platforms on purpose (checked below)
@@ -119,8 +119,8 @@ const main = async () => {
     assert.ok(found.length, `no "${key}" enum found`);
     for (const en of found) assert.deepEqual([...en].sort(), [...(want ?? found[0])].sort(), `"${key}" enum out of sync`);
   };
-  same('theme', Object.keys(THEMES));
-  same('themes', Object.keys(THEMES));
+  same('theme', STYLE_THEMES); // film palettes are free: a film board's theme is checked against themes.ts by the engine
+  same('themes', STYLE_THEMES);
   same('host', sb.HOST_NAMES);
   same('captionStyle', sb.CAPTION_STYLES);
   same('transition', sb.TRANSITIONS);

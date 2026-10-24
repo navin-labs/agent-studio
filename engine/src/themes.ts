@@ -18,7 +18,11 @@ export type Theme = {
   reveal?: string; // the reveal (C2: the name and the year the moment they are spoken). Unset: the highlighter uses accent
 };
 
-export type ThemeName = 'paper' | 'ink' | 'mono' | 'studio' | 'night' | 'archive' | 'night-signal' | 'archive-gold';
+export type ThemeName = 'paper' | 'ink' | 'mono' | 'studio' | 'night' | 'archive' | 'night-signal' | 'archive-gold' | 'cutaway' | 'scherenschnitt' | 'muster' | 'offset' | 'pop-day' | 'pop-night' | 'linen' | 'periwinkle' | 'signal' | 'journey' | 'editorial';
+
+// The themes channels, styles and recipes may name (their schemas list exactly these). The rest are film palettes, each added by
+// the Director for one authored film; a film board may name any theme here.
+export const STYLE_THEMES = ['paper', 'ink', 'mono', 'studio', 'night', 'archive', 'night-signal', 'archive-gold'] as const;
 
 export const THEMES: Record<ThemeName, Theme> = {
   // Paper & Signal v1 (locked 2026-09-29): values copied from P in theme.ts.
@@ -61,6 +65,70 @@ export const THEMES: Record<ThemeName, Theme> = {
   'archive-gold': {
     bg: '#0E1A2B', surface: '#16243A', ink: '#F4F1EA', muted: '#A8A59E', rule: '#1E2D45',
     accent: '#F4F1EA', onAccent: '#0E1A2B', flow: '#A8A59E', ok: '#F4F1EA', alert: '#F4F1EA', warn: '#A8A59E', shadow: '#000000', reveal: '#E8A020',
+  },
+  // Cutaway (film c2-2026-w40-1, the microwave): a 1940s technical cutaway sheet. Chocolate-brown ink on drafting paper;
+  // the one hot colour is heat itself (the waves and whatever they cook from inside) and the reveal (name, year).
+  cutaway: {
+    bg: '#F0E6D2', surface: '#E6D8BC', ink: '#24170F', muted: '#65503F', rule: '#D8C6A5',
+    accent: '#24170F', onAccent: '#F0E6D2', flow: '#B23C16', ok: '#B23C16', alert: '#B23C16', warn: '#65503F', shadow: '#24170F', reveal: '#B23C16',
+  },
+  // Scherenschnitt (film c2-2026-w41-1, Velcro): a Swiss folded papercut, black paper on backlit cream rag paper. The one red
+  // is the grip itself (hooks that hold, the fastener) and the reveal.
+  // Muster (film c1-2026-w41-3, the salary register): blue ballpoint on cool ruled ledger paper. Red is the register's own margin
+  // and strike-throughs; the one green is printed and means automated, paid.
+  muster: {
+    bg: '#EDF0EA', surface: '#E1E6DE', ink: '#1A2D78', muted: '#4F5A73', rule: '#B7C5D9',
+    accent: '#1A2D78', onAccent: '#EDF0EA', flow: '#4F5A73', ok: '#2E7D1F', alert: '#C2302B', warn: '#C2302B', shadow: '#2A2F3A',
+  },
+  // Editorial (2026-10-25, format A Editorial Object): off-white paper, black and greys, one deep red. muted = the grey
+  // display type, accent = the deep red key word, alert = the bright red of pen and laser marks.
+  editorial: {
+    bg: '#ECECE9', surface: '#F7F7F5', ink: '#151515', muted: '#5E5E5E', rule: '#CFCFCB',
+    accent: '#8E1B1B', onAccent: '#F7F7F5', flow: '#2B8CA8', ok: '#151515', alert: '#D7261E', warn: '#8E1B1B', shadow: '#151515',
+  },
+  // Journey (2026-10-25, format D Flat Journey): cream paper and two inks. ink = navy (type, ground line, ticks),
+  // alert = coral (the shapes' second ink, the timeline's progress and the cursor); illustrations come in these two inks.
+  journey: {
+    bg: '#FAF5EC', surface: '#FFFDF8', ink: '#2E3B7A', muted: '#4D5A93', rule: '#E8DFD0',
+    accent: '#F07A5F', onAccent: '#1E2752', flow: '#F07A5F', ok: '#2E3B7A', alert: '#F07A5F', warn: '#F07A5F', shadow: '#2E3B7A',
+  },
+  // Signal (2026-10-25, format C Network Line): black meets white, one violet light. ink = the dark side and the type,
+  // bg = the light side, flow = the line, its glow and the lit nodes.
+  signal: {
+    bg: '#E4E4E6', surface: '#F4F4F6', ink: '#0B0B10', muted: '#55555E', rule: '#C9C9D1',
+    accent: '#6C68FF', onAccent: '#0B0B10', flow: '#6C68FF', ok: '#6C68FF', alert: '#FF5A47', warn: '#9A97FF', shadow: '#0B0B10',
+  },
+  // Periwinkle (2026-10-25, format B Duotone Story): one hue. surface = the light centre and the photos' highlights, ink = the
+  // photos' shadows and the keywords, rule = the saturated edge of the radial ground, warn = the one rare hot accent.
+  periwinkle: {
+    bg: '#B4B8F0', surface: '#E6E7FB', ink: '#1B1C5A', muted: '#2F3280', rule: '#6366DA',
+    accent: '#1B1C5A', onAccent: '#E6E7FB', flow: '#4A4ECF', ok: '#1B1C5A', alert: '#FF6A3D', warn: '#FF8A3D', shadow: '#1B1C5A',
+  },
+  // Linen (2026-10-23, the calm hook): warm, quiet, editorial. One accent (gold) for the key word; soft natural tones for
+  // things: ok = sage (the burr), warn = caramel (fur), flow = slate teal (hooks), alert = terracotta (rare marks).
+  linen: {
+    bg: '#EFE9DF', surface: '#F8F4EC', ink: '#2A2622', muted: '#6E665C', rule: '#DDD4C6',
+    accent: '#C9A227', onAccent: '#2A2622', flow: '#3F6E78', ok: '#7A8B5C', alert: '#B5523B', warn: '#B07A4A', shadow: '#2A2622', reveal: '#C9A227',
+  },
+  // Pop toy-world (2026-10-23, the attention hook test): a light and a dark world the film flips between; saturated pops only
+  // for meaning: alert = the pen, warn = fur and warmth, ok = the burr, flow = hooks and macro light, accent = the key word.
+  'pop-day': {
+    bg: '#ECEBE7', surface: '#FFFFFF', ink: '#141414', muted: '#55534E', rule: '#D6D4CE',
+    accent: '#FFD23F', onAccent: '#141414', flow: '#1592B0', ok: '#2E9E5B', alert: '#E8402F', warn: '#E9862A', shadow: '#141414',
+  },
+  'pop-night': {
+    bg: '#0D0D10', surface: '#1A1A20', ink: '#F2F1EC', muted: '#A3A19B', rule: '#2A2A31',
+    accent: '#FFD23F', onAccent: '#0D0D10', flow: '#36D1F0', ok: '#3DDC84', alert: '#FF5A47', warn: '#FF9A3C', shadow: '#000000',
+  },
+  scherenschnitt: {
+    bg: '#F2E6CC', surface: '#E4D2AC', ink: '#17130F', muted: '#5F503C', rule: '#D6C29A',
+    accent: '#17130F', onAccent: '#F2E6CC', flow: '#B0261C', ok: '#B0261C', alert: '#B0261C', warn: '#5F503C', shadow: '#5A4428', reveal: '#B0261C',
+  },
+  // Offset (film c2-2026-w41-2, Bubble Wrap): a 1957 two-ink offset print on newsprint. Teal is the printed wallpaper and its
+  // Ben-Day shading (surface, flow); the one coral plate is the reveal (the year, the names, the company).
+  offset: {
+    bg: '#ECE6D8', surface: '#8FB2AA', ink: '#1B2124', muted: '#2F3A3A', rule: '#CFC7B5',
+    accent: '#1B2124', onAccent: '#ECE6D8', flow: '#4F7C75', ok: '#B23F28', alert: '#B23F28', warn: '#2F3A3A', shadow: '#1B2124', reveal: '#B23F28',
   },
 };
 
