@@ -27,6 +27,10 @@ for job in json.load(open(sys.argv[1])):
     try:
         img = Image.open(job["src"]).convert("RGB")
         img.thumbnail((2048, 2048))
+        if job.get("photo"):  # a whole photo (a window or plate): only whether it shows the noun matters
+            m = match(img, job.get("noun", ""))
+            print(json.dumps({"out": job["out"], "w": img.width, "h": img.height, "score": round(m, 3), "match": round(m, 3), "why": [] if m >= 0.5 else [f"may not be a {job.get('noun')} ({m:.0%})"]}), flush=True)
+            continue
         cut = remove(img, session=session)  # RGBA
         a = np.asarray(cut)[:, :, 3].astype(np.float32) / 255
         solid = a > 0.5

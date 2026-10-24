@@ -196,6 +196,61 @@
           "type": "string",
           "pattern": "^[0-9]{3,4}$",
           "description": "the story's year, shown by the year-flap opener"
+        },
+        "structure": {
+          "enum": ["story", "essay", "teardown", "before-after", "myth-bust", "countdown", "gag"],
+          "description": "the story's shape; rotates across a channel's films (studio/styles.ts)"
+        },
+        "cta": {
+          "enum": ["none", "question", "save", "comment-keyword", "follow-series"],
+          "description": "the one call to action; rotates across a channel's films"
+        },
+        "series": {
+          "type": "object",
+          "required": ["name", "part"],
+          "properties": {"name": {"type": "string"}, "part": {"type": "integer", "minimum": 1}, "of": {"type": "integer", "minimum": 1}},
+          "description": "a numbered series keeps one visual world across its parts; the idea changes each part"
+        },
+        "devices": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "novelty",
+              "open-loop",
+              "reveal",
+              "contrast",
+              "proof",
+              "stakes",
+              "urgency",
+              "number",
+              "second-person",
+              "pattern-interrupt",
+              "callback",
+              "loop"
+            ]
+          },
+          "description": "The storytelling devices this script uses (docs/CREATIVE_BIBLE.md section 13; studio/script.ts checks them)"
+        },
+        "proof": {
+          "type": "object",
+          "required": [
+            "fact",
+            "source"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "fact": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 120
+            },
+            "source": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "description": "The one hard, specific fact shown on screen, with its source"
         }
       }
     },

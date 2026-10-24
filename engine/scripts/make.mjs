@@ -22,6 +22,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
 import {HOOK_PATTERNS, lengthIssue, probeFrames, validateStoryboard} from '../src/composer/storyboard.ts';
+import {scriptErrors} from '../../studio/script.ts';
 import {probeVideo} from './probe.ts';
 import {filmstrip, master, motion} from './film.mjs';
 import {ctaKind, file as variantFile, PLATFORMS, ROUTE, variantDir} from '../../studio/variant.ts';
@@ -153,6 +154,8 @@ const validateBoard = (doc) => {
   else if (doc.caption.split('\n')[0].length > 125) warnings.push('caption first line over 125 chars, it gets cut before "more"');
   if (doc.caption && !VOICE_ON && /voiceover|voice-over/i.test(doc.caption)) errors.push('caption discloses a voiceover but the video is silent (VOICE is off)');
   if (doc.hashtags && (doc.hashtags.length < 3 || doc.hashtags.length > 5)) errors.push('use 3 to 5 hashtags (Instagram caps at 5)');
+  // a channel board's words must hold attention (docs/CREATIVE_BIBLE.md section 13): checked before any render is spent
+  if (doc.channel) for (const e of scriptErrors(doc)) errors.push(`script: ${e}`);
   // the closer shows the channel's own account: read it from channels/<id>/channel.json (no channel = test board, default handle)
   if (doc.channel) {
     const cf = path.join(ROOT, '..', 'channels', doc.channel, 'channel.json');

@@ -19,6 +19,9 @@ import {DUO_FRAMES, DuoVelcro} from './fx/demos/DuoVelcro';
 import {NET_FRAMES, NetC1} from './fx/demos/NetC1';
 import {FLAT_FRAMES, FlatVelcro} from './fx/demos/FlatVelcro';
 import {ED_FRAMES, EdVelcro} from './fx/demos/EdVelcro';
+import {AMB_FRAMES, AmbC1} from './fx/demos/AmbC1';
+import {MEM_FRAMES, MemC2} from './fx/demos/MemC2';
+import {DOODLE_FRAMES, DoodleC1} from './fx/demos/DoodleC1';
 import {THUMB, Thumbnail, type ThumbnailProps} from './thumbnail/Thumbnail';
 import {REEL} from './theme';
 import type {ReelProps, ReelScript} from './types';
@@ -87,6 +90,9 @@ export const Root: React.FC = () => (
     />
     <Still id="Thumbnail" component={Thumbnail} width={THUMB.w} height={THUMB.h} defaultProps={{text: 'Who drew the *first* barcode?', theme: 'archive', handle: '@backstory.minute'} satisfies ThumbnailProps} />
     <Still id="MascotConcept" component={ConceptSheet} width={REEL.w} height={REEL.h} defaultProps={{concept: 0} satisfies ConceptProps} />
+    <Composition id="DoodleC1" component={DoodleC1} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={DOODLE_FRAMES} />
+    <Composition id="MemC2" component={MemC2} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={MEM_FRAMES} />
+    <Composition id="AmbC1" component={AmbC1} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={AMB_FRAMES} />
     <Composition id="EdVelcro" component={EdVelcro} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={ED_FRAMES} />
     <Composition id="FlatVelcro" component={FlatVelcro} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={FLAT_FRAMES} />
     <Composition id="NetC1" component={NetC1} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={NET_FRAMES} />

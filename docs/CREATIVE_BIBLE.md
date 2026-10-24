@@ -191,3 +191,91 @@ Every film picks **one** format. The rule underneath all four: what the script n
 | **D. Flat Journey** | Video-45335: 53 / 38 / 0.6 s | cream paper, two inks (coral and navy), grain | a side-scrolling illustrated world: landmarks, vehicles, stations, a timeline scrubber with years, a lone figure under a spotlight | flat two-colour **vector illustrations** from the asset pipeline (Pixabay vectors, Openverse SVG, Stitch flat illustration), recoloured to the two inks + grain; a horizontal world camera; a `Timeline` scrubber | C2 history: journeys, eras, "then vs now" (the India bullet-train story is this exact shape) |
 
 Not a format but a toolkit: the PickUs ad's kinetic tricks (letters that fly together, pen marks, world flips) are effects any format may borrow, sparingly.
+
+## 12. Formats x Looks: many styles, never repetitive (2026-10-25)
+Four formats are not four styles. A **format** is the structure and motion grammar (how a film is built). A **look** is the medium (what it is made of: pencil, ink, paper, photo...). Any format can wear any look that suits it, so the feed never repeats.
+- **Formats (structure):** A Editorial Object, B Duotone Story, C Network Line, D Flat Journey. More are added as tested (e.g. Evidence Board, Then/Now Split).
+- **Looks are data, not code.** Each look is one file with:
+  - the medium sentence every asset prompt carries, so all images in a film share one hand;
+  - the grade code applies to every asset (duotone, B&W, posterise to inks, paper key, line-only);
+  - a texture overlay (paper, grain, halftone, canvas);
+  - a type pairing;
+  - a motion temperament (stepped 12 fps for hand-made media, smooth for photo and 3D).
+
+| Look | Asset medium (prompt) | Grade + texture | Type pairing | Suits |
+|---|---|---|---|---|
+| Pencil sketch | graphite pencil sketch on off-white paper, visible hatching | multiply on paper, line boil on 2s | serif italic + grotesk | A, B, D |
+| Charcoal | soft charcoal drawing, smudged shadows | B&W + paper tooth | condensed + serif | A, B |
+| Ink & wash | brush ink with grey wash | 2-tone ink | serif | A, D |
+| Watercolour | loose watercolour on cold-press paper | soft edges, paper | serif italic | B, D |
+| Gouache storybook | matte gouache, mid-century | posterise, grain | rounded grotesk | D |
+| Risograph | 2-ink riso print, misregistration, halftone | 2-ink + offset + halftone | grotesk bold | A, D |
+| Cut paper | layered cut paper, soft shadows | paper key + lift shadow | condensed | D, A |
+| Linocut / woodcut | relief print, carved lines | 1-ink + paper | slab or condensed | A, D |
+| Copperplate engraving | 19th-century engraving, cross-hatching | 1-ink + spot red | serif | A, B |
+| Blueprint / cyanotype | technical drawing, white lines on blue | invert + line | mono + condensed | A, C |
+| Archival collage | public-domain photos and paper scraps | B&W + torn edges | serif + typewriter | A |
+| Minimal line art | single continuous line drawing | line only, one accent | thin grotesk | A, D |
+| Chalkboard | chalk on dark board | invert, chalk texture | handwritten + condensed | B, D |
+| Comic halftone | bold ink and halftone dots | posterise + dots | condensed italic | A |
+| Clay / toy | clay or toy photo, soft studio light | none (photo) + soft shadow | rounded | B, D |
+| Photo editorial B&W | studio photo cut-outs | B&W + contrast (format A) | condensed + serif | A |
+| One-hue duotone | photo cut-outs | duotone curve (format B) | condensed + italic | B |
+| Two-ink flat | flat vector, two inks | paper key (format D) | condensed + italic | D |
+| Light network | none (code) | glow | thin sans | C |
+
+- **Where assets come from:**
+  - **outsourced:** Stitch generates them in the look's medium; Pixabay, Pexels and Openverse supply photos (cut out);
+  - **otherwise an alternative built from the script:** archive or public-domain material, or the code-native format C for abstract ideas.
+- **Rotation (uniqueness gate):**
+  - no look repeats within the last 6 posts of a channel;
+  - no format runs twice in a row;
+  - the look is chosen to fit the story's world (history → engraving, archival, blueprint; automation → line art, risograph, network);
+  - a film is a fingerprint of six axes: format, look, suit (chosen by studio/styles.ts) and hook type, structure, CTA (from the script). The hook type may not repeat the previous film's; the structure and CTA may not repeat either of the last 2. No film may share 4 or more axes with any of the last 8 (2026-10-25, from Forge's review of 9 reference reels: repetition comes from the same idea, look and structure together, never from the look alone);
+  - a numbered series (`meta.series`) keeps one world (format, look, suit) across its parts, and each part has a new idea; a small, consistent world travels (pixelnoir: 6x and 14x followers in likes).
+- **Idea first:** the one-line idea, hook and payoff are fixed in words before any scene is written. If the idea is only interesting with effects, the idea is rewritten.
+
+## 13. Script craft: the words that make people stay (2026-10-25)
+Research basis:
+- Loewenstein's information-gap theory: curiosity comes from a noticed, right-sized gap in what you know. Triggers: a question or puzzle, a sequence with an unknown end, a violated expectation, someone else holding the answer.
+- Short-form practice: hook, context, payoff, loop; 80 to 150 spoken words for 30 to 60 s; a visual reset at every new beat.
+- The but/therefore rule: every line turns the story, never "and then".
+
+**Structure (every script):**
+1. **Hook (0 to 2 s, at most 12 words):** a violated expectation, a puzzle, or an illusion of novelty. "You've touched this every day and never noticed it." Never a greeting or a topic label.
+2. **Context (one line):** just enough to make the gap matter.
+3. **Turns (2 to 4 beats), each a "but" or "therefore":** every 3 to 5 s, a **new reveal** the viewer didn't have.
+4. **Contrast framing (at least once):** then vs now, tiny vs huge, expected vs actual, manual vs automatic.
+5. **Bullseye proof (at least once):** one hard, specific fact shown on screen with its source (a date, a patent number, a measured number). Specificity is credibility.
+6. **Stakes or urgency (at least once):** why this matters to *you*, now.
+7. **Payoff at about 70%:** the gap opened in the hook closes.
+8. **Loop line:** the last line hands back to the first, so a replay feels natural.
+
+**Devices the Writer chooses from (name them on the board, so the Director stages them):** illusion of novelty, open loop, new reveal, contrast frame, bullseye proof, stakes, urgency, specific number, second person ("you"), pattern-interrupt line, callback, loop.
+
+**Script checks:**
+- **Code (QA):**
+  - the hook is 12 words or fewer, opens no greeting, and has a question, a contradiction or a number;
+  - at least two turn words (but, instead, actually, so, until);
+  - at least one specific number or date with a source;
+  - 80 to 150 words for 30 to 60 s;
+  - the last line shares a key word with the first.
+- **Critic (a separate Claude pass):** checks each declared device, and rejects flat lines ("and then") and claims without proof.
+
+## 14. More references (2026-10-25): three new formats, new looks, new effects
+Analysed frame by frame at 2 fps. Video-45547 duplicates 90405, and 77717 duplicates 28089.
+
+| Ref | Measured (hook / per s / still) | What it is | New format | Look + colour suit | New effects |
+|---|---|---|---|---|---|
+| Video-84390 (14.8 s) | 247 / 59 / 0.5 s | A dreamy 3D world (a glowing figure flying through clouds, cities, space), letterboxed inside 9:16; real photo and video clips float beside it as inset windows (lightning, jellyfish, birds, galaxy, black hole, Neptune, the sun, candles, a comet) | **E. Memory Windows**: one dreamy world + floating real-footage windows that illustrate each line | glowing game-like 3D or painted dream; suits: deep night blue and warm gold, swinging between them | light trails, bloom, white-flash cut, picture-in-picture windows that slide and settle, sparkle particles, cinematic letterbox bars |
+| Video-90405 (26.9 s) | 171 / 113 / 0 s | Real footage through a moving train window (sea, trees, stations, motion blur) in a rounded old-film frame; a hand-drawn doodle character (round face, hands, changing expressions) sings the words, which appear handwritten word by word | **F. Doodle on Footage**: real moving footage + one doodle character + handwritten words | lo-fi film (grain, scratches, rounded vignette frame, faded teal and warm); doodle in black ink | doodle line boil (stepped redraw), expression swaps on the beat, hand gestures, handwritten word reveal, film frame + grain + scratches, footage motion blur |
+| Video-65602 (11.7 s) | 46 / 24 / 0.8 s | Letterboxed painted night city scenes (a basketball court behind a fence, a brick alley with a lamp, an underpass, an outdoor stair); lamps switch on and off, fog drifts | **G. Ambient Scenes**: one atmospheric scene per line, nearly still; light and weather carry the motion | painted night city; suit: navy dark + sodium amber + cold fluorescent | lamp flicker / light cone switching on, fog drift, light pooling, slow parallax |
+| Video-40696 (13.2 s) | 64 / 16 / 1.7 s | The same idea in lo-fi pixel art (a laundromat, a balcony, a corridor, a riverside at night, a stairwell lamp, a vending machine in the rain, a rooftop water tower) | G (pixel variant) | pixel art night; suit: indigo night + warm window light + neon glow | rain, glowing lamp pulse, window lights blinking, water reflections shimmering |
+
+What these add to the rules:
+- **Code may draw when the look itself is drawn simply.** A doodle character (F) and line art are the look, so code-drawn strokes are right there. Code still never imitates a *real* object in a realistic look.
+- **Real moving footage is now an asset type.** Pexels and Pixabay videos (train windows, sea, city, rain) feed F and E as plates, and are cut into windows for E.
+- **Painted and pixel scenes come from Stitch** in the look's medium, then are lit by code (lamps, fog, rain, reflections) so a still scene lives.
+- **New colour suits:** teal-and-orange film, night navy + sodium amber, deep blue + glowing gold, indigo pixel night.
+
+The library now has **7 formats** (A to G). Every format can take several looks and colour suits, and the rotation gate (section 12) spreads them so no two posts in a row feel alike.

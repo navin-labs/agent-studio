@@ -85,7 +85,7 @@ Include `"host"` and `"captionStyle"` only when the first shot is `host-hook`.
 - `vo` is spoken by the voice at about 3.6 words per second, with a third of a second between lines. Each line must fit its shot's maximum seconds; the watcher says "shorten it" when it does not.
 - Length, measured on every rendered video with its voice: **C1 40 to 60 s in both formats, no exceptions**; C2 25 to 45 s. Fill each shot close to its maximum; short lines make short videos, and a C1 video under 40 s fails QA on every platform.
 - `*accent*` words drive the animation. Use them only where the spec's `cues` say (e.g. one per flow step, one per inbox row, one per chat message), never for decoration.
-- Hook: the first shot's on-screen text is max 6 words, a pain the viewer owns today, in their words.
+- Hook: the first shot's on-screen text is max 6 words, a pain the viewer owns today, in their words. The first spoken line follows the script craft below.
 - The last shot is the closer (`host-cta` or `end-card`) with the CTA kind in its `text` (table above).
 - Caption body (the studio adds the rest per platform: the CTA line, the AI-voice disclosure, the hashtags): line 1 restates the hook in max 125 characters; 2 to 4 short plain lines on how it works; then `Example data.`; last line "Send this to whoever ..." (C2: then `Source: <meta.source>`). No Follow, Subscribe or DM line. 3 to 5 hashtags in `hashtags`, lowercase.
 - C2: put the name or the year people search for in caption line 1 (it becomes the YouTube title). The YouTube description must carry the source link (the SEO preflight fails a C2 board without it).
@@ -93,6 +93,33 @@ Include `"host"` and `"captionStyle"` only when the first shot is `host-hook`.
 - Honesty: show how automation can work. Never claim a client, a result or a number saved. Sample data only, with invented Indian SME names and INR amounts in Indian grouping. No em or en dashes. No real brands. No banned phrases (the gate lists them).
 - Truth test: each step can only act on data it has at that step. The done label must be what the last step truly produces.
 - Variety: no two boards in the week share a caption opener, a topic or a `hero_metaphor`.
+
+## Script craft: the words that make people stay (CREATIVE_BIBLE.md section 13)
+People decide in about a second whether to keep watching. A line that only informs loses them; a line that opens a gap keeps them. Write the `vo` lines as a story with turns, not a list of facts.
+
+Structure, in this order:
+1. **Hook, line 1, at most 12 words:** a violated expectation, a puzzle, or an illusion of novelty ("You've touched this every day and never noticed it."). Never a greeting, never "today we", never a topic label.
+2. **Context, one line:** just enough for the gap to matter.
+3. **Turns, every line:** each line turns the story with "but", "so", "instead", "until", "actually" (at least 2 in the script). Never "and then". Every 3 to 5 seconds the viewer learns something new (a reveal).
+4. **Contrast:** at least one then/now, before/after, tiny/huge, manual/automatic.
+5. **Bullseye proof:** one hard, specific fact (a date, a patent number, a measured figure) said in the voice and shown on screen. Put it in `meta.proof` with its source link.
+6. **Stakes or urgency:** why it matters to the viewer, now.
+7. **Payoff at about 70%:** close the gap the hook opened.
+8. **Loop:** the last spoken line reuses a key word of the hook, so a replay feels natural.
+
+Idea first: write the one-line idea, the hook and the payoff in plain words before anything else. If the idea is only interesting with effects, rewrite the idea.
+
+Vary the build, not just the topic. Each script declares `meta.structure` (story, essay, teardown, before-after, myth-bust, countdown, gag) and `meta.cta` (none, question, save, comment-keyword, follow-series). The hook's type is read from line 1 (question, number, contradiction, "you", scene). The style gate refuses a film whose hook type repeats the previous film, or whose structure or CTA repeats either of the last two. It also refuses a film that matches any of the last 8 on four or more axes. For a recurring world, add `meta.series` ({"name", "part", "of"}): the parts keep one look, and each part has a new idea.
+
+One idea per line, at most 22 words. Declare what you used in `meta.devices` (any of: novelty, open-loop, reveal, contrast, proof, stakes, urgency, number, second-person, pattern-interrupt, callback, loop). Every script needs at least: novelty or open-loop, reveal, contrast, proof, stakes or urgency, loop. The Director stages each one: the proof as a stamp or document, the contrast as a split, the reveal as a lens or a cut.
+
+```json
+"meta": {"source": "...", "idea_id": "...", "recipe_id": "...",
+  "devices": ["novelty", "reveal", "contrast", "proof", "stakes", "loop"],
+  "proof": {"fact": "US patent 2,717,437 (1955)", "source": "https://patents.google.com/patent/US2717437A/en"},
+  "structure": "story", "cta": "none"}
+```
+Before saving, run `node STUDIO/studio/script.ts <board.json>`: it prints `ok` or each rule the script breaks (the watcher refuses the board with the same reasons, prefixed `script:`).
 
 ## Check
 For each board, read `STUDIO/engine/content/storyboards/<id>.status.txt`. It lists QA per platform (`youtube:`, `instagram:`, `facebook:`):

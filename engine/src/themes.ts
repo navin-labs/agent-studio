@@ -18,7 +18,7 @@ export type Theme = {
   reveal?: string; // the reveal (C2: the name and the year the moment they are spoken). Unset: the highlighter uses accent
 };
 
-export type ThemeName = 'paper' | 'ink' | 'mono' | 'studio' | 'night' | 'archive' | 'night-signal' | 'archive-gold' | 'cutaway' | 'scherenschnitt' | 'muster' | 'offset' | 'pop-day' | 'pop-night' | 'linen' | 'periwinkle' | 'signal' | 'journey' | 'editorial';
+export type ThemeName = 'paper' | 'ink' | 'mono' | 'studio' | 'night' | 'archive' | 'night-signal' | 'archive-gold' | 'cutaway' | 'scherenschnitt' | 'muster' | 'offset' | 'pop-day' | 'pop-night' | 'linen' | 'periwinkle' | 'signal' | 'journey' | 'editorial' | 'vibrant' | 'dark-luxe' | 'midnight-neon' | 'pastel' | 'earthy' | 'sepia' | 'bauhaus' | 'nordic' | 'sunset' | 'film' | 'sodium-night' | 'indigo-pixel' | 'gold-dream';
 
 // The themes channels, styles and recipes may name (their schemas list exactly these). The rest are film palettes, each added by
 // the Director for one authored film; a film board may name any theme here.
@@ -79,6 +79,59 @@ export const THEMES: Record<ThemeName, Theme> = {
   muster: {
     bg: '#EDF0EA', surface: '#E1E6DE', ink: '#1A2D78', muted: '#4F5A73', rule: '#B7C5D9',
     accent: '#1A2D78', onAccent: '#EDF0EA', flow: '#4F5A73', ok: '#2E7D1F', alert: '#C2302B', warn: '#C2302B', shadow: '#2A2F3A',
+  },
+  // Colour suits (2026-10-25, docs/CREATIVE_BIBLE.md section 12): moods any format and look can wear; studio/looks.json says which.
+  'vibrant': {
+    bg: '#2438E8', surface: '#2E46F5', ink: '#FFFFFF', muted: '#DCE1FF', rule: '#4B5EF0',
+    accent: '#FF8A1F', onAccent: '#14161F', flow: '#FF8A1F', ok: '#FFD23F', alert: '#FF4D4D', warn: '#FF8A1F', shadow: '#0B1360',
+  },
+  'dark-luxe': {
+    bg: '#0E0D0B', surface: '#1A1814', ink: '#F3EDE2', muted: '#B7AE9C', rule: '#2A2620',
+    accent: '#C9A24B', onAccent: '#0E0D0B', flow: '#C9A24B', ok: '#C9A24B', alert: '#E0654E', warn: '#C9A24B', shadow: '#000000',
+  },
+  'midnight-neon': {
+    bg: '#0A0F24', surface: '#121A38', ink: '#EAF2FF', muted: '#9AA8CC', rule: '#1E2A50',
+    accent: '#22E4FF', onAccent: '#0A0F24', flow: '#22E4FF', ok: '#7CFFB2', alert: '#FF3DA5', warn: '#FF3DA5', shadow: '#000000',
+  },
+  'pastel': {
+    bg: '#FBF3EC', surface: '#FFFFFF', ink: '#2B2633', muted: '#6A6075', rule: '#EADFF0',
+    accent: '#FFB8A3', onAccent: '#2B2633', flow: '#8FD3C1', ok: '#8FD3C1', alert: '#E46F86', warn: '#FFB8A3', shadow: '#2B2633',
+  },
+  'earthy': {
+    bg: '#EFE6D6', surface: '#F7F0E4', ink: '#2E2A20', muted: '#625A49', rule: '#D9CDB7',
+    accent: '#B5763A', onAccent: '#1E1A12', flow: '#6B7A3C', ok: '#6B7A3C', alert: '#A4432E', warn: '#B5763A', shadow: '#2E2A20',
+  },
+  'sepia': {
+    bg: '#E9DCC4', surface: '#F2E8D5', ink: '#2B1F14', muted: '#5E4A35', rule: '#D4C2A2',
+    accent: '#7A4E2A', onAccent: '#F2E8D5', flow: '#7A4E2A', ok: '#5B6B3A', alert: '#8E2C1E', warn: '#7A4E2A', shadow: '#2B1F14',
+  },
+  'bauhaus': {
+    bg: '#F2EEE3', surface: '#FFFFFF', ink: '#111111', muted: '#4A4A4A', rule: '#DDD6C8',
+    accent: '#F2C230', onAccent: '#111111', flow: '#1F4FBF', ok: '#1F4FBF', alert: '#D7322B', warn: '#F2C230', shadow: '#111111',
+  },
+  'nordic': {
+    bg: '#EEF2F4', surface: '#FFFFFF', ink: '#1D2A33', muted: '#52606B', rule: '#D7DFE4',
+    accent: '#7FB3D5', onAccent: '#1D2A33', flow: '#4F86A8', ok: '#4F86A8', alert: '#C2554A', warn: '#7FB3D5', shadow: '#1D2A33',
+  },
+  'sunset': {
+    bg: '#FFE7D6', surface: '#FFF3EA', ink: '#3A1430', muted: '#7A3B5E', rule: '#F5C9B8',
+    accent: '#FF6F59', onAccent: '#2A0E22', flow: '#B5428A', ok: '#B5428A', alert: '#E0303F', warn: '#FF6F59', shadow: '#3A1430',
+  },
+  'film': {
+    bg: '#0F2A2C', surface: '#16393B', ink: '#F4E9D8', muted: '#BFD0CB', rule: '#244A4C',
+    accent: '#F08A3C', onAccent: '#0F2A2C', flow: '#F08A3C', ok: '#9FD3C7', alert: '#F25C3C', warn: '#F08A3C', shadow: '#000000',
+  },
+  'sodium-night': {
+    bg: '#0B0F1E', surface: '#141A2E', ink: '#F5E6C8', muted: '#A9A291', rule: '#1E2640',
+    accent: '#FFB347', onAccent: '#0B0F1E', flow: '#7FD1FF', ok: '#FFB347', alert: '#FF6B57', warn: '#FFB347', shadow: '#000000',
+  },
+  'indigo-pixel': {
+    bg: '#14123A', surface: '#1D1A4E', ink: '#F2EEFF', muted: '#B0A8E0', rule: '#2A2666',
+    accent: '#FFC857', onAccent: '#14123A', flow: '#5CE1E6', ok: '#5CE1E6', alert: '#FF5C8A', warn: '#FFC857', shadow: '#000000',
+  },
+  'gold-dream': {
+    bg: '#081226', surface: '#0F1D38', ink: '#F7EBD3', muted: '#B8C2D9', rule: '#1A2B4F',
+    accent: '#F5C26B', onAccent: '#081226', flow: '#F5C26B', ok: '#9AD1FF', alert: '#FF7A59', warn: '#F5C26B', shadow: '#000000',
   },
   // Editorial (2026-10-25, format A Editorial Object): off-white paper, black and greys, one deep red. muted = the grey
   // display type, accent = the deep red key word, alert = the bright red of pen and laser marks.

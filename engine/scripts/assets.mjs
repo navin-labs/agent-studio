@@ -3,6 +3,8 @@
 // out with BiRefNet (scripts/cutout.py, its own venv), and keep the best one in the prop library with its source and licence.
 //   node scripts/assets.mjs "burdock burr" "magnifying glass" ...      (from engine/)
 //   node scripts/assets.mjs "white sneaker=public/hook-test/stitch-shoe.jpg"   a local image (Stitch photo, scan) instead of a search
+//   node scripts/assets.mjs "photo:aurora borealis"   a whole photo (a window or plate in formats E and F), not a cut-out:
+//   the candidate CLIP matches best is kept as public/props/<slug>/<slug>.jpg
 //   out: public/props/<slug>/<slug>.png + manifest.json (all candidates, scores, sources). Props are not committed: the
 //   manifest says where each came from, so the library can be rebuilt; stock licences forbid redistributing the files as-is.
 // Keys come from engine/.env (PIXABAY_API_KEY, PEXELS_API_KEY); a provider without a key is skipped. Openverse needs none.
@@ -51,7 +53,7 @@ const PROVIDERS = {
 
 export const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-export const fetchProp = async (noun, local, localLicense = 'Stitch (Google Labs) generated') => {
+export const fetchProp = async (noun, local, localLicense = 'Stitch (Google Labs) generated', photo = false) => {
   const id = slug(noun);
   const dir = path.join(ROOT, 'public/props', id);
   const raw = path.join(ROOT, 'test/out/assets', id);
@@ -61,7 +63,7 @@ export const fetchProp = async (noun, local, localLicense = 'Stitch (Google Labs
   const cands = [];
   // a local image (a Stitch photo, a scan) is one more candidate: "noun=path/to/file.jpg"
   if (local) cands.push({url: url.pathToFileURL(path.resolve(local)).href, page: '', author: '', license: localLicense, provider: 'local', query: noun});
-  for (const q of local ? [] : [`${noun} isolated`, noun])
+  for (const q of local ? [] : photo ? [noun] : [`${noun} isolated`, noun])
     for (const [name, search] of Object.entries(PROVIDERS)) {
       try {
         for (const c of await search(q)) if (!cands.some((x) => x.url === c.url)) cands.push({...c, query: q});
@@ -75,7 +77,7 @@ export const fetchProp = async (noun, local, localLicense = 'Stitch (Google Labs
       const buf = c.provider === 'local' ? fs.readFileSync(url.fileURLToPath(c.url)) : Buffer.from(await (await get(c.url)).arrayBuffer());
       c.file = path.join(raw, `${i}.src`);
       fs.writeFileSync(c.file, buf);
-      jobs.push({src: c.file, out: path.join(raw, `${i}.png`), noun});
+      jobs.push({src: c.file, out: path.join(raw, `${i}.png`), noun, photo});
       c.cut = jobs.at(-1).out;
     } catch (e) {
       c.error = e.message;
@@ -88,6 +90,14 @@ export const fetchProp = async (noun, local, localLicense = 'Stitch (Google Labs
   const scores = new Map(r.stdout.trim().split('\n').filter(Boolean).map((l) => JSON.parse(l)).map((s) => [s.out, s]));
   for (const c of cands) Object.assign(c, scores.get(c.cut) ?? {score: 0});
   // best score wins; ties go to the earlier provider and query (the list order)
+  if (photo) {
+    const best = cands.reduce((a, c) => ((c.match ?? 0) > (a?.match ?? -1) ? c : a), null);
+    if (!best || (best.match ?? 0) < 0.5) throw new Error(`${noun}: no photo matches (best ${best?.match ?? 0}); try another wording`);
+    fs.copyFileSync(best.file, path.join(dir, `${id}.jpg`));
+    const manifest = {noun, id, file: `props/${id}/${id}.jpg`, chosen: pick(best), candidates: cands.map(pick), at: new Date().toISOString()};
+    fs.writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify(manifest, null, 1));
+    return manifest;
+  }
   const best = cands.reduce((a, c) => ((c.score ?? 0) > (a?.score ?? -1) ? c : a), null);
   if (!best || best.score < 0.5) throw new Error(`${noun}: no usable cut-out (best ${best?.score ?? 0}); try another wording`);
   fs.copyFileSync(best.cut, path.join(dir, `${id}.png`));
@@ -102,8 +112,8 @@ if (process.argv[1] === url.fileURLToPath(import.meta.url)) {
   const nouns = process.argv.slice(2);
   if (!nouns.length) throw new Error('usage: node scripts/assets.mjs "noun" ["noun" ...]');
   for (const arg of nouns) {
-    const [n, local] = arg.split('=');
-    const m = await fetchProp(n, local).catch((e) => (console.log(`${n}: ${e.message}`), null));
+    const [n, local] = arg.replace(/^photo:/, '').split('=');
+    const m = await fetchProp(n, local, undefined, arg.startsWith('photo:')).catch((e) => (console.log(`${n}: ${e.message}`), null));
     if (m) console.log(`${n} -> public/${m.file}  (${m.chosen.provider}, ${m.chosen.license}, score ${m.chosen.score}, ${m.candidates.length} candidates)`);
   }
 }
