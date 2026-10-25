@@ -328,7 +328,7 @@ const prepareVoice = async (script) => {
   // a scene without a line (the end card) stays silent
   const inputs = script.scenes.map((s) => ((s.say ?? s.vo) ? ttsText(s.say ?? s.vo, {...lv?.pronounce, ...script.pronounce}) : null));
   const PROVIDER = lv ? 'local' : API_PROVIDER;
-  if (lv) localBatch(lv, dir, manifest, inputs);
+  if (lv) localBatch(lv, dir, manifest, inputs, script.scenes);
   for (let i = 0; i < n; i++) {
     const base = `s${String(i + 1).padStart(2, '0')}`;
     const existing = ['.mp3', '.wav', '.m4a'].map((e) => path.join(dir, base + e)).find((f) => fs.existsSync(f));
@@ -341,7 +341,7 @@ const prepareVoice = async (script) => {
     const voiceKey = {
       openai: `${OPENAI_MODEL}/${OPENAI_VOICE}/${INSTRUCTIONS}`,
       elevenlabs: `${process.env.ELEVENLABS_VOICE_ID}`,
-      local: lv ? localKey(lv) : '',
+      local: lv ? `${localKey(lv)}/${lineSpeed(lv, script.scenes[i])}` : '',
     }[PROVIDER] ?? '';
     const hash = crypto.createHash('sha1').update(`${PROVIDER}|${voiceKey}|${inputs[i]}`).digest('hex').slice(0, 12);
     const manual = existing && (!entry || entry.source === 'manual');
@@ -381,17 +381,20 @@ const prepareVoice = async (script) => {
 
 // Voices every scene that needs a new clip with the channel's local engine (the model loads once per video).
 const localKey = (v) => `${v.engine}/${v.voice ?? 'default'}/${v.speed ?? 1}`;
-function localBatch(v, dir, manifest, inputs) {
+// a line's pace (scene.voice.pace, written by the Writer) scales the channel's speed; its feel waits for an expressive engine
+export const PACE = {slow: 0.9, steady: 1, quick: 1.1};
+const lineSpeed = (v, s) => +((v.speed ?? 1) * (PACE[s?.voice?.pace] ?? 1)).toFixed(3);
+function localBatch(v, dir, manifest, inputs, scenes) {
   const jobs = [];
   inputs.forEach((text, i) => {
     if (text === null) return;
     const base = `s${String(i + 1).padStart(2, '0')}`;
-    const hash = crypto.createHash('sha1').update(`local|${localKey(v)}|${text}`).digest('hex').slice(0, 12);
+    const hash = crypto.createHash('sha1').update(`local|${localKey(v)}/${lineSpeed(v, scenes[i])}|${text}`).digest('hex').slice(0, 12);
     const entry = manifest.scenes[i];
     const existing = ['.mp3', '.wav', '.m4a'].some((e) => fs.existsSync(path.join(dir, base + e)));
     if (entry?.source === 'manual' && !flags.has('--force-vo')) return;
     if (existing && entry?.hash === hash && !flags.has('--force-vo')) return;
-    jobs.push({text, out: path.join(dir, `${base}.local.wav`)});
+    jobs.push({text, out: path.join(dir, `${base}.local.wav`), speed: lineSpeed(v, scenes[i])});
   });
   if (!jobs.length) return;
   const py = path.join(ROOT, '.venv-voice', v.engine, 'bin', 'python');

@@ -13,6 +13,10 @@ You are given `BOARD` (`engine/test/films/<id>.json`). The renders are under `en
 ## Judge
 Score 1 to 10: `first_frame, hook_3s, visual_storytelling, composition, typography, motion, cinematography, metaphor, transitions, originality, authored, premium, sound, restraint, memorability`. Calibrate: 9 = award-reel work; 8 = a top studio ships it; 7 = good, with visible flaws; 6 = acceptable; 5 and under = would embarrass the studio. Score what you SEE: a great idea badly drawn scores low on composition and premium. Sound: judge the plan (the brief's or `direction.music`) against the picture (you cannot hear it); never above 7.
 
+Check the two pictures the Writer named: frame 0 must plainly show `meta.hook_image` and the last voiced moment `meta.payoff_image`; a film that opens on anything else or ends on a caption costs `first_frame`, `hook_3s` and `memorability`.
+
+Watch the voice against the picture: each line's `voice.feel` (on the board) should be visible on screen at that moment (tension tight and moving, surprise landing on its word, warmth breathing). A picture that ignores the voice's feeling costs `visual_storytelling` and `sound`.
+
 Hunt for: placeholder geometry (boxes standing in for objects), crude or tiny objects that carry the story, captions colliding with key objects, dead or empty areas of the frame, the same composition held too long, text that only repeats the voice, effects without a cause, anything that looks like a template, a stock AI video or a SaaS explainer, an opening like thousands of others.
 
 Anti-slop tests (true = passes): `not_generic_ai_tool`, `not_canva_template`, `composition_not_reusable` (for a format film: the shots are specific to this story, its own plates, photos and moments, not the format's defaults), `metaphor_specific_to_story`, `opening_not_common`, `has_memorable_moment`, `works_muted`, `works_without_captions`.

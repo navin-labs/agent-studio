@@ -66,7 +66,7 @@ Save to `STUDIO/engine/content/storyboards/<recipe id>.json` (file name = `id` =
   "hookPattern": "<recipe hook_pattern>",
   "scenes": [
     {"primitive": "<recipe primitives[0]>", "params": {...}, "vo": "..."},
-    {"primitive": "<recipe primitives[1]>", "transition": "<recipe transitions[1]>", "params": {...}, "vo": "..."},
+    {"primitive": "<recipe primitives[1]>", "transition": "<recipe transitions[1]>", "params": {...}, "vo": "...", "voice": {"feel": "tense", "pace": "quick"}},
     {"primitive": "end-card", "transition": "<recipe transitions[last]>", "params": {"text": "*Follow*", "sub": "..."}}
   ],
   "caption": "...",
@@ -87,7 +87,7 @@ Include `"host"` and `"captionStyle"` only when the first shot is `host-hook`.
 - `*accent*` words drive the animation. Use them only where the spec's `cues` say (e.g. one per flow step, one per inbox row, one per chat message), never for decoration.
 - Hook: the first shot's on-screen text is max 6 words, a pain the viewer owns today, in their words. The first spoken line follows the script craft below.
 - The last shot is the closer (`host-cta` or `end-card`) with the CTA kind in its `text` (table above).
-- Caption body (the studio adds the rest per platform: the CTA line, the AI-voice disclosure, the hashtags): line 1 restates the hook in max 125 characters; 2 to 4 short plain lines on how it works; then `Example data.`; last line "Send this to whoever ..." (C2: then `Source: <meta.source>`). No Follow, Subscribe or DM line. 3 to 5 hashtags in `hashtags`, lowercase.
+- Caption body (the studio adds the rest per platform: the CTA line, the AI-voice disclosure, the hashtags): line 1 is a short claim or question that restates the hook in max 125 characters (never a channel trailer such as "Follow for more"); 2 to 4 short plain lines on how it works; then `Example data.`; last line "Send this to whoever ..." (C2: then `Source: <meta.source>`). No Follow, Subscribe or DM line. 3 to 5 hashtags in `hashtags`, lowercase.
 - C2: put the name or the year people search for in caption line 1 (it becomes the YouTube title). The YouTube description must carry the source link (the SEO preflight fails a C2 board without it).
 - Optional experiment arm B (YouTube title/thumbnail test): `meta.title_b` (another title, 10 to 100 chars) and/or `meta.thumb_b` (another thumbnail headline, max 60 chars, `*accent*` allowed). Use it on at most 2 boards a week; Navin approves both arms with the video.
 - Honesty: show how automation can work. Never claim a client, a result or a number saved. Sample data only, with invented Indian SME names and INR amounts in Indian grouping. No em or en dashes. No real brands. No banned phrases (the gate lists them).
@@ -98,28 +98,43 @@ Include `"host"` and `"captionStyle"` only when the first shot is `host-hook`.
 People decide in about a second whether to keep watching. A line that only informs loses them; a line that opens a gap keeps them. Write the `vo` lines as a story with turns, not a list of facts.
 
 Structure, in this order:
-1. **Hook, line 1, at most 12 words:** a violated expectation, a puzzle, or an illusion of novelty ("You've touched this every day and never noticed it."). Never a greeting, never "today we", never a topic label.
+1. **Hook, line 1, at most 12 words, and the first frame:** the strongest opening is one concrete **scene** (a man rolling a heavy wheel alone; burrs clinging to a dog; a chocolate bar melting in an engineer's pocket) or one number that moves (a fee counter falling to zero). Name that first frame in `meta.hook_image`. A violated expectation, a puzzle or a question also works ("You've touched this every day and never noticed it."). Never a greeting, "today we", a topic label, a dashboard or a list title.
 2. **Context, one line:** just enough for the gap to matter.
-3. **Turns, every line:** each line turns the story with "but", "so", "instead", "until", "actually" (at least 2 in the script). Never "and then". Every 3 to 5 seconds the viewer learns something new (a reveal).
-4. **Contrast:** at least one then/now, before/after, tiny/huge, manual/automatic.
-5. **Bullseye proof:** one hard, specific fact (a date, a patent number, a measured figure) said in the voice and shown on screen. Put it in `meta.proof` with its source link.
-6. **Stakes or urgency:** why it matters to the viewer, now.
-7. **Payoff at about 70%:** close the gap the hook opened.
-8. **Loop:** the last spoken line reuses a key word of the hook, so a replay feels natural.
+3. **The failed attempt:** for a story, show the way that did not work before the one that did (the log rolled alone fails, the first cart collapses, the spoked wheel works). Struggle, failure, mechanism, dated proof, payoff: this order earned the highest ratio in Forge's study (docs/research/2026-10-25-forge-faceless-reels.md). Declare it as the device `failed-attempt`.
+4. **Turns, every line:** each line turns the story with "but", "so", "instead", "until", "actually" (at least 2 in the script). Never "and then". Every 3 to 5 seconds the viewer learns something new (a reveal).
+5. **Contrast:** at least one then/now, before/after, tiny/huge, manual/automatic.
+6. **Bullseye proof:** one hard, specific fact (a date, a patent number, a measured figure) said in the voice and shown on screen. Put it in `meta.proof` with its source link.
+7. **Stakes or urgency:** why it matters to the viewer, now.
+8. **Payoff at about 70%, as a picture:** close the gap the hook opened, and end on an image, not a summary line (the cart riding into the sunset, the pin in a museum case, today's shoe strap closing). Name it in `meta.payoff_image`. For a history story, real archival photos near the end prove the animated story true.
+9. **Loop:** the last spoken line reuses a key word of the hook, so a replay feels natural.
 
 Idea first: write the one-line idea, the hook and the payoff in plain words before anything else. If the idea is only interesting with effects, rewrite the idea.
 
-Vary the build, not just the topic. Each script declares `meta.structure` (story, essay, teardown, before-after, myth-bust, countdown, gag) and `meta.cta` (none, question, save, comment-keyword, follow-series). The hook's type is read from line 1 (question, number, contradiction, "you", scene). The style gate refuses a film whose hook type repeats the previous film, or whose structure or CTA repeats either of the last two. It also refuses a film that matches any of the last 8 on four or more axes. For a recurring world, add `meta.series` ({"name", "part", "of"}): the parts keep one look, and each part has a new idea.
+Vary the build, not just the topic. Each script declares `meta.structure` (story, essay, teardown, before-after, myth-bust, gag; never a countdown or list: one surprising story beats seven thin ones) and `meta.cta` (none, question, save, comment-keyword, follow-series). The hook's type is read from line 1 (question, number, contradiction, "you", scene). The style gate refuses a film whose hook type repeats the previous film, or whose structure or CTA repeats either of the last two. It also refuses a film that matches any of the last 8 on four or more axes. For a recurring world, add `meta.series` ({"name", "part", "of"}): the parts keep one look, and each part has a new idea.
 
-One idea per line, at most 22 words. Declare what you used in `meta.devices` (any of: novelty, open-loop, reveal, contrast, proof, stakes, urgency, number, second-person, pattern-interrupt, callback, loop). Every script needs at least: novelty or open-loop, reveal, contrast, proof, stakes or urgency, loop. The Director stages each one: the proof as a stamp or document, the contrast as a split, the reveal as a lens or a cut.
+One idea per line, at most 22 words. Declare what you used in `meta.devices` (any of: novelty, open-loop, reveal, contrast, proof, stakes, urgency, number, second-person, pattern-interrupt, callback, loop, failed-attempt). Every script needs at least: novelty or open-loop, reveal, contrast, proof, stakes or urgency, loop. The Director stages each one: the proof as a stamp or document, the contrast as a split, the reveal as a lens or a cut.
 
 ```json
 "meta": {"source": "...", "idea_id": "...", "recipe_id": "...",
   "devices": ["novelty", "reveal", "contrast", "proof", "stakes", "loop"],
   "proof": {"fact": "US patent 2,717,437 (1955)", "source": "https://patents.google.com/patent/US2717437A/en"},
-  "structure": "story", "cta": "none"}
+  "structure": "story", "cta": "none",
+  "hook_image": "burrs clinging to a dog's fur on an Alpine path",
+  "payoff_image": "a modern shoe strap closing with a rip"}
 ```
-Before saving, run `node STUDIO/studio/script.ts <board.json>`: it prints `ok` or each rule the script breaks (the watcher refuses the board with the same reasons, prefixed `script:`).
+### Voice: how each line is said
+The words decide what people hear; the voice decides whether they feel it. Give every spoken line a `voice`:
+- `feel` (required): `curious`, `tense`, `frustrated`, `surprised`, `warm`, `wry`, `urgent`, `calm` or `triumphant`. Write the feel the listener should have, not the topic's mood.
+- `pace` (optional): `slow` (weight, a fact that must land), `steady`, or `quick` (pressure, a list, a chase).
+- `hold` (optional, 0.3 to 1.2 seconds): silence after the line, the beat before a reveal. At most two per script; a pause that is everywhere means nothing.
+
+The arc, line by line: the hook opens on tension or curiosity (`curious`, `tense`, `frustrated`, `surprised`, `wry` or `urgent`, never `calm`); the context and the problem tighten (`tense`, `frustrated`, `urgent`, often `quick`); the proof lands (`slow`, sometimes held); the turn releases (`surprised`, then `warm` or `triumphant`); the loop line hands back (`wry` or `warm`). Use at least three different feels. A flat voice over a good script loses people at the same second as a bad script.
+
+Example: `"voice": {"feel": "surprised", "pace": "slow", "hold": 0.6}` on the line just before the reveal.
+
+What it changes now: `pace` sets the voice's speed for that line (0.9x, 1x, 1.1x) and `hold` adds the silence; the film's pictures follow `feel` (the doodle's face, where the camera rests). The current voice cannot act a feeling; the expressive voice (Sarvam Bulbul v4) will read `feel` directly, so write it as if it already does.
+
+Before saving, run `node STUDIO/studio/script.ts <board.json>`: it prints `ok` or each rule the script breaks (the watcher refuses the board with the same reasons, prefixed `script:`). It checks the voice too: every line tagged, at least three feels, a hook that opens a gap, at most two holds.
 
 ## Check
 For each board, read `STUDIO/engine/content/storyboards/<id>.status.txt`. It lists QA per platform (`youtube:`, `instagram:`, `facebook:`):

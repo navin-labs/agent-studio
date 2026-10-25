@@ -262,6 +262,10 @@ Research basis:
   - the last line shares a key word with the first.
 - **Critic (a separate Claude pass):** checks each declared device, and rejects flat lines ("and then") and claims without proof.
 
+
+**Voice direction (2026-10-25).** Every spoken line carries `voice: {feel, pace, hold}` (the Writer's). The feelings make an arc: open on tension or curiosity, tighten through the problem, land the proof slowly, release on the turn (surprise, then warmth or triumph), hand back on the loop. At least three different feels; at most two held silences, kept for the reveal. Now: `pace` changes the voice speed per line and `hold` adds the silence (engine/scripts/make.mjs, src/composer/storyboard.ts); the Director stages each line's feel in the picture. Next: the expressive voice (Sarvam Bulbul v4) reads `feel` directly. Gate: studio/script.ts.
+
+**What winners do (Forge's Instagram study, 2026-10-25; docs/research/2026-10-25-forge-faceless-reels.md).** Open on one concrete scene (10 of the top 15 against 1 of the low 5), named in `meta.hook_image`. Tell a story with a failed attempt before the mechanism. End on a payoff picture (14 of 15 against 3 of 5), named in `meta.payoff_image`. Prove animated history with real archival photos at the end. Never a countdown or list (0 of 15 against 2 of 5). Captions open on a claim or question, never a channel trailer. A comment-keyword CTA with a real free thing drives comments above likes. Reuse one grammar per series and change the story and hook image each time: the hook sets the ceiling.
 ## 14. More references (2026-10-25): three new formats, new looks, new effects
 Analysed frame by frame at 2 fps. Video-45547 duplicates 90405, and 77717 duplicates 28089.
 

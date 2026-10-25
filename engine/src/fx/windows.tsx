@@ -6,6 +6,8 @@ import {Img, staticFile} from 'remotion';
 import {BACK, IN, k, OUT, rng} from '../films/kit';
 import {useTheme} from '../themes';
 
+const lum = (hex: string) => parseInt(hex.slice(1, 3), 16) * 0.3 + parseInt(hex.slice(3, 5), 16) * 0.59 + parseInt(hex.slice(5, 7), 16) * 0.11;
+
 // A real photo in a rounded frame: slides in from a side with a small overshoot, floats, pushes in slowly, then shrinks away.
 export const Window: React.FC<{t: number; at: number; until: number; src: string; x: number; y: number; w: number; h: number; from?: 'left' | 'right' | 'below'; tilt?: number; pos?: string}> = ({t, at, until, src, x, y, w, h, from = 'right', tilt = 0, pos}) => {
   const th = useTheme();
@@ -21,13 +23,14 @@ export const Window: React.FC<{t: number; at: number; until: number; src: string
   );
 };
 
-// Cinematic letterbox bars in the theme's background colour.
+// Cinematic letterbox bars in the suit's darker colour (ink or bg), so a light suit still gets dark bars.
 export const Letterbox: React.FC<{h?: number}> = ({h = 170}) => {
   const th = useTheme();
+  const bar = lum(th.ink) < lum(th.bg) ? th.ink : th.bg;
   return (
     <>
-      <div style={{position: 'absolute', left: 0, right: 0, top: 0, height: h, background: th.bg}} />
-      <div style={{position: 'absolute', left: 0, right: 0, bottom: 0, height: h, background: th.bg}} />
+      <div style={{position: 'absolute', left: 0, right: 0, top: 0, height: h, background: bar}} />
+      <div style={{position: 'absolute', left: 0, right: 0, bottom: 0, height: h, background: bar}} />
     </>
   );
 };
@@ -54,7 +57,8 @@ export const DreamLine: React.FC<{t: number; at: number; end: number; text: stri
   if (t < at - 0.1 || t > end) return null;
   const words = text.split(' ');
   return (
-    <div data-tb="caption" style={{position: 'absolute', left: 90, right: 130, bottom: 1920 - y, textAlign: 'center', fontFamily: '"Instrument Serif", serif', fontSize: 72, lineHeight: 1.08, color: th.ink, textShadow: `0 3px 24px ${th.shadow}`, opacity: k(t, [end - 0.2, end], [1, 0])}}>
+    // a halo in the suit's background colour keeps the line readable over any plate
+    <div data-tb="caption" style={{position: 'absolute', left: 90, right: 130, bottom: 1920 - y, textAlign: 'center', fontFamily: '"Instrument Serif", serif', fontSize: 72, lineHeight: 1.08, color: th.ink, textShadow: `0 0 4px ${th.bg}, 0 0 12px ${th.bg}, 0 0 28px ${th.bg}, 0 0 48px ${th.bg}`, opacity: k(t, [end - 0.2, end], [1, 0])}}>
       {words.map((w, i) => {
         const wt = at + (i / words.length) * dur;
         return <span key={i} style={{display: 'inline-block', marginRight: '0.25em', opacity: k(t, [wt, wt + 0.18], [0, 1]), translate: `0 ${k(t, [wt, wt + 0.3], [24, 0], OUT)}px`}}>{w}</span>;

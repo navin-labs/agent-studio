@@ -19,6 +19,7 @@ Code: `studio/learn.ts` (`node studio/learn.ts <channel> <week>`), `studio/impro
 - KPI per channel from `channel.json` `kpi.numerator` / `kpi.denominator` (C1: (dms + profile_visits) / reach), pooled per group; the 7d window replaces 24h.
 - Nothing is judged on fewer than 3 videos. A winner needs a runner-up with 3+ videos and a 10% lead. Bench never leaves a beat empty; a grammar removal never takes a beat's last option.
 - Known limit: a video's KPI counts for every primitive in it (no per-shot attribution); scene retention is the per-shot signal.
+- Known limit (2026-10-25): format films (the Director's) are not yet scored by their style axes (format, look, suit, hook type, structure, CTA) or voice arc; until then Learn's evidence covers template boards only. Next: score those axes from the films ledger (state/films.jsonl).
 
 ## Never
 - Touch voices, colour tokens, the AI-voiceover disclosure, C2's every-claim-sourced rule, approval gates, `live` flags or dispatch switches. A Tier 2 tap writes exactly one thing: `channel.json` `style`, or the channel's grammar removals; anything else is refused.

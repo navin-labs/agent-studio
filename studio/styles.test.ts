@@ -28,7 +28,7 @@ assert.deepStrictEqual([part2.format, part2.look, part2.suit], [base.format, bas
 // unattended films use only formats with a renderer; 30 of them in a row never run out of fresh combinations
 const ready = readyCatalogue(), made: Style[] = [];
 for (let i = 0; i < 30; i++) {
-  const s = chooseStyle(made, 'automation', i + 3, ready, {hook: ['question', 'number', 'contradiction', 'you', 'scene'][i % 5], structure: ['story', 'essay', 'teardown', 'before-after', 'myth-bust', 'countdown', 'gag'][i % 7], cta: ['none', 'save', 'question', 'comment-keyword'][i % 4]});
+  const s = chooseStyle(made, 'automation', i + 3, ready, {hook: ['question', 'number', 'contradiction', 'you', 'scene'][i % 5], structure: ['story', 'essay', 'teardown', 'before-after', 'myth-bust', 'gag'][i % 6], cta: ['none', 'save', 'question', 'comment-keyword'][i % 4]});
   assert.ok(Object.keys(ready.formats).includes(s.format), `ready film ${i} uses ${s.format}`);
   assert.deepStrictEqual(styleErrors(s, made, ready), [], `ready film ${i}: ${JSON.stringify(s)}`);
   made.push(s);

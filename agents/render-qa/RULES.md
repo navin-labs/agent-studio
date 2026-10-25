@@ -21,7 +21,9 @@ Each channel board renders once per platform from its style preset's spec for th
 | format | mp4, the preset's size for that platform (1080x1920), 30 fps |
 | duration | Measured on the mp4: C1 40 to 60 s (host and explainer, no exceptions), C2 25 to 45 s, C3 20 to 45 s |
 | safe-zones | Text boxes measured at compose time inside the Instagram and YouTube safe areas |
-| fingerprint | Storyboard matches its recipe (shots, theme, style, hook pattern, transitions); novelty rules pass against approved videos, including topic, hero metaphor, caption opener |
+| fingerprint | Storyboard matches its recipe (shots, theme, style, hook pattern, transitions); novelty rules pass against approved videos, including topic, hero metaphor, caption opener (a film skips the shot-structure rule: its uniqueness is the creative check) |
+| motion | A film's first frame, change by 0.3 s, first 3 s activity (the format's own floor from studio/looks.json `band`, else 40), no still stretch over 2.5 s, loudness -15.5 to -12.5 LUFS |
+| creative | A format film: its style is the recorded one and passes the style gate (studio/styles.ts), and the critic's review passes; an authored film: its brief and review |
 | naming | Board file `<id>.json`; folder `<channel>/<date>/<id>/<platform>/`; every file starts with `<channel>-<platform>-<date>-<id>.` (a bare name such as `video.mp4` or `final.mp4` fails); contact sheet present; YouTube thumbnail present (and arm B when `meta.thumb_b`) |
 | manifest | Schema-valid; channel, platform, video id and date match the folder; style version is the board's preset; render.json is this platform's render; every listed file exists; the video is the file the manifest's hash describes; no other platform's variant is the same file |
 | cta | No CTA in the caption body; the closer text and spoken line are the preset's for this platform; the caption carries the platform's CTA line; Subscribe only on YouTube, never Follow there; an Instagram funnel says "Instagram" anywhere else; the end card names this platform's own account; a voiced video discloses the AI voice |

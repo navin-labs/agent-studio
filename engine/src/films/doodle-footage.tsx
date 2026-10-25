@@ -3,7 +3,7 @@
 // src/fx/direction.ts). Proven by fx/demos/DoodleC1.tsx.
 import React from 'react';
 import {AbsoluteFill, Img, staticFile} from 'remotion';
-import {type DoodleShot, wordTime} from '../fx/direction';
+import {type DoodleShot, FEEL_FACE, wordTime} from '../fx/direction';
 import {Doodle, Envelope, FilmPlate, Hand, Scribble} from '../fx/doodle';
 import {useTheme} from '../themes';
 import {BACK, type Cue, Foley, Grain, k, Score, useFilm} from './kit';
@@ -20,6 +20,8 @@ export const Film: React.FC = () => {
   const cues: Cue[] = [];
   const i = Math.min(shots.length - 1, Math.max(0, lines.filter((b) => t >= b.start).length - 1)); // a voiced closer keeps the last face
   const talk = lines.some((b) => t >= b.vo![0] && t <= b.vo![1]);
+  const feels = script.scenes.filter((s) => s.vo).map((s) => s.voice?.feel);
+  const face = (j: number) => shots[j].face ?? FEEL_FACE[feels[j] ?? ''] ?? 'calm';
   // the icon row: born in one shot, ticked one by one from a later word, flown away on another
   const born = shots.findIndex((s) => s.icons);
   const icons = born >= 0 ? shots[born].icons! : null;
@@ -30,7 +32,7 @@ export const Film: React.FC = () => {
   if (tick !== undefined && icons) IX(icons.count).forEach((_, j) => cues.push([tick + j * 0.3, 'pen', 0.25]));
   if (fly !== undefined) cues.push([fly, 'swish', 0.3]);
   // the doodle pops on a scribble or on a face change
-  const pops = shots.map((s, j) => (s.scribble ? wordTime(lines[j], s.scribble.at) : j && s.face !== shots[j - 1].face ? lines[j].start : -9));
+  const pops = shots.map((s, j) => (s.scribble ? wordTime(lines[j], s.scribble.at) : j && face(j) !== face(j - 1) ? lines[j].start : -9));
   return (
     <AbsoluteFill style={{background: th.bg}}>
       <FilmPlate t={t} src={d.footage!} rate={1.2} cuts={shots.map((s, j) => ({at: j ? lines[j].start - 0.15 : 0, from: s.from ?? j * 5}))} />
@@ -45,7 +47,7 @@ export const Film: React.FC = () => {
         }),
       )}
       {shots.map((s, j) => (s.scribble ? (cues.push([wordTime(lines[j], s.scribble.at), 'pen', 0.35]), <Scribble key={j} t={t} at={wordTime(lines[j], s.scribble.at)} until={(lines[j + 1]?.start ?? total) - 0.1} text={s.scribble.text} x={540} y={620} />) : null))}
-      <Doodle t={t} x={470} y={1010} face={shots[i].face} talk={talk} pop={Math.max(...pops.filter((p) => p <= t), -9)} />
+      <Doodle t={t} x={470} y={1010} face={face(i)} talk={talk} pop={Math.max(...pops.filter((p) => p <= t), -9)} />
       {lines.map((b, j) => <Hand key={j} t={t} at={b.vo![0]} end={(lines[j + 1]?.start ?? closer?.start ?? total) - 0.1} text={b.text} dur={b.vo![1] - b.vo![0]} />)}
       {closer && cta.text ? <Hand t={t} at={closer.start} end={total} text={cta.text} dur={0.6} /> : null}
       <Grain opacity={0.14} blend="overlay" />

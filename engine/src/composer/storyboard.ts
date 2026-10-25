@@ -20,7 +20,11 @@ export type StoryboardScene = {
   say?: string; // exact TTS text if pronunciation needs fixing
   transition?: Transition; // how this scene enters (default cut)
   captions?: boolean; // default: on, except kinetic-type shots (they already show the words)
+  voice?: LineVoice; // how the line is said (the Writer): feel, pace and a held silence after it
 };
+// The voice direction of one line. pace scales the voice speed now; feel drives the visuals now and an expressive voice later.
+export const FEELS = ['curious', 'tense', 'frustrated', 'surprised', 'warm', 'wry', 'urgent', 'calm', 'triumphant'] as const;
+export type LineVoice = {feel: (typeof FEELS)[number]; pace?: 'slow' | 'steady' | 'quick'; hold?: number};
 
 export const HOST_NAMES = ['chiku', 'bahi', 'tikku'] as const;
 export const CAPTION_STYLES = ['keywords', 'karaoke'] as const;
@@ -58,7 +62,8 @@ export const sceneFrames = (sb: Storyboard, t?: Timing): number[] =>
   sb.scenes.map((sc, i) => {
     const [lo, hi] = SPECS[sc.primitive].seconds;
     const measured = t?.durations?.[i] != null;
-    const byVo = sc.vo ? LEAD + Math.ceil((voSecs(sc, i, t) + (measured ? TAIL_AUDIO : TAIL_EST)) * FPS) : Math.round(((lo + hi) / 2) * FPS);
+    // a held line (voice.hold) keeps that much silence after it
+    const byVo = sc.vo ? LEAD + Math.ceil((voSecs(sc, i, t) + (measured ? TAIL_AUDIO : TAIL_EST) + (sc.voice?.hold ?? 0)) * FPS) : Math.round(((lo + hi) / 2) * FPS);
     return Math.max(Math.round(lo * FPS), measured ? byVo : Math.min(byVo, Math.round(hi * FPS)));
   });
 

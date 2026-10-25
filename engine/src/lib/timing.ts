@@ -37,7 +37,7 @@ export const voSeconds = (props: ReelProps, i: number) => {
 export const computeFrames = (props: ReelProps): number[] =>
   props.script.scenes.map((s, i) => {
     const measured = props.timing?.durations?.[i];
-    const secs = voSeconds(props, i) + (measured != null ? TAIL_AUDIO : TAIL_EST);
+    const secs = voSeconds(props, i) + (measured != null ? TAIL_AUDIO : TAIL_EST) + ((s as {voice?: {hold?: number}}).voice?.hold ?? 0); // hold: a silence after the line
     const byVo = LEAD + Math.ceil(secs * FPS);
     const byMin = s.minSeconds ? Math.ceil(s.minSeconds * FPS) : 0;
     return Math.max(byVo, sceneMinFrames(s), byMin);

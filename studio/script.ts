@@ -4,12 +4,17 @@
 //   node studio/script.ts <board.json>    prints "ok" or each rule the script breaks
 import fs from 'node:fs';
 
-export const DEVICES = ['novelty', 'open-loop', 'reveal', 'contrast', 'proof', 'stakes', 'urgency', 'number', 'second-person', 'pattern-interrupt', 'callback', 'loop'] as const;
+export const DEVICES = ['novelty', 'open-loop', 'reveal', 'contrast', 'proof', 'stakes', 'urgency', 'number', 'second-person', 'pattern-interrupt', 'callback', 'loop', 'failed-attempt'] as const;
 export type Device = (typeof DEVICES)[number];
-type Board = {scenes: {vo?: string}[]; meta?: {devices?: string[]; proof?: {fact: string; source: string}; structure?: string; cta?: string}};
+type Board = {scenes: {vo?: string; voice?: {feel: string; pace?: string; hold?: number}}[]; meta?: {devices?: string[]; proof?: {fact: string; source: string}; structure?: string; cta?: string; hook_image?: string; payoff_image?: string}};
 // the shape of the story and its call to action; both rotate (studio/styles.ts) so consecutive films are built differently
-export const STRUCTURES = ['story', 'essay', 'teardown', 'before-after', 'myth-bust', 'countdown', 'gag'] as const;
+// no countdown or list: lists lose (docs/research/2026-10-25-forge-faceless-reels.md: 0 of the top 15, 2 of the low 5)
+export const STRUCTURES = ['story', 'essay', 'teardown', 'before-after', 'myth-bust', 'gag'] as const;
 export const CTAS = ['none', 'question', 'save', 'comment-keyword', 'follow-series'] as const;
+// the voice direction (scene.voice): the feels a hook may open on, and whether every channel board must carry it
+export const HOOK_FEELS = ['curious', 'tense', 'frustrated', 'surprised', 'wry', 'urgent'];
+// the voice tags and the two images become required for every channel board once the w44 boards (written before them) are out
+export const REQUIRE_NEXT = false; // ponytail: flip to true after w44
 // what kind of gap the first line opens: a question, a number, a contradiction, a "you" claim, or a scene
 export const hookType = (hook: string) =>
   /\?/.test(hook) ? 'question' : /\d/.test(hook) ? 'number' : /\b(never|nobody|no one|wrong|actually|without|stop|nothing|until|secret|not)\b/i.test(hook) ? 'contradiction' : /\byou\b/i.test(hook) ? 'you' : 'scene';
@@ -35,7 +40,22 @@ export const scriptErrors = (doc: Board): string[] => {
   if (GREETING.test(hook)) e.push(`hook: opens with a greeting or a topic label ("${hook}"); open on a violated expectation, a puzzle or a claim`);
   if (doc.meta && !STRUCTURES.includes(doc.meta.structure as never)) e.push(`structure: meta.structure must be one of ${STRUCTURES.join(', ')}`);
   if (doc.meta && !CTAS.includes(doc.meta.cta as never)) e.push(`cta: meta.cta must be one of ${CTAS.join(', ')}`);
-  if (!HOOK_TRIGGER.test(hook)) e.push(`hook: no question, number or contradiction ("${hook}"); make the viewer notice a gap`);
+  // how it is said: an arc of feelings, a hook that opens a gap, silences that are earned
+  const voiced = doc.scenes.filter((s) => s.vo);
+  const tagged = voiced.filter((s) => s.voice?.feel);
+  if (tagged.length || (REQUIRE_NEXT && doc.meta)) {
+    if (tagged.length < voiced.length) e.push(`voice: ${voiced.length - tagged.length} line(s) have no voice.feel; give every line its feel`);
+    if (new Set(tagged.map((s) => s.voice!.feel)).size < 3) e.push('voice: fewer than 3 different feels; the voice needs an arc (e.g. curious, tense, surprised, warm)');
+    if (voiced[0]?.voice?.feel && !HOOK_FEELS.includes(voiced[0].voice.feel)) e.push(`voice: the hook is ${voiced[0].voice.feel}; open on ${HOOK_FEELS.join(', ')}`);
+    if (voiced.filter((s) => s.voice?.hold).length > 2) e.push('voice: more than 2 held silences; keep holds for the reveal');
+  }
+  // a scene hook (one concrete opening image) wins most often; it counts when the Writer names that image for the Director
+  const img = (s?: string) => (s ?? '').trim().split(/\s+/).filter(Boolean).length >= 4;
+  if (!HOOK_TRIGGER.test(hook) && !img(doc.meta?.hook_image)) e.push(`hook: no question, number or contradiction ("${hook}"), and no meta.hook_image naming the opening scene; make the viewer notice a gap or open on one concrete image`);
+  if (doc.meta && (REQUIRE_NEXT || doc.meta.hook_image || doc.meta.payoff_image)) {
+    if (!img(doc.meta.hook_image)) e.push('hook_image: meta.hook_image names the first frame in at least 4 words (one concrete scene: who or what, doing what, where)');
+    if (!img(doc.meta.payoff_image)) e.push('payoff_image: meta.payoff_image names the closing picture in at least 4 words (end on an image, not a summary line)');
+  }
   const all = lines.join(' ');
   const turns = all.match(TURN)?.length ?? 0;
   if (turns < 2) e.push(`turns: ${turns} turn word (but, instead, actually, so, until); every beat should turn the story, aim for 2 or more`);

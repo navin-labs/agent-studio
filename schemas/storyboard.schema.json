@@ -116,7 +116,18 @@
             "minLength": 1,
             "description": "Caption and voice line; *accent* runs become the shot's cue frames"
           },
-          "say": {
+          "voice": {
+                "type": "object",
+                "description": "How the line is said (the Writer): feel (emotion), pace (slow 0.9x, steady, quick 1.1x speed) and hold (seconds of silence after the line, before a reveal)",
+                "required": ["feel"],
+                "additionalProperties": false,
+                "properties": {
+                  "feel": {"enum": ["curious", "tense", "frustrated", "surprised", "warm", "wry", "urgent", "calm", "triumphant"]},
+                  "pace": {"enum": ["slow", "steady", "quick"]},
+                  "hold": {"type": "number", "minimum": 0, "maximum": 1.2}
+                }
+              },
+              "say": {
             "type": "string",
             "minLength": 1,
             "description": "Exact TTS text when pronunciation needs fixing"
@@ -197,8 +208,10 @@
           "pattern": "^[0-9]{3,4}$",
           "description": "the story's year, shown by the year-flap opener"
         },
+        "hook_image": {"type": "string", "minLength": 12, "description": "The first frame, named concretely (who or what, doing what, where); the Director opens on it"},
+        "payoff_image": {"type": "string", "minLength": 12, "description": "The closing picture that pays off the story; the Director ends on it"},
         "structure": {
-          "enum": ["story", "essay", "teardown", "before-after", "myth-bust", "countdown", "gag"],
+          "enum": ["story", "essay", "teardown", "before-after", "myth-bust", "gag"],
           "description": "the story's shape; rotates across a channel's films (studio/styles.ts)"
         },
         "cta": {
@@ -227,7 +240,8 @@
               "second-person",
               "pattern-interrupt",
               "callback",
-              "loop"
+              "loop",
+              "failed-attempt"
             ]
           },
           "description": "The storytelling devices this script uses (docs/CREATIVE_BIBLE.md section 13; studio/script.ts checks them)"

@@ -29,7 +29,7 @@ if x.engine == "kokoro":
     from kokoro import KPipeline
     pipe = KPipeline(lang_code=x.voice[0], repo_id="hexgrad/Kokoro-82M", device=device)  # voice ids start with a (US) or b (UK)
     sr = 24000
-    synth = lambda text: np.concatenate([np.asarray(r.audio) for r in pipe(text, voice=x.voice, speed=x.speed)])
+    synth = lambda text, speed=None: np.concatenate([np.asarray(r.audio) for r in pipe(text, voice=x.voice, speed=speed or x.speed)])
 elif x.engine == "parler":
     from parler_tts import ParlerTTSForConditionalGeneration
     from transformers import AutoTokenizer
@@ -39,13 +39,13 @@ elif x.engine == "parler":
     sr = model.config.sampling_rate
     pace = "speaks slightly fast" if x.speed > 1.05 else "speaks slowly and calmly" if x.speed < 0.95 else "speaks at a moderate pace"
     desc = tok(f"{x.voice}'s voice is {x.style}, he {pace}, in a close, very clear recording with no background noise.", return_tensors="pt").input_ids.to(device)
-    synth = lambda text: model.generate(input_ids=desc, prompt_input_ids=tok(text, return_tensors="pt").input_ids.to(device)).cpu().numpy().squeeze()
+    synth = lambda text, speed=None: model.generate(input_ids=desc, prompt_input_ids=tok(text, return_tensors="pt").input_ids.to(device)).cpu().numpy().squeeze()
 else:
     from chatterbox.tts import ChatterboxTTS
     model = ChatterboxTTS.from_pretrained(device=device)
     sr = model.sr
     cfg = 0.3 if x.speed < 0.95 else 0.5  # the default voice only, never a reference clip (no cloning)
-    synth = lambda text: model.generate(text, cfg_weight=cfg).squeeze().cpu().numpy()
+    synth = lambda text, speed=None: model.generate(text, cfg_weight=cfg).squeeze().cpu().numpy()
 load = time.time() - t0
 
 # Same loudness for every voice, lead and tail silence trimmed: voiced RMS to -20 dBFS, peak capped at -1 dBFS (af_heart came out 3 dB quieter than am_fenrir).
@@ -58,10 +58,10 @@ def level(audio):
     keep = int(0.04 * sr)
     return audio[max(0, loud[0] - keep): loud[-1] + keep] if loud.size else audio
 
-jobs = json.load(open(x.jobs)) if x.jobs else [{"text": x.text, "out": x.out}]
+jobs = json.load(open(x.jobs)) if x.jobs else [{"text": x.text, "out": x.out}]  # a job may set its own "speed" (a line's pace)
 for j in jobs:
     t1 = time.time()
-    audio = level(np.asarray(synth(j["text"]), dtype=np.float32))
+    audio = level(np.asarray(synth(j["text"], j.get("speed")), dtype=np.float32))
     render = time.time() - t1
     sf.write(j["out"], audio, sr)
     secs = len(audio) / sr

@@ -13,6 +13,7 @@ Why: the one AI step. It writes words, nothing else.
 ## Must
 - Pick one idea per recipe, only from the feed. Copy its link into `meta.source`.
 - Fill hook, voice lines, labels, caption within each primitive's text limits.
+- Pass the script gate (studio/script.ts): hook of 12 words or fewer, turns, contrast, a sourced proof, stakes, a loop, declared devices, structure and CTA, and every line's voice direction (feel, pace, hold).
 - Choose the CTA kind in the closer's text (`*Follow*`, `DM *AUDIT*`, `*Send* it`); never write platform CTA words (Subscribe, Follow, DM) into the caption body or other lines: the style preset adds each platform's own.
 - Length: C1 40 to 60 s in both formats, no exceptions; C2 25 to 45 s.
 - Follow the channel RULEBOOK (honesty, CTA, hashtags).

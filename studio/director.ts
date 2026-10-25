@@ -38,10 +38,13 @@ export const direct = (board: string, opts: {test?: boolean; model?: string; jud
       r = run(prompt, tools);
     }
     fs.writeFileSync(path.join(log, `${id}.${name}.md`), r.stdout ?? '');
+    // a dead login is not a creative failure: say so plainly, so the report (and Telegram) names the fix
+    if (/Failed to authenticate|OAuth session expired|Not logged in/i.test(r.stdout ?? '')) throw new Error('the headless claude login has expired: run `claude` in a terminal and use /login, then run the Director again');
     return r;
   };
+  // user-level settings load too: Stitch is a user-scope MCP server, and --setting-sources would hide it
   const run = (prompt: string, tools: string) => {
-    return spawnSync('claude', ['-p', prompt, '--model', opts.model ?? process.env.DIRECTOR_MODEL ?? 'opus', '--permission-mode', 'acceptEdits', '--setting-sources', 'project,local', '--append-system-prompt', priorities, '--allowedTools', tools],
+    return spawnSync('claude', ['-p', prompt, '--model', opts.model ?? process.env.DIRECTOR_MODEL ?? 'opus', '--permission-mode', 'acceptEdits', '--append-system-prompt', priorities, '--allowedTools', tools],
       {cwd: ROOT, stdio: ['ignore', 'pipe', 'inherit'], encoding: 'utf8', maxBuffer: 1 << 26, timeout: 3 * 3600_000});
   };
   const AUTHOR = 'Read Write Edit Glob Grep Bash(node:*) Bash(npm run:*) Bash(npx tsc:*) Bash(ls:*) Bash(cd:*) Bash(mkdir:*) Bash(cp:*) Bash(cat:*) mcp__stitch__generate_screen_from_text mcp__stitch__download_file mcp__stitch__get_screen';
@@ -85,7 +88,12 @@ if (import.meta.main) {
   if (!boards.length) (console.error('usage: node studio/director.ts <board.json>... [--test]'), process.exit(2));
   let failed = 0;
   for (const b of boards) {
-    const o = direct(b, {test: args.includes('--test'), judgeOnly: args.includes('--judge'), revise: args.includes('--revise')});
+    let o: Outcome;
+    try {
+      o = direct(b, {test: args.includes('--test'), judgeOnly: args.includes('--judge'), revise: args.includes('--revise')});
+    } catch (e) {
+      o = {id: path.basename(b, '.json'), ok: false, problems: [(e as Error).message], minutes: 0};
+    }
     console.log(`${o.ok ? 'FILM' : 'HELD'} ${o.id} (${o.minutes} min)${o.problems.length ? ': ' + o.problems.join('; ') : ''}`);
     if (!o.ok) failed++;
   }
