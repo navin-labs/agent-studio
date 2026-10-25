@@ -101,7 +101,10 @@ export const Whisper: React.FC<{t: number; at: number; end: number; text: string
   return (
     <div data-tb="caption" style={{position: 'absolute', left: 112, right: 124, bottom: 1920 - 1460, textAlign: 'center', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 52, lineHeight: 1.25, color: th.ink, textShadow: `0 2px 18px ${mix(th.shadow, 90)}`, opacity: o}}>
       {words.map((w, i) => (
-        <span key={i} style={{opacity: k(t, [at + (i / words.length) * dur, at + (i / words.length) * dur + 0.2], [0, 1]), marginRight: '0.28em'}}>{w}</span>
+        // a real space between words, so the line can wrap (spans with only margins between them never break)
+        <React.Fragment key={i}>
+          <span style={{opacity: k(t, [at + (i / words.length) * dur, at + (i / words.length) * dur + 0.2], [0, 1])}}>{w}</span>{' '}
+        </React.Fragment>
       ))}
     </div>
   );
