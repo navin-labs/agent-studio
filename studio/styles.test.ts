@@ -33,4 +33,16 @@ for (let i = 0; i < 30; i++) {
   assert.deepStrictEqual(styleErrors(s, made, ready), [], `ready film ${i}: ${JSON.stringify(s)}`);
   made.push(s);
 }
-console.log(`styles ok: ${combos().length} combinations (${combos(ready).length} with a renderer); 60 films used ${looks.size} looks, ${suits.size} suits, all ${formats.size} formats, no repeats inside the windows`);
+// a long run on the small renderable catalogue never gets stuck: it relaxes a window instead, and says so
+const long: Style[] = [];
+const H = ['question', 'number', 'contradiction', 'you', 'scene'], ST = ['story', 'essay', 'teardown', 'before-after', 'myth-bust', 'gag'], CT = ['none', 'question', 'save', 'comment-keyword', 'follow-series'];
+for (let i = 0; i < 100; i++) {
+  const s = chooseStyle(long, 'automation', i + 11, ready, {hook: H[i % 5], structure: ST[i % 6], cta: CT[i % 5]});
+  assert.deepStrictEqual(styleErrors(s, long, ready), [], `long run film ${i}`);
+  assert.ok(!long.length || long.at(-1)!.format !== s.format, 'the format never repeats back to back');
+  long.push(s);
+}
+const relaxedRuns = long.filter((s) => s.relaxed).length;
+const tuple = (s: Style) => [s.format, s.look, s.suit, s.camera, s.hook, s.structure, s.cta].join('|');
+assert.strictEqual(new Set(long.map(tuple)).size, long.length, 'no exact 7-axis tuple ever runs twice');
+console.log(`styles ok: ${combos().length} combinations (${combos(ready).length} with a renderer); 60 films used ${looks.size} looks, ${suits.size} suits, all ${formats.size} formats, no repeats inside the windows; 100 renderable films never got stuck (${relaxedRuns} relaxed a window)`);

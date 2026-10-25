@@ -53,7 +53,7 @@ export type Storyboard = {
   preset?: StylePreset; // render-time only: the style preset itself, added by make.mjs
 };
 
-export type Timing = {durations?: (number | null)[]; audio?: (string | null)[]};
+export type Timing = {durations?: (number | null)[]; audio?: (string | null)[]; words?: ({w: string; s: number; e: number}[] | null)[]};
 
 const voSecs = (sc: StoryboardScene, i: number, t?: Timing) => t?.durations?.[i] ?? (sc.vo ? estimateSeconds(sc.vo, VOICE_WPS) : 0);
 

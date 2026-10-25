@@ -322,6 +322,7 @@ const prepareVoice = async (script) => {
   const manifest = fs.existsSync(manifestFile) ? JSON.parse(fs.readFileSync(manifestFile, 'utf8')) : {scenes: []};
   const audio = [];
   const durations = [];
+  const words = []; // per scene: [{w, s, e}] seconds into its clip, or null
   let fresh = false; // a clip was written: the render bundle (a copy of public/) must be rebuilt to include it
   const lv = channelVoice(script);
   // pronunciation: the channel's overrides (voice.pronounce, engine markup e.g. Kokoro "[Tally](/tˈæli/)"), then the board's own
@@ -359,6 +360,10 @@ const prepareVoice = async (script) => {
       if (existing && existing !== file) fs.renameSync(existing, `${existing}.old`);
       fs.writeFileSync(file, buf);
       if (PROVIDER === 'local') fs.rmSync(path.join(dir, `${base}.local.wav`), {force: true});
+      // the clip's word times travel with it (Kokoro writes them): cards land on the exact spoken word
+      const lw = path.join(dir, `${base}.local.words.json`);
+      if (fs.existsSync(lw)) fs.renameSync(lw, path.join(dir, `${base}.words.json`));
+      else fs.rmSync(path.join(dir, `${base}.words.json`), {force: true});
       manifest.scenes[i] = {file: path.basename(file), source: PROVIDER, hash};
       fresh = true;
       console.log('done');
@@ -366,9 +371,12 @@ const prepareVoice = async (script) => {
     if (file && fs.existsSync(file)) {
       audio.push(path.relative(PUBLIC, file).split(path.sep).join('/'));
       durations.push(await measure(file));
+      const wf = path.join(dir, `${base}.words.json`);
+      words.push(fs.existsSync(wf) ? JSON.parse(fs.readFileSync(wf, 'utf8')) : null);
     } else {
       audio.push(null);
       durations.push(null);
+      words.push(null);
     }
   }
   manifest.scenes = manifest.scenes.slice(0, n);
@@ -376,7 +384,7 @@ const prepareVoice = async (script) => {
   const missing = audio.filter((a, i) => !a && inputs[i] !== null).length;
   if (missing && missing === inputs.filter((x) => x !== null).length) console.log(c.yellow(`  No voiceover: set "voice" in channels/${script.channel ?? '<id>'}/channel.json (README "Voice"), or drop your recordings into ` + path.relative(ROOT, dir) + '/s01.mp3, s02.mp3 ...'));
   else if (missing) console.log(c.yellow(`  ${missing} scene(s) have no voiceover`));
-  return {audio, durations, voice: audio.some(Boolean) ? (lv ? localKey(lv) : PROVIDER) : null, fresh};
+  return {audio, durations, words, voice: audio.some(Boolean) ? (lv ? localKey(lv) : PROVIDER) : null, fresh};
 };
 
 // Voices every scene that needs a new clip with the channel's local engine (the model loads once per video).
@@ -442,12 +450,12 @@ const captionText = (doc, voice) =>
 
 const renderReel = async (script, place) => {
   const {renderMedia, renderStill, selectComposition} = await import('@remotion/renderer');
-  const {audio, durations, voice, fresh} = await prepareVoice(script);
+  const {audio, durations, words, voice, fresh} = await prepareVoice(script);
   if (flags.has('--vo-only')) return;
   if (fresh) serveUrl = null; // the bundle copies public/ when it is built; new voice clips need a new one
   const music = script.music && fs.existsSync(path.join(PUBLIC, 'music', script.music)) ? `music/${script.music}` : null;
   if (script.music && !music) console.log(c.yellow(`  music file public/music/${script.music} not found, rendering without music`));
-  const inputProps = {script, timing: {audio, durations, music}};
+  const inputProps = {script, timing: {audio, durations, words, music}};
   const browserExecutable = findBrowser();
   const url = await getBundle();
   const gl = script.film ? {chromiumOptions: {gl: 'angle'}} : {}; // films may paint with p5.brush (WebGL2)

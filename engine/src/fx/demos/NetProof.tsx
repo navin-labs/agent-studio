@@ -6,7 +6,7 @@ import {INOUT, k, OUT} from '../../films/kit';
 import {ensureFonts} from '../../fonts';
 import {FPS} from '../../lib/timing';
 import {ThemeCtx, THEMES} from '../../themes';
-import {Branches, NetStage, Phrase, Wedge} from '../network';
+import {Branches, NetStage, Phrase, Tunnel, Wedge} from '../network';
 
 const DUR = [2.88, 4.16];
 const AT = [0.4, 4.6];
@@ -52,6 +52,12 @@ export const NetProof: React.FC = () => {
       <AbsoluteFill style={{background: `color-mix(in srgb, ${th.bg} ${arc}%, ${th.shadow})`}}>
         {t < TURN + 1.2 && (
           <AbsoluteFill style={{opacity: k(t, [TURN, TURN + 1.0], [1, 0]), scale: String(k(t, [0, 1.1], [1.9, 1], OUT) + k(t, [1.1, TURN], [0, 0.22], INOUT)), transformOrigin: '540px 900px'}}>
+            {/* the funnel: the camera dives down a tunnel of rings that narrows to one point, the inbox */}
+            <AbsoluteFill style={{opacity: 0.9}}>
+              <NetStage pos={[0.3, 0.1, k(t, [0, TURN + 0.6], [6, -14], INOUT)]} look={[0, 0, k(t, [0, TURN + 0.6], [-2, -22], INOUT)]} fov={62}>
+                <Tunnel t={t} />
+              </NetStage>
+            </AbsoluteFill>
             <Wedge t={t} apex={[540, k(t, [0, 0.6], [400, APEX], OUT)]} open={squeeze} grow={k(t, [0, 0.5], [0.6, 1], OUT)} />
             <Queue t={t} />
           </AbsoluteFill>

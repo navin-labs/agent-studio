@@ -21,7 +21,7 @@ export const k = (t: number, [a, b]: [number, number], [x, y]: [number, number],
 export const settle = (t: number, t0: number, freq = 3.2, damp = 1.1) => (t < t0 ? 1 : Math.exp(-(t - t0) * damp * 3) * Math.cos((t - t0) * freq * Math.PI * 2));
 
 // ---------- the film's context: beats (voice lines), total length, CTA ----------
-export type Beat = {start: number; end: number; vo: [number, number] | null; text: string};
+export type Beat = {start: number; end: number; vo: [number, number] | null; text: string; words?: {w: string; s: number; e: number}[]}; // words: film seconds
 export type Film = {t: number; beats: Beat[]; total: number; script: Storyboard; cta: {text: string; sub: string; handle: string}};
 export const FilmCtx = createContext<Film | null>(null);
 export const useFilm = (): Film => {
@@ -36,7 +36,9 @@ export const filmContext = (script: Storyboard, frames: number[], timing: Timing
     at += frames[i];
     const d = timing?.durations?.[i];
     const text = (sc.vo ?? '').replace(/\*/g, '');
-    return {start, end: at / FPS, vo: sc.vo ? ([start + LEAD / FPS, start + LEAD / FPS + (d ?? (at / FPS - start - 0.4))] as [number, number]) : null, text};
+    const ws = timing?.words?.[i];
+    const words = sc.vo && ws ? ws.map((w) => ({w: w.w, s: start + LEAD / FPS + w.s, e: start + LEAD / FPS + w.e})) : undefined;
+    return {start, end: at / FPS, vo: sc.vo ? ([start + LEAD / FPS, start + LEAD / FPS + (d ?? (at / FPS - start - 0.4))] as [number, number]) : null, text, words};
   });
   const closer = script.scenes.at(-1)?.params ?? {};
   return {t: frame / FPS, beats, total: at / FPS, script, cta: {text: String(closer.text ?? '').replace(/\*/g, ''), sub: String(closer.sub ?? ''), handle: script.handle ?? ''}};

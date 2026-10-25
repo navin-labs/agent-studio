@@ -10,7 +10,9 @@ import {FORMAT_FILMS} from '../engine/src/fx/direction.ts';
 const rng = (seed: number) => () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
 
 // format/look/suit are chosen here; hook, structure and cta come from the script (studio/script.ts); a series keeps its world
-export type Style = {format: string; look: string; suit: string; camera?: string; hook?: string; structure?: string; cta?: string; series?: string};
+// relaxed: the windows the picker had to shrink because nothing was free (recorded, so QA checks the same rules)
+export type Relax = {lookWindow?: number; suitWindow?: number; fingerprintMax?: number};
+export type Style = {format: string; look: string; suit: string; camera?: string; relaxed?: Relax; hook?: string; structure?: string; cta?: string; series?: string};
 const AXES = ['format', 'look', 'suit', 'camera', 'hook', 'structure', 'cta'] as const;
 type Look = {medium: string; grade: string; texture: string; motion: string; formats: string[]; suits: string[]; fit: string[]};
 export type Catalogue = {formats: Record<string, {name: string; cameras?: string[]}>; looks: Record<string, Look>; rules: {lookWindow: number; suitWindow: number; formatWindow: number; hookWindow: number; structureWindow: number; ctaWindow: number; fingerprintWindow: number; fingerprintMax: number; cameraWindow?: number}};
@@ -23,7 +25,6 @@ export const readyCatalogue = (c = CATALOGUE): Catalogue => {
   return {...c, formats: Object.fromEntries(Object.entries(c.formats).filter(([f]) => ready.has(f))), looks};
 };
 
-// every allowed combination
 // every allowed combination, one per camera move the format supports (push-in, orbit, drift, static)
 export const combos = (c = CATALOGUE): Style[] =>
   Object.entries(c.looks).flatMap(([look, l]) => l.formats.flatMap((format) => l.suits.flatMap((suit) => (c.formats[format]?.cameras ?? ['push-in']).map((camera) => ({format, look, suit, camera})))));
@@ -38,7 +39,7 @@ export const styleErrors = (s: Style, recent: Style[], c = CATALOGUE): string[] 
   if (!l.suits.includes(s.suit)) e.push(`look ${s.look} does not wear suit ${s.suit} (${l.suits.join(', ')})`);
   // a small catalogue (only the formats with a renderer) gets windows it can satisfy: a look or suit may return after the rest
   const n = (k: 'looks' | 'suits') => (k === 'looks' ? Object.keys(c.looks).length : new Set(Object.values(c.looks).flatMap((x) => x.suits)).size);
-  const r = {...c.rules, lookWindow: Math.min(c.rules.lookWindow, n('looks') - 2), suitWindow: Math.min(c.rules.suitWindow, n('suits') - 2)};
+  const r = {...c.rules, lookWindow: Math.min(c.rules.lookWindow, n('looks') - 2), suitWindow: Math.min(c.rules.suitWindow, n('suits') - 2), ...s.relaxed};
   // a series keeps one world (its format, look and suit) across parts; the idea changes, the world is the brand
   const world = recent.filter((x) => !(s.series && x.series === s.series));
   if (world.slice(-r.lookWindow).some((x) => x.look === s.look)) e.push(`look ${s.look} was used in the channel's last ${r.lookWindow} films`);
@@ -47,6 +48,8 @@ export const styleErrors = (s: Style, recent: Style[], c = CATALOGUE): string[] 
   if (s.camera && c.formats[s.format]?.cameras && !c.formats[s.format].cameras!.includes(s.camera)) e.push(`camera ${s.camera} is not a move format ${s.format} has (${c.formats[s.format].cameras!.join(', ')})`);
   for (const [a, w] of [['camera', r.cameraWindow ?? 1], ['hook', r.hookWindow], ['structure', r.structureWindow], ['cta', r.ctaWindow]] as const)
     if (s[a] && !(a === 'camera' && (c.formats[s.format]?.cameras?.length ?? 1) < 2) && recent.slice(-w).some((x) => x[a] === s[a])) e.push(`${a} ${s[a]} was used in the channel's last ${w} films`);
+  // never, in the channel's whole history, the exact same film tuple twice
+  if (s.camera && s.hook && recent.some((x) => AXES.every((a) => x[a] === s[a]))) e.push('fingerprint: this exact combination of all 7 axes already ran on this channel');
   // fingerprint: never ship a film that matches a recent one on most axes (change at least two)
   for (const x of recent.slice(-r.fingerprintWindow)) {
     const same = AXES.filter((a) => s[a] && s[a] === x[a]);
@@ -58,8 +61,18 @@ export const styleErrors = (s: Style, recent: Style[], c = CATALOGUE): string[] 
 // a fresh combination: allowed, not recent, fitting the story (a look that fits the story's kind beats one that fits "any"),
 // and of the least-used format and look lately; ties broken by a seeded draw so the choice is reproducible
 export const chooseStyle = (recent: Style[], fit: string, seed = 1, c = CATALOGUE, story: Omit<Style, 'format' | 'look' | 'suit'> = {}): Style => {
-  const ok = combos(c).map((s) => ({...s, ...story})).filter((s) => !styleErrors(s, recent, c).length);
-  if (!ok.length) throw new Error('no style combination is free: widen studio/looks.json or relax its rules');
+  // when nothing is free, relax one rule a step at a time, in this order: the look window, the suit window, the fingerprint;
+  // never the format, camera, hook, structure or CTA windows (those keep consecutive films apart)
+  const steps: (Relax | undefined)[] = [undefined];
+  for (let w = c.rules.lookWindow - 1; w >= 1; w--) steps.push({lookWindow: w});
+  for (let w = c.rules.suitWindow - 1; w >= 1; w--) steps.push({lookWindow: 1, suitWindow: w});
+  for (let m = c.rules.fingerprintMax + 1; m <= AXES.length - 2; m++) steps.push({lookWindow: 1, suitWindow: 1, fingerprintMax: m});
+  let ok: Style[] = [];
+  for (const relaxed of steps) {
+    ok = combos(c).map((s) => ({...s, ...story, ...(relaxed ? {relaxed} : {})})).filter((s) => !styleErrors(s, recent, c).length);
+    if (ok.length) break;
+  }
+  if (!ok.length) throw new Error('no style combination is free even with every window relaxed: add looks or formats to studio/looks.json');
   // the next part of a series stays in the series' world when it may
   const prev = story.series ? [...recent].reverse().find((x) => x.series === story.series) : undefined;
   const same = prev ? ok.filter((s) => s.format === prev.format && s.look === prev.look && s.suit === prev.suit) : [];

@@ -15,4 +15,5 @@ const e = boardDirectionErrors(bad);
 for (const want of ['must be the film', '1 shots for 2 voice lines', 'public/nope.jpg is missing', '"satellite" is not a word of line 1', 'outside the 1080 x 1920 frame']) assert.ok(e.some((x) => x.includes(want)), `must fail on "${want}"; got:\n${e.join('\n')}`);
 // a word's time is its share of the line's voice window
 assert.strictEqual(wordTime({vo: [1, 3], start: 0.8, text: 'one two three four'}, 'three'), 2);
-console.log(`direction ok: a sound direction passes; a broken one fails on ${e.length} exact reasons; words are timed`);
+assert.strictEqual(wordTime({vo: [1, 3], start: 0.8, text: 'one two three four', words: [{w: 'one', s: 1}, {w: 'two', s: 1.2}, {w: 'three', s: 2.7}]}, 'three'), 2.7, 'the reported spoken moment wins');
+console.log(`direction ok: a sound direction passes; a broken one fails on ${e.length} exact reasons; words are timed, exactly when the voice reports them`);

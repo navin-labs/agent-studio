@@ -23,8 +23,11 @@ const words = (s: string): string[] => s.replace(/\*/g, '').toLowerCase().match(
 const norm = (w: string) => words(w)[0] ?? '';
 
 // when a word is spoken: the line's voice window split evenly by word (Kokoro reads at an even pace; good to about 0.2 s)
-export const wordTime = (beat: {vo: [number, number] | null; start: number; text: string}, at: At) => {
+export const wordTime = (beat: {vo: [number, number] | null; start: number; text: string; words?: {w: string; s: number}[]}, at: At) => {
   if (!beat.vo) return beat.start;
+  // the exact spoken moment when the voice engine reported its words, else an even split of the line
+  const hit = beat.words?.find((x) => norm(x.w) === norm(at));
+  if (hit) return hit.s;
   const w = words(beat.text);
   const i = Math.max(0, w.indexOf(norm(at)));
   return beat.vo[0] + (i / Math.max(1, w.length)) * (beat.vo[1] - beat.vo[0]);
