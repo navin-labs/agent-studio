@@ -25,6 +25,10 @@ export const ensureFonts = () => {
       loadFont({family: 'VT323', url: staticFile('fonts/vt323-latin-400-normal.woff2'), weight: '400'}),
       // the film formats' display and editorial voices (OFL, docs/CREATIVE_BIBLE.md section 11)
       loadFont({family: 'Anton', url: staticFile('fonts/anton-latin-400-normal.woff2'), weight: '400'}),
+      // the style blocks' faces (Motion Graphics starter kit, OFL: public/fonts/OFL-motion-kit.txt)
+      loadFont({family: 'Archivo Black', url: staticFile('fonts/archivo-black-400.woff2'), weight: '400'}),
+      loadFont({family: 'Bricolage Grotesque', url: staticFile('fonts/bricolage-grotesque-800.woff2'), weight: '800'}),
+      loadFont({family: 'Space Grotesk', url: staticFile('fonts/space-grotesk-700.woff2'), weight: '700'}),
       loadFont({family: 'Instrument Serif', url: staticFile('fonts/instrument-serif-latin-400-normal.woff2'), weight: '400'}),
       loadFont({family: 'Instrument Serif', url: staticFile('fonts/instrument-serif-latin-400-italic.woff2'), weight: '400', style: 'italic'}),
     ]),

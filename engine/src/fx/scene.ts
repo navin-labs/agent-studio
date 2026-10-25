@@ -10,7 +10,7 @@ export type Shot = {
   camera?: Cam; // 2D world camera over the 1080x1920 frame; left out: a slow push so no shot sits still
   focal?: string; // the script entity this shot shows (grounding, F6)
 };
-export type Scene = {look?: {grain?: number}; shots: Shot[]};
+export type Scene = {look?: {grain?: number; block?: 'kinetic' | 'glass' | 'grain' | 'pop-bold'}; shots: Shot[]};
 
 // Shot windows in seconds on the film's timeline, from the beats' starts and ends.
 export const shotWindows = (shots: Shot[], beats: {start: number; end: number}[]): [number, number][] =>

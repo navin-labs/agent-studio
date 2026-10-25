@@ -8,6 +8,7 @@ import {type Shot, shotWindows} from '../fx/scene';
 import {FPS} from '../lib/timing';
 import {useTheme} from '../themes';
 import {Captions, Grain, useFilm} from './kit';
+import {BlockProvider, type BlockId, BLOCKS, Ground} from '../fx/blocks';
 
 const ShotView: React.FC<{s: Shot; fx: Fx; t: number; dur: number}> = ({s, fx, t, dur}) => {
   const p = {...fx.example, ...s.props};
@@ -23,8 +24,10 @@ export const SceneFilm: React.FC = () => {
   if (!script.scene) throw new Error(`board ${script.id}: "film": "scene" needs a "scene"`);
   const shots = script.scene.shots;
   const win = shotWindows(shots, beats);
-  return (
-    <AbsoluteFill style={{background: th.bg}}>
+  const block = script.scene.look?.block as BlockId | undefined; // a style block (blocks.tsx): the moves' feel, type and ground
+  const body = (
+    <AbsoluteFill style={{background: th.bg, fontFamily: block ? BLOCKS[block].display : undefined, textTransform: block && BLOCKS[block].caps ? 'uppercase' : undefined}}>
+      {block ? <Ground t={t} /> : null}
       {shots.map((s, i) => {
         const fx = FX[s.fx];
         if (!fx) throw new Error(`scene.shots[${i}]: unknown effect "${s.fx}" (src/fx/registry.tsx)`);
@@ -40,6 +43,7 @@ export const SceneFilm: React.FC = () => {
       <Captions style={{top: 1290, fontFamily: '"Inter Tight", Inter, sans-serif', fontWeight: 800, fontSize: 54, lineHeight: 1.15, color: th.ink}} />
     </AbsoluteFill>
   );
+  return block ? <BlockProvider id={block}>{body}</BlockProvider> : body;
 };
 
 // One effect alone with its example props, for the gallery (scripts/fx-gallery.mjs): composition "fx-<id>".

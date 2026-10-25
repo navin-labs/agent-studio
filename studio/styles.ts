@@ -10,10 +10,10 @@ import {FORMAT_FILMS} from '../engine/src/fx/direction.ts';
 const rng = (seed: number) => () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
 
 // format/look/suit are chosen here; hook, structure and cta come from the script (studio/script.ts); a series keeps its world
-export type Style = {format: string; look: string; suit: string; hook?: string; structure?: string; cta?: string; series?: string};
-const AXES = ['format', 'look', 'suit', 'hook', 'structure', 'cta'] as const;
+export type Style = {format: string; look: string; suit: string; camera?: string; hook?: string; structure?: string; cta?: string; series?: string};
+const AXES = ['format', 'look', 'suit', 'camera', 'hook', 'structure', 'cta'] as const;
 type Look = {medium: string; grade: string; texture: string; motion: string; formats: string[]; suits: string[]; fit: string[]};
-export type Catalogue = {formats: Record<string, {name: string}>; looks: Record<string, Look>; rules: {lookWindow: number; suitWindow: number; formatWindow: number; hookWindow: number; structureWindow: number; ctaWindow: number; fingerprintWindow: number; fingerprintMax: number}};
+export type Catalogue = {formats: Record<string, {name: string; cameras?: string[]}>; looks: Record<string, Look>; rules: {lookWindow: number; suitWindow: number; formatWindow: number; hookWindow: number; structureWindow: number; ctaWindow: number; fingerprintWindow: number; fingerprintMax: number; cameraWindow?: number}};
 export const CATALOGUE: Catalogue = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, 'looks.json'), 'utf8'));
 
 // only the formats that have a renderer (engine/src/films/<format>.tsx), for films made unattended
@@ -24,8 +24,9 @@ export const readyCatalogue = (c = CATALOGUE): Catalogue => {
 };
 
 // every allowed combination
+// every allowed combination, one per camera move the format supports (push-in, orbit, drift, static)
 export const combos = (c = CATALOGUE): Style[] =>
-  Object.entries(c.looks).flatMap(([look, l]) => l.formats.flatMap((format) => l.suits.map((suit) => ({format, look, suit}))));
+  Object.entries(c.looks).flatMap(([look, l]) => l.formats.flatMap((format) => l.suits.flatMap((suit) => (c.formats[format]?.cameras ?? ['push-in']).map((camera) => ({format, look, suit, camera})))));
 
 // what a choice breaks against the channel's recent films (newest last)
 export const styleErrors = (s: Style, recent: Style[], c = CATALOGUE): string[] => {
@@ -43,8 +44,9 @@ export const styleErrors = (s: Style, recent: Style[], c = CATALOGUE): string[] 
   if (world.slice(-r.lookWindow).some((x) => x.look === s.look)) e.push(`look ${s.look} was used in the channel's last ${r.lookWindow} films`);
   if (world.slice(-r.suitWindow).some((x) => x.suit === s.suit)) e.push(`suit ${s.suit} was used in the channel's last ${r.suitWindow} films`);
   if (world.slice(-r.formatWindow).some((x) => x.format === s.format)) e.push(`format ${s.format} ran in the previous film`);
-  for (const [a, w] of [['hook', r.hookWindow], ['structure', r.structureWindow], ['cta', r.ctaWindow]] as const)
-    if (s[a] && recent.slice(-w).some((x) => x[a] === s[a])) e.push(`${a} ${s[a]} was used in the channel's last ${w} films`);
+  if (s.camera && c.formats[s.format]?.cameras && !c.formats[s.format].cameras!.includes(s.camera)) e.push(`camera ${s.camera} is not a move format ${s.format} has (${c.formats[s.format].cameras!.join(', ')})`);
+  for (const [a, w] of [['camera', r.cameraWindow ?? 1], ['hook', r.hookWindow], ['structure', r.structureWindow], ['cta', r.ctaWindow]] as const)
+    if (s[a] && !(a === 'camera' && (c.formats[s.format]?.cameras?.length ?? 1) < 2) && recent.slice(-w).some((x) => x[a] === s[a])) e.push(`${a} ${s[a]} was used in the channel's last ${w} films`);
   // fingerprint: never ship a film that matches a recent one on most axes (change at least two)
   for (const x of recent.slice(-r.fingerprintWindow)) {
     const same = AXES.filter((a) => s[a] && s[a] === x[a]);

@@ -2,7 +2,7 @@
 // plate per voice line, src/fx/direction.ts). Proven by fx/demos/AmbC1.tsx.
 import React from 'react';
 import {AbsoluteFill} from 'remotion';
-import {type AmbientShot, wordTime} from '../fx/direction';
+import {type AmbientShot, cameraMotion, wordTime} from '../fx/direction';
 import {Fog, Lamp, Plate, Rain, ScreenGlow, Sunrise, Whisper} from '../fx/ambient';
 import {useTheme} from '../themes';
 import {type Cue, Foley, Score, useFilm} from './kit';
@@ -14,6 +14,7 @@ export const Film: React.FC = () => {
   const lines = beats.filter((b) => b.vo);
   const shots = d.shots as AmbientShot[];
   const cues: Cue[] = [];
+  const cam = cameraMotion(d.style.camera);
   const closer = beats.at(-1)!.vo ? null : beats.at(-1)!;
   return (
     <AbsoluteFill style={{background: th.bg}}>
@@ -23,7 +24,7 @@ export const Film: React.FC = () => {
         s.lamps?.forEach((l) => l.on && cues.push([wordTime(b, l.on), 'switch', 0.3]));
         s.screens?.forEach((x) => x.pings?.forEach((p) => cues.push([wordTime(b, p), 'pop', 0.22])));
         return (
-          <Plate key={i} t={t} a={a} b={end} src={s.plate} push={s.push} origin={s.origin}>
+          <Plate key={i} t={t} a={a} b={end} src={s.plate} push={(s.push ?? 0.08) * cam.push} drift={cam.drift} origin={s.origin}>
             {s.lamps?.map((l, j) => <Lamp key={j} t={t} on={l.on ? wordTime(b, l.on) : a + 0.25} x={l.x} y={l.y} r={l.r} cone={l.cone} />)}
             {s.screens?.map((x, j) => <ScreenGlow key={j} t={t} x={x.x} y={x.y} w={x.w} h={x.h} pings={x.pings?.map((p) => wordTime(b, p))} />)}
             {s.rain ? <Rain t={t} amount={s.rain} /> : null}

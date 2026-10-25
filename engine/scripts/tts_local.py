@@ -29,7 +29,18 @@ if x.engine == "kokoro":
     from kokoro import KPipeline
     pipe = KPipeline(lang_code=x.voice[0], repo_id="hexgrad/Kokoro-82M", device=device)  # voice ids start with a (US) or b (UK)
     sr = 24000
-    synth = lambda text, speed=None: np.concatenate([np.asarray(r.audio) for r in pipe(text, voice=x.voice, speed=speed or x.speed)])
+    WORDS = []  # the last line's words with their times (Kokoro reports them per token): exact word timing for the cards
+    def synth(text, speed=None):
+        WORDS.clear()
+        parts, at = [], 0.0
+        for r in pipe(text, voice=x.voice, speed=speed or x.speed):
+            a = np.asarray(r.audio)
+            for tk in (r.tokens or []):
+                if tk.start_ts is not None and tk.text.strip() and any(ch.isalnum() for ch in tk.text):
+                    WORDS.append({"w": tk.text, "s": at + tk.start_ts, "e": at + (tk.end_ts or tk.start_ts)})
+            parts.append(a)
+            at += len(a) / sr
+        return np.concatenate(parts)
 elif x.engine == "parler":
     from parler_tts import ParlerTTSForConditionalGeneration
     from transformers import AutoTokenizer
@@ -49,14 +60,17 @@ else:
 load = time.time() - t0
 
 # Same loudness for every voice, lead and tail silence trimmed: voiced RMS to -20 dBFS, peak capped at -1 dBFS (af_heart came out 3 dB quieter than am_fenrir).
+TRIM = [0]  # samples cut from the start by level(), so word times can be moved with the audio
 def level(audio):
+    TRIM[0] = 0
     voiced = audio[np.abs(audio) > 0.01]
     if not voiced.size: return audio
     audio = audio * min(0.1 / np.sqrt((voiced ** 2).mean()), 0.891 / np.abs(audio).max())
     # trim the engine's own lead and tail silence to 40 ms: the engine adds the pause between lines (no dead air over 0.5 s)
     loud = np.nonzero(np.abs(audio) > 0.02)[0]
     keep = int(0.04 * sr)
-    return audio[max(0, loud[0] - keep): loud[-1] + keep] if loud.size else audio
+    TRIM[0] = max(0, loud[0] - keep) if loud.size else 0
+    return audio[TRIM[0]: loud[-1] + keep] if loud.size else audio
 
 jobs = json.load(open(x.jobs)) if x.jobs else [{"text": x.text, "out": x.out}]  # a job may set its own "speed" (a line's pace)
 for j in jobs:
@@ -64,5 +78,8 @@ for j in jobs:
     audio = level(np.asarray(synth(j["text"], j.get("speed")), dtype=np.float32))
     render = time.time() - t1
     sf.write(j["out"], audio, sr)
+    if x.engine == "kokoro" and WORDS:  # <out>.words.json: [{w, s, e}] in seconds of this clip
+        shift = TRIM[0] / sr
+        json.dump([{"w": w["w"], "s": round(max(0, w["s"] - shift), 3), "e": round(max(0, w["e"] - shift), 3)} for w in WORDS], open(j["out"].rsplit(".", 1)[0] + ".words.json", "w"))
     secs = len(audio) / sr
     print(json.dumps({"engine": x.engine, "voice": x.voice or "default", "seconds": round(secs, 2), "render_s": round(render, 2), "load_s": round(load, 2), "rtf": round(render / secs, 3), "device": device}), flush=True)

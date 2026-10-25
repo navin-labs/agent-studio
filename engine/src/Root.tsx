@@ -21,6 +21,9 @@ import {FLAT_FRAMES, FlatVelcro} from './fx/demos/FlatVelcro';
 import {ED_FRAMES, EdVelcro} from './fx/demos/EdVelcro';
 import {AMB_FRAMES, AmbC1} from './fx/demos/AmbC1';
 import {MEM_FRAMES, MemC2} from './fx/demos/MemC2';
+import {MOVES_FRAMES, MovesDemo} from './fx/demos/Moves';
+import {KINETIC_FRAMES, KineticProof} from './fx/demos/KineticProof';
+import {NETPROOF_FRAMES, NetProof} from './fx/demos/NetProof';
 import {DOODLE_FRAMES, DoodleC1} from './fx/demos/DoodleC1';
 import {THUMB, Thumbnail, type ThumbnailProps} from './thumbnail/Thumbnail';
 import {REEL} from './theme';
@@ -91,6 +94,12 @@ export const Root: React.FC = () => (
     <Still id="Thumbnail" component={Thumbnail} width={THUMB.w} height={THUMB.h} defaultProps={{text: 'Who drew the *first* barcode?', theme: 'archive', handle: '@backstory.minute'} satisfies ThumbnailProps} />
     <Still id="MascotConcept" component={ConceptSheet} width={REEL.w} height={REEL.h} defaultProps={{concept: 0} satisfies ConceptProps} />
     <Composition id="DoodleC1" component={DoodleC1} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={DOODLE_FRAMES} />
+    <Composition id="moves-kinetic" component={MovesDemo} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={MOVES_FRAMES} defaultProps={{block: 'kinetic' as const}} />
+    <Composition id="moves-glass" component={MovesDemo} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={MOVES_FRAMES} defaultProps={{block: 'glass' as const}} />
+    <Composition id="moves-grain" component={MovesDemo} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={MOVES_FRAMES} defaultProps={{block: 'grain' as const}} />
+    <Composition id="moves-pop-bold" component={MovesDemo} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={MOVES_FRAMES} defaultProps={{block: 'pop-bold' as const}} />
+    <Composition id="KineticProof" component={KineticProof} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={KINETIC_FRAMES} />
+    <Composition id="NetProof" component={NetProof} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={NETPROOF_FRAMES} />
     <Composition id="MemC2" component={MemC2} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={MEM_FRAMES} />
     <Composition id="AmbC1" component={AmbC1} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={AMB_FRAMES} />
     <Composition id="EdVelcro" component={EdVelcro} width={REEL.w} height={REEL.h} fps={FPS} durationInFrames={ED_FRAMES} />

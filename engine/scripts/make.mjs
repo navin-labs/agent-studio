@@ -536,7 +536,7 @@ const renderReel = async (script, place) => {
     const files = {video: path.basename(name('mp4')), caption: path.basename(name('caption.txt')), ...(v.thumbnail ? {thumbnail: path.basename(name('thumbnail.png'))} : {})};
     const sha = crypto.createHash('sha256').update(fs.readFileSync(name('mp4'))).digest('hex');
     const {platform: _p, ...destination} = v.publisher;
-    fs.writeFileSync(name('manifest.json'), JSON.stringify({channel: script.channel, platform: v.platform, video_id: script.id, date: script.date, style_version: script.preset.id, voice: voice ?? null, cta_kind: v.kind, cta_text: v.text.replace(/\*/g, ''), cta_say: script.scenes.at(-1).vo, end_card_handle: script.handle || null, destination: {via: destination.via, handle: destination.handle, ...(destination.page_id ? {page_id: destination.page_id} : {})}, size: v.size, video_sha256: sha, qa_status: 'pending', files}, null, 2) + '\n');
+    fs.writeFileSync(name('manifest.json'), JSON.stringify({channel: script.channel, platform: v.platform, video_id: script.id, date: script.date, style_version: script.preset.id, ...(script.direction ? {fingerprint: script.direction.style} : {}), voice: voice ?? null, cta_kind: v.kind, cta_text: v.text.replace(/\*/g, ''), cta_say: script.scenes.at(-1).vo, end_card_handle: script.handle || null, destination: {via: destination.via, handle: destination.handle, ...(destination.page_id ? {page_id: destination.page_id} : {})}, size: v.size, video_sha256: sha, qa_status: 'pending', files}, null, 2) + '\n');
   }
   return errs === 0 && !(long && voiced);
 };

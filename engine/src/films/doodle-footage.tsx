@@ -30,7 +30,6 @@ export const Film: React.FC = () => {
   const fly = flyShot >= 0 ? wordTime(lines[flyShot], shots[flyShot].fly!) : undefined;
   if (icons) IX(icons.count).forEach((_, j) => cues.push([wordTime(lines[born], icons.at) + j * 0.18, 'pop', 0.2]));
   if (tick !== undefined && icons) IX(icons.count).forEach((_, j) => cues.push([tick + j * 0.3, 'pen', 0.25]));
-  if (fly !== undefined) cues.push([fly, 'swish', 0.3]);
   // the doodle pops on a scribble or on a face change
   const pops = shots.map((s, j) => (s.scribble ? wordTime(lines[j], s.scribble.at) : j && face(j) !== face(j - 1) ? lines[j].start : -9));
   return (
@@ -46,8 +45,9 @@ export const Film: React.FC = () => {
           return <Img key={`${j}-${n}`} src={staticFile(x.src)} style={{position: 'absolute', left: x.x - x.w / 2, top: x.y - x.w / 2, width: x.w, filter: `drop-shadow(0 0 0 ${th.ink}) drop-shadow(6px 6px 0 ${th.bg})`, scale: String(k(t, [at, at + 0.3], [0, 1], BACK)), rotate: `${Math.sin(t * 2 + n) * 3}deg`}} />;
         }),
       )}
-      {shots.map((s, j) => (s.scribble ? (cues.push([wordTime(lines[j], s.scribble.at), 'pen', 0.35]), <Scribble key={j} t={t} at={wordTime(lines[j], s.scribble.at)} until={(lines[j + 1]?.start ?? total) - 0.1} text={s.scribble.text} x={540} y={620} />) : null))}
-      <Doodle t={t} x={470} y={1010} face={face(i)} talk={talk} pop={Math.max(...pops.filter((p) => p <= t), -9)} />
+      {shots.map((s, j) => (s.scribble ? (cues.push([wordTime(lines[j], s.scribble.at), 'pen', 0.35]), <Scribble key={j} t={t} at={wordTime(lines[j], s.scribble.at)} until={(lines[j + 1]?.start ?? total) - 0.1} text={s.scribble.text} x={s.scribble.x ?? 540} y={s.scribble.y ?? 620} />) : null))}
+      {/* off the subject: the shot's place, else the lower third, alternating sides, smaller */}
+      <Doodle t={t} x={shots[i].doodle?.x ?? (i % 2 ? 790 : 290)} y={shots[i].doodle?.y ?? 1130} size={shots[i].doodle?.size ?? 0.7} face={face(i)} talk={talk} pop={Math.max(...pops.filter((p) => p <= t), -9)} />
       {lines.map((b, j) => <Hand key={j} t={t} at={b.vo![0]} end={(lines[j + 1]?.start ?? closer?.start ?? total) - 0.1} text={b.text} dur={b.vo![1] - b.vo![0]} />)}
       {closer && cta.text ? <Hand t={t} at={closer.start} end={total} text={cta.text} dur={0.6} /> : null}
       <Grain opacity={0.14} blend="overlay" />

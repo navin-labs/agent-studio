@@ -58,7 +58,7 @@ export const DreamLine: React.FC<{t: number; at: number; end: number; text: stri
   const words = text.split(' ');
   return (
     // a halo in the suit's background colour keeps the line readable over any plate
-    <div data-tb="caption" style={{position: 'absolute', left: 90, right: 130, bottom: 1920 - y, textAlign: 'center', fontFamily: '"Instrument Serif", serif', fontSize: 72, lineHeight: 1.08, color: th.ink, textShadow: `0 0 4px ${th.bg}, 0 0 12px ${th.bg}, 0 0 28px ${th.bg}, 0 0 48px ${th.bg}`, opacity: k(t, [end - 0.2, end], [1, 0])}}>
+    <div data-tb="caption" style={{position: 'absolute', left: 112, right: 124, bottom: 1920 - y, textAlign: 'center', fontFamily: '"Instrument Serif", serif', fontSize: 72, lineHeight: 1.08, color: th.ink, textShadow: `0 0 4px ${th.bg}, 0 0 12px ${th.bg}, 0 0 28px ${th.bg}, 0 0 48px ${th.bg}`, opacity: k(t, [end - 0.2, end], [1, 0])}}>
       {words.map((w, i) => {
         const wt = at + (i / words.length) * dur;
         return <span key={i} style={{display: 'inline-block', marginRight: '0.25em', opacity: k(t, [wt, wt + 0.18], [0, 1]), translate: `0 ${k(t, [wt, wt + 0.3], [24, 0], OUT)}px`}}>{w}</span>;

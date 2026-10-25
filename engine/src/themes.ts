@@ -18,7 +18,7 @@ export type Theme = {
   reveal?: string; // the reveal (C2: the name and the year the moment they are spoken). Unset: the highlighter uses accent
 };
 
-export type ThemeName = 'paper' | 'ink' | 'mono' | 'studio' | 'night' | 'archive' | 'night-signal' | 'archive-gold' | 'cutaway' | 'scherenschnitt' | 'muster' | 'offset' | 'pop-day' | 'pop-night' | 'linen' | 'periwinkle' | 'signal' | 'journey' | 'editorial' | 'vibrant' | 'dark-luxe' | 'midnight-neon' | 'pastel' | 'earthy' | 'sepia' | 'bauhaus' | 'nordic' | 'sunset' | 'film' | 'sodium-night' | 'indigo-pixel' | 'gold-dream';
+export type ThemeName = 'paper' | 'ink' | 'mono' | 'studio' | 'night' | 'archive' | 'night-signal' | 'archive-gold' | 'cutaway' | 'scherenschnitt' | 'muster' | 'offset' | 'pop-day' | 'pop-night' | 'linen' | 'periwinkle' | 'signal' | 'journey' | 'editorial' | 'vibrant' | 'dark-luxe' | 'midnight-neon' | 'pastel' | 'earthy' | 'sepia' | 'bauhaus' | 'nordic' | 'sunset' | 'film' | 'sodium-night' | 'indigo-pixel' | 'gold-dream' | 'kinetic' | 'glass' | 'grain' | 'pop-bold';
 
 // The themes channels, styles and recipes may name (their schemas list exactly these). The rest are film palettes, each added by
 // the Director for one authored film; a film board may name any theme here.
@@ -128,6 +128,26 @@ export const THEMES: Record<ThemeName, Theme> = {
   'indigo-pixel': {
     bg: '#14123A', surface: '#1D1A4E', ink: '#F2EEFF', muted: '#B0A8E0', rule: '#2A2666',
     accent: '#FFC857', onAccent: '#14123A', flow: '#5CE1E6', ok: '#5CE1E6', alert: '#FF5C8A', warn: '#FFC857', shadow: '#000000',
+  },
+  // Style blocks (2026-10-25, from the Motion Graphics starter kit's four styles, re-skinned as our suits; src/fx/blocks.ts):
+  // kinetic = black, white, one lime key word; glass = soft light page, dark grey type, green ticks, flow/warn/alert = the
+  // drifting blobs (pale blue, peach, lilac); grain = warm paper, ink black, one deep red; pop-bold = flat lime/purple/pink
+  // blocks (accent/flow/alert) with black outlines and hard offset shadows.
+  kinetic: {
+    bg: '#050505', surface: '#141414', ink: '#FFFFFF', muted: '#A3A3A3', rule: '#262626',
+    accent: '#C6FF3D', onAccent: '#050505', flow: '#C6FF3D', ok: '#C6FF3D', alert: '#FF5A4E', warn: '#C6FF3D', shadow: '#000000',
+  },
+  glass: {
+    bg: '#EEF0F7', surface: '#FFFFFF', ink: '#1D1D1F', muted: '#5E5E66', rule: '#D9DBE5',
+    accent: '#17773A', onAccent: '#FFFFFF', flow: '#A9C8F5', ok: '#17773A', alert: '#CDB8F2', warn: '#F7C9AE', shadow: '#1D1D1F',
+  },
+  grain: {
+    bg: '#EFE8DC', surface: '#F7F2E9', ink: '#1A1A1A', muted: '#5A544B', rule: '#D8CFBF',
+    accent: '#A8361F', onAccent: '#F7F2E9', flow: '#A8361F', ok: '#1A1A1A', alert: '#A8361F', warn: '#A8361F', shadow: '#1A1A1A',
+  },
+  'pop-bold': {
+    bg: '#F4F1E8', surface: '#FFFFFF', ink: '#111111', muted: '#444444', rule: '#111111',
+    accent: '#C6FF3D', onAccent: '#111111', flow: '#8A3CFF', ok: '#111111', alert: '#FF4FD8', warn: '#C6FF3D', shadow: '#111111',
   },
   'gold-dream': {
     bg: '#081226', surface: '#0F1D38', ink: '#F7EBD3', muted: '#B8C2D9', rule: '#1A2B4F',

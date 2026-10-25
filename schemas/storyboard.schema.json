@@ -208,6 +208,7 @@
           "pattern": "^[0-9]{3,4}$",
           "description": "the story's year, shown by the year-flap opener"
         },
+        "idea": {"type": "string", "minLength": 20, "description": "The film in one plain sentence, written before anything else (script first); no direction starts without it"},
         "hook_image": {"type": "string", "minLength": 12, "description": "The first frame, named concretely (who or what, doing what, where); the Director opens on it"},
         "payoff_image": {"type": "string", "minLength": 12, "description": "The closing picture that pays off the story; the Director ends on it"},
         "structure": {

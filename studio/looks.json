@@ -1,13 +1,13 @@
 {
   "about": "The film style catalogue (docs/CREATIVE_BIBLE.md sections 11, 12, 14). A film is one format x one look x one colour suit (a theme in engine/src/themes.ts). studio/styles.ts picks a combination that fits the story and is unlike the channel's recent films. Add a look or a suit here; a new format needs engine code (engine/src/fx).",
   "formats": {
-    "editorial-object": {"name": "A. Editorial Object", "reference": "Video-93990", "assets": "photo cut-out", "fx": "src/fx/editorial.tsx"},
-    "duotone-story": {"name": "B. Duotone Story", "reference": "Video-28089", "assets": "photo cut-out", "fx": "src/fx/duotone.tsx"},
-    "network-line": {"name": "C. Network Line", "reference": "Video-40262", "assets": "none (code-native)", "fx": "src/fx/network.tsx"},
-    "flat-journey": {"name": "D. Flat Journey", "reference": "Video-45335", "assets": "illustration plates", "fx": "src/fx/journey.tsx"},
-    "memory-windows": {"name": "E. Memory Windows", "reference": "Video-84390", "assets": "dream scene + footage windows", "fx": "src/fx/windows.tsx", "band": {"hook": 148, "perS": 35}},
-    "doodle-footage": {"name": "F. Doodle on Footage", "reference": "Video-90405", "assets": "footage plate", "fx": "src/fx/doodle.tsx", "band": {"hook": 103, "perS": 68}},
-    "ambient-scenes": {"name": "G. Ambient Scenes", "reference": "Video-65602, Video-40696", "assets": "painted or pixel scenes", "fx": "src/fx/ambient.tsx", "band": {"hook": 28, "perS": 10}}
+    "editorial-object": {"name": "A. Editorial Object", "reference": "Video-93990", "assets": "photo cut-out", "fx": "src/fx/editorial.tsx", "cameras": ["push-in", "static"]},
+    "duotone-story": {"name": "B. Duotone Story", "reference": "Video-28089", "assets": "photo cut-out", "fx": "src/fx/duotone.tsx", "cameras": ["push-in", "drift"]},
+    "network-line": {"name": "C. Network Line", "reference": "Video-40262", "assets": "none (code-native)", "fx": "src/fx/network.tsx", "cameras": ["orbit", "push-in"]},
+    "flat-journey": {"name": "D. Flat Journey", "reference": "Video-45335", "assets": "illustration plates", "fx": "src/fx/journey.tsx", "cameras": ["drift", "push-in"]},
+    "memory-windows": {"name": "E. Memory Windows", "reference": "Video-84390", "assets": "dream scene + footage windows", "fx": "src/fx/windows.tsx", "band": {"hook": 148, "perS": 35}, "cameras": ["push-in", "drift"]},
+    "doodle-footage": {"name": "F. Doodle on Footage", "reference": "Video-90405", "assets": "footage plate", "fx": "src/fx/doodle.tsx", "band": {"hook": 103, "perS": 68}, "cameras": ["static"]},
+    "ambient-scenes": {"name": "G. Ambient Scenes", "reference": "Video-65602, Video-40696", "assets": "painted or pixel scenes", "fx": "src/fx/ambient.tsx", "band": {"hook": 28, "perS": 10}, "cameras": ["push-in", "drift", "static"]}
   },
   "looks": {
     "photo-bw": {"medium": "studio photograph, plain light background, soft shadow", "grade": "bw", "texture": "grain", "motion": "smooth", "formats": ["editorial-object"], "suits": ["editorial", "dark-luxe", "nordic", "bauhaus"], "fit": ["any"]},
@@ -38,5 +38,5 @@
     "cosmic-painting": {"medium": "dreamlike oil painting, rich impasto brush texture, glowing cinematic light, deep blue and gold, no people, no text", "grade": "none", "texture": "grain", "motion": "smooth", "formats": ["memory-windows"], "suits": ["midnight-neon", "gold-dream", "dark-luxe"], "fit": ["science", "history", "any"]},
     "pixel-night": {"medium": "detailed pixel art night scene, lo-fi, warm window lights, no people, no text", "grade": "none", "texture": "none", "motion": "stepped", "formats": ["ambient-scenes"], "suits": ["indigo-pixel", "sodium-night", "midnight-neon"], "fit": ["mood", "city", "any"]}
   },
-  "rules": {"lookWindow": 6, "suitWindow": 3, "formatWindow": 1, "hookWindow": 1, "structureWindow": 2, "ctaWindow": 2, "fingerprintWindow": 8, "fingerprintMax": 3}
+  "rules": {"lookWindow": 6, "suitWindow": 3, "formatWindow": 1, "hookWindow": 1, "structureWindow": 2, "ctaWindow": 2, "fingerprintWindow": 8, "fingerprintMax": 4, "cameraWindow": 1}
 }

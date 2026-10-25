@@ -10,8 +10,8 @@ export type Issue = {level: 'error' | 'warning'; frame: number; scene: number; p
 // Platform UI covers parts of the frame; text must sit inside every profile the video is posted to.
 // ponytail: every board is checked against all profiles (one cut posts everywhere); per-board platform lists when a channel skips one.
 export const SAFE_ZONES: Record<string, Rect> = {
-  instagram: {x: 60, y: 250, w: 960, h: 1250}, // header on top; caption and buttons below 1500
-  youtube: {x: 60, y: 180, w: 900, h: 1350}, // like/comment/share column on the right 120 px; title and channel below 1530
+  instagram: {x: 108, y: 250, w: 864, h: 1250}, // header on top; caption and buttons below 1500; the middle 80% of the width (phones crop the sides)
+  youtube: {x: 108, y: 180, w: 852, h: 1350}, // like/comment/share column on the right 120 px; title and channel below 1530; 80% width
 };
 const TOL = 2; // px of anti-aliasing slack
 
@@ -41,17 +41,18 @@ export const checkTextBoxes = (frames: FrameBoxes[], zones = SAFE_ZONES): Issue[
 
 if (import.meta.main) {
   const {default: assert} = await import('node:assert');
-  const t = (r: Partial<TextBox>): TextBox => ({scene: 0, primitive: 'p', role: 'text', text: 't', x: 100, y: 400, w: 200, h: 50, ...r});
+  const t = (r: Partial<TextBox>): TextBox => ({scene: 0, primitive: 'p', role: 'text', text: 't', x: 120, y: 400, w: 200, h: 50, ...r});
   assert.deepEqual(checkTextBoxes([{frame: 0, boxes: [t({})]}]), [], 'a box inside the safe area passes');
   assert.equal(checkTextBoxes([{frame: 0, boxes: [t({y: 200})]}])[0].level, 'error', 'above the IG header fails');
   assert.equal(checkTextBoxes([{frame: 0, boxes: [t({x: 900, w: 200})]}]).length, 2, 'off the right edge fails on both platforms');
-  assert.match(checkTextBoxes([{frame: 0, boxes: [t({x: 800, w: 200})]}])[0].problem, /youtube/, 'text under the Shorts button column fails only on youtube');
-  assert.equal(checkTextBoxes([{frame: 0, boxes: [t({x: 800, w: 200})]}]).length, 1, 'but passes instagram');
-  assert.match(checkTextBoxes([{frame: 0, boxes: [t({box: {x: 100, y: 400, w: 150, h: 50}})]}])[0].problem, /overflows/, 'wider than its card fails');
-  assert.equal(checkTextBoxes([{frame: 0, boxes: [t({x: 101, box: {x: 100, y: 400, w: 200, h: 50}})]}]).length, 0, '1px anti-alias slack passes');
+  assert.match(checkTextBoxes([{frame: 0, boxes: [t({x: 770, w: 195})]}])[0].problem, /youtube/, 'text under the Shorts button column fails only on youtube');
+  assert.equal(checkTextBoxes([{frame: 0, boxes: [t({x: 770, w: 195})]}]).length, 1, 'but passes instagram');
+  assert.match(checkTextBoxes([{frame: 0, boxes: [t({box: {x: 120, y: 400, w: 150, h: 50}})]}])[0].problem, /overflows/, 'wider than its card fails');
+  assert.equal(checkTextBoxes([{frame: 0, boxes: [t({x: 121, box: {x: 120, y: 400, w: 200, h: 50}})]}]).length, 0, '1px anti-alias slack passes');
   const cap = t({role: 'caption', y: 420});
   assert.equal(checkTextBoxes([{frame: 0, boxes: [t({}), cap]}])[0].level, 'warning', 'caption over shot text warns');
   assert.equal(checkTextBoxes([0, 1, 2].map((frame) => ({frame, boxes: [t({y: 200 - frame})]}))).length, 1, 'same problem is reported once per scene, even as it moves');
   assert.match(checkTextBoxes([{frame: 0, boxes: [t({cut: true})]}])[0].problem, /cut off/, 'clipped text fails');
+  assert.equal(checkTextBoxes([{frame: 0, boxes: [t({x: 80})]}]).length, 2, 'outside the middle 80% of the width fails');
   console.log('textcheck ok');
 }

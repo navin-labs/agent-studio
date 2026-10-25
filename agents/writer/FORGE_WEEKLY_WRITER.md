@@ -108,7 +108,7 @@ Structure, in this order:
 8. **Payoff at about 70%, as a picture:** close the gap the hook opened, and end on an image, not a summary line (the cart riding into the sunset, the pin in a museum case, today's shoe strap closing). Name it in `meta.payoff_image`. For a history story, real archival photos near the end prove the animated story true.
 9. **Loop:** the last spoken line reuses a key word of the hook, so a replay feels natural.
 
-Idea first: write the one-line idea, the hook and the payoff in plain words before anything else. If the idea is only interesting with effects, rewrite the idea.
+Idea first: write the one-line idea (`meta.idea`), the hook and the payoff picture in plain words before anything else. If the idea is only interesting with effects, rewrite the idea. The Director cannot start a film without `meta.idea`, `meta.hook_image` and `meta.payoff_image`.
 
 Vary the build, not just the topic. Each script declares `meta.structure` (story, essay, teardown, before-after, myth-bust, gag; never a countdown or list: one surprising story beats seven thin ones) and `meta.cta` (none, question, save, comment-keyword, follow-series). The hook's type is read from line 1 (question, number, contradiction, "you", scene). The style gate refuses a film whose hook type repeats the previous film, or whose structure or CTA repeats either of the last two. It also refuses a film that matches any of the last 8 on four or more axes. For a recurring world, add `meta.series` ({"name", "part", "of"}): the parts keep one look, and each part has a new idea.
 
@@ -119,6 +119,7 @@ One idea per line, at most 22 words. Declare what you used in `meta.devices` (an
   "devices": ["novelty", "reveal", "contrast", "proof", "stakes", "loop"],
   "proof": {"fact": "US patent 2,717,437 (1955)", "source": "https://patents.google.com/patent/US2717437A/en"},
   "structure": "story", "cta": "none",
+  "idea": "A dog's walk in the Alps gave the world Velcro.",
   "hook_image": "burrs clinging to a dog's fur on an Alpine path",
   "payoff_image": "a modern shoe strap closing with a rip"}
 ```

@@ -10,13 +10,13 @@ import {useTheme} from '../themes';
 const mix = (c: string, p: number) => `color-mix(in srgb, ${c} ${p}%, transparent)`;
 
 // The plate: cover the frame, a very slow push and a breath of sideways drift; dips to black at its edges (the cut).
-export const Plate: React.FC<{t: number; a: number; b: number; src: string; dim?: number; push?: number; origin?: string; children?: React.ReactNode}> = ({t, a, b, src, dim = 0, push = 0.08, origin = '50% 50%', children}) => {
+export const Plate: React.FC<{t: number; a: number; b: number; src: string; dim?: number; push?: number; origin?: string; drift?: number; children?: React.ReactNode}> = ({t, a, b, src, dim = 0, push = 0.08, origin = '50% 50%', drift = 8, children}) => {
   if (t < a - 0.3 || t > b + 0.3) return null;
   const o = Math.min(k(t, [a - 0.3, a + 0.2], [0, 1], OUT), k(t, [b - 0.2, b + 0.3], [1, 0], IN));
   const s = 1.02 + k(t, [a, b], [0, push]);
   return (
     <div style={{position: 'absolute', inset: 0, opacity: o}}>
-      <div style={{position: 'absolute', inset: 0, scale: String(s), transformOrigin: origin, translate: `${Math.sin(t * 0.35) * 8}px 0`}}>
+      <div style={{position: 'absolute', inset: 0, scale: String(s), transformOrigin: origin, translate: `${Math.sin(t * 0.35) * drift}px 0`}}>
         <Img src={staticFile(src)} style={{width: 1080, height: 1920, objectFit: 'cover', filter: dim ? `brightness(${1 - dim})` : undefined}} />
         {children}
       </div>
@@ -99,7 +99,7 @@ export const Whisper: React.FC<{t: number; at: number; end: number; text: string
   const words = text.split(' ');
   const o = k(t, [end - 0.25, end], [1, 0]);
   return (
-    <div data-tb="caption" style={{position: 'absolute', left: 90, right: 130, bottom: 1920 - 1460, textAlign: 'center', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 52, lineHeight: 1.25, color: th.ink, textShadow: `0 2px 18px ${mix(th.shadow, 90)}`, opacity: o}}>
+    <div data-tb="caption" style={{position: 'absolute', left: 112, right: 124, bottom: 1920 - 1460, textAlign: 'center', fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 52, lineHeight: 1.25, color: th.ink, textShadow: `0 2px 18px ${mix(th.shadow, 90)}`, opacity: o}}>
       {words.map((w, i) => (
         <span key={i} style={{opacity: k(t, [at + (i / words.length) * dur, at + (i / words.length) * dur + 0.2], [0, 1]), marginRight: '0.28em'}}>{w}</span>
       ))}

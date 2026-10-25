@@ -20,8 +20,8 @@ assert.ok(looks.size >= 12, `60 films should use at least 12 looks, used ${looks
 assert.strictEqual(formats.size, Object.keys(CATALOGUE.formats).length, `60 films should use every format, used ${[...formats].join(', ')}`);
 assert.match(styleErrors({format: 'network-line', look: 'pencil-sketch', suit: 'linen'}, []).join(), /not made for format/);
 assert.match(styleErrors(recent.at(-1)!, recent).join(), /last 6 films/);
-const base: Style = {format: 'ambient-scenes', look: 'pixel-night', suit: 'indigo-pixel', hook: 'number', structure: 'story', cta: 'none'};
-assert.match(styleErrors({...base, look: 'painted-night', suit: 'sodium-night', format: 'ambient-scenes'}, [base, {format: 'network-line', look: 'light-network', suit: 'signal'}]).join(), /fingerprint: shares format, hook, structure, cta/);
+const base: Style = {format: 'ambient-scenes', look: 'pixel-night', suit: 'indigo-pixel', camera: 'drift', hook: 'number', structure: 'story', cta: 'none'};
+assert.match(styleErrors({...base, look: 'painted-night', suit: 'sodium-night', format: 'ambient-scenes'}, [base, {format: 'network-line', look: 'light-network', suit: 'signal'}]).join(), /fingerprint: shares format, camera, hook, structure, cta/);
 assert.match(styleErrors({...base, format: 'network-line', look: 'light-network', suit: 'signal'}, [base]).join(), /hook number was used/);
 const part2 = chooseStyle([{...base, series: 'night-shift'}], 'automation', 1, CATALOGUE, {hook: 'question', structure: 'before-after', cta: 'follow-series', series: 'night-shift'});
 assert.deepStrictEqual([part2.format, part2.look, part2.suit], [base.format, base.look, base.suit], 'part 2 of a series stays in its world');

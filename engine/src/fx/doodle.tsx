@@ -46,10 +46,10 @@ export const FilmPlate: React.FC<{t: number; src: string; rate?: number; cuts?: 
 export type Face = 'tired' | 'shock' | 'calm' | 'happy';
 
 // The character: a round head with hands; `talk` opens the mouth with the voice, `face` sets eyes, mouth and hands.
-export const Doodle: React.FC<{t: number; x: number; y: number; face: Face; talk: boolean; pop?: number}> = ({t, x, y, face, talk, pop = 0}) => {
+export const Doodle: React.FC<{t: number; x: number; y: number; face: Face; talk: boolean; pop?: number; size?: number}> = ({t, x, y, face, talk, pop = 0, size = 1}) => {
   const th = useTheme();
   const {pen, paper} = penPaper(th);
-  const s = k(t, [0.1, 0.45], [0, 1], BACK) * (1.25 + 0.15 * Math.max(0, 1 - Math.abs(t - pop) * 5));
+  const s = size * k(t, [0.1, 0.45], [0, 1], BACK) * (1.25 + 0.15 * Math.max(0, 1 - Math.abs(t - pop) * 5));
   const open = talk ? 6 + 20 * Math.abs(Math.sin(t * 13)) : 0;
   const st = {fill: 'none', stroke: pen, strokeWidth: 8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const};
   const eyes = {
@@ -99,7 +99,7 @@ export const Hand: React.FC<{t: number; at: number; end: number; text: string; d
   if (t < at - 0.1 || t > end) return null;
   const words = text.split(' ');
   return (
-    <div data-tb="caption" style={{position: 'absolute', left: 90, right: 130, bottom: 1920 - y, textAlign: 'center', fontFamily: '"Bradley Hand", "Chalkboard SE", cursive', fontWeight: 700, fontSize: size, lineHeight: 1.12, color: th.ink, textShadow: `0 0 10px ${th.surface}, 0 0 4px ${th.surface}, 0 0 2px ${th.surface}`, opacity: k(t, [end - 0.2, end], [1, 0])}}>
+    <div data-tb="caption" style={{position: 'absolute', left: 112, right: 124, bottom: 1920 - y, textAlign: 'center', fontFamily: '"Bradley Hand", "Chalkboard SE", cursive', fontWeight: 700, fontSize: size, lineHeight: 1.12, color: th.ink, textShadow: `0 0 10px ${th.surface}, 0 0 4px ${th.surface}, 0 0 2px ${th.surface}`, opacity: k(t, [end - 0.2, end], [1, 0])}}>
       {words.map((w, i) => {
         const wt = at + (i / words.length) * dur;
         return <span key={i} style={{display: 'inline-block', marginRight: '0.24em', opacity: t >= wt ? 1 : 0, rotate: `${jit(wt, i, 4)}deg`, scale: String(k(t, [wt, wt + 0.15], [1.25, 1], BACK))}}>{w}</span>;

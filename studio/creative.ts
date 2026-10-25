@@ -14,7 +14,7 @@ import type {Storyboard} from '../engine/src/composer/storyboard.ts';
 import {type Brief, COORDS, type Coords} from '../engine/src/films/brief.ts';
 import {appendJsonl, PATHS, readJsonl} from './ledger.ts';
 import {topicSimilarity} from './novelty.ts';
-import {hookType} from './script.ts';
+import {hookType, scriptErrors} from './script.ts';
 import {chooseStyle, readyCatalogue, type Style, styleErrors} from './styles.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
@@ -155,7 +155,11 @@ if (import.meta.main) {
     process.exit(errs.length ? 1 : 0);
   } else if (cmd === 'style' && a) {
     // the story's own axes come from the script; format, look and suit are chosen against the channel's recent films
-    const doc = load(a) as Storyboard & {channel: string; meta?: {structure?: string; cta?: string; series?: {name: string}; fit?: string}};
+    const doc = load(a) as Storyboard & {channel: string; meta?: {structure?: string; cta?: string; series?: {name: string}; fit?: string; idea?: string; hook_image?: string; payoff_image?: string}};
+    // script first: no direction starts until the words work on their own (the idea, the hook, the payoff picture)
+    const words = (s?: string) => (s ?? '').trim().split(/\s+/).filter(Boolean).length;
+    const first = [...scriptErrors(doc as never), ...(words(doc.meta?.idea) >= 6 ? [] : ['idea: meta.idea is the film in one plain sentence (6 words or more); write it before any direction']), ...(words(doc.meta?.hook_image) >= 4 ? [] : ['hook_image: name the first frame']), ...(words(doc.meta?.payoff_image) >= 4 ? [] : ['payoff_image: name the closing picture'])];
+    if (first.length) (first.forEach((x) => console.log(`FAIL ${x}`)), console.log('script first: fix the board, then run style again'), process.exit(1));
     const before = films.filter((f) => f.id !== doc.id && f.channel === doc.channel && f.style && f.status !== 'rejected').map((f) => f.style!);
     const story = {hook: hookType(doc.scenes.find((s) => s.vo)?.vo ?? ''), structure: doc.meta?.structure, cta: doc.meta?.cta, ...(doc.meta?.series ? {series: doc.meta.series.name} : {})};
     const fit = doc.meta?.fit ?? (doc.channel.startsWith('c2') ? 'history' : 'automation');

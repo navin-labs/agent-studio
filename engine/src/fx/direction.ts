@@ -6,15 +6,17 @@ export type At = string; // a word of the shot's voice line
 type XY = {x: number; y: number}; // pixels in the 1080 x 1920 frame
 export type AmbientShot = {plate: string; push?: number; origin?: string; lamps?: (XY & {r?: number; cone?: number; on?: At})[]; screens?: (XY & {w: number; h: number; pings?: At[]})[]; rain?: number; fog?: number; sunrise?: boolean};
 export type WindowsShot = {plate: string; push?: number; origin?: string; windows?: (XY & {photo: string; at: At; w: number; h: number; from?: 'left' | 'right' | 'below'; tilt?: number; pos?: string})[]; sparks?: At}; // pos: CSS object-position, to frame part of a photo
-export type DoodleShot = {face?: 'tired' | 'shock' | 'calm' | 'happy' /* left out: from the line's voice.feel (FEEL_FACE) */; from?: number; stickers?: (XY & {src: string; at: At; w: number})[]; icons?: {at: At; count: number}; tick?: At; fly?: At; scribble?: {text: string; at: At}}; // icons stay until a later shot's fly; tick checks them one by one
+export type DoodleShot = {face?: 'tired' | 'shock' | 'calm' | 'happy' /* left out: from the line's voice.feel (FEEL_FACE) */; from?: number; stickers?: (XY & {src: string; at: At; w: number})[]; icons?: {at: At; count: number}; tick?: At; fly?: At; scribble?: {text: string; at: At; x?: number; y?: number}; doodle?: XY & {size?: number}}; // icons stay until a later shot's fly; tick checks them one by one
 export type Direction = {
-  style: {format: string; look: string; suit: string; hook?: string; structure?: string; cta?: string; series?: string}; // studio/styles.ts
+  style: {format: string; look: string; suit: string; camera?: string; hook?: string; structure?: string; cta?: string; series?: string}; // studio/styles.ts
   music?: {caption: string; bpm: number; seed?: number};
   footage?: string; // doodle-footage: the footage plate (public/...)
   shots: (AmbientShot | WindowsShot | DoodleShot)[];
 };
 // the doodle's face for a line's feel (the Writer's voice direction), unless the shot sets one
 export const FEEL_FACE: Record<string, 'tired' | 'shock' | 'calm' | 'happy'> = {frustrated: 'tired', tense: 'tired', curious: 'calm', calm: 'calm', surprised: 'shock', urgent: 'shock', warm: 'happy', wry: 'happy', triumphant: 'happy'};
+// the film's camera move (direction.style.camera) as plate motion: how much of the shot's push it keeps, and the sideways drift
+export const cameraMotion = (camera?: string) => (camera === 'static' ? {push: 0.15, drift: 3} : camera === 'drift' ? {push: 0.45, drift: 70} : {push: 1, drift: 8});
 export const FORMAT_FILMS = ['ambient-scenes', 'memory-windows', 'doodle-footage'] as const; // formats with a renderer
 
 const words = (s: string): string[] => s.replace(/\*/g, '').toLowerCase().match(/[a-z0-9%']+/g) ?? [];
