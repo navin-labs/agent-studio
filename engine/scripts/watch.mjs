@@ -73,7 +73,7 @@ function next() {
   if (state[f] === h) return next();
   busy = true;
   const statusFile = f.replace(/\.json$/, '.status.txt');
-  // FILMS=on: a Writer board without a film goes to the Director first (studio/director.ts, about an hour). A film that passes
+  // FILMS=on: a Writer board without a film goes to the Director first (studio/director.ts, run through the cost guard in studio/costguard.ts: $0.40, 6 calls and 5 minutes per run unless COSTGUARD_* is set). A film that passes
   // its review comes back into this folder with "film" set and renders below like any board; one that fails is held, never
   // rendered as primitive shots.
   let board = null;

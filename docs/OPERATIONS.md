@@ -94,3 +94,11 @@ Re-render a board without changing it (for example after fixing `engine/.env`): 
 - Look: `"style"` in `channel.json` (a style preset in `styles/`), or approve Learn's Tier 2 proposal on Telegram.
 - After any code change: `cd engine && npm run check`, then `launchctl kickstart -k` the receiver and the watcher.
 - After changing an n8n workflow file: import, publish, restart n8n (`docs/INSTALL.md` section 6).
+
+## Director cost guard
+Every model call the Director stage makes goes through `studio/costguard.ts`, which cannot be changed from inside a session (the session's edit rights exclude it). Each run writes `engine/test/out/director/<board id>/<run>/run-ledger.json` and prints a table (Stage, Calls, Retries, Tokens In/Out, Cost, Status) when it ends or aborts.
+- **Ceilings per run:** $0.40 (warning at $0.25), 6 calls, 5 minutes, 6,000 input tokens per prompt we send, 2 retries per stage, 1 Critic call.
+- **Free gates first:** a Writer board that fails the script, density or audio-timing gate on specific lines is repaired with a stateless micro-prompt (the failing line, its neighbours and the exact error), at most three attempts, then it waits for a human. The paid Critic runs only after every free gate passes.
+- **No automatic revision:** a held film is never revised by itself. Read the critic's notes, then rerun with `node studio/director.ts <board> --approve-retry` to approve one revision (a new run, a new budget).
+- **Raising the ceilings (human only):** `COSTGUARD_MAX_USD`, `COSTGUARD_MAX_MS`, `COSTGUARD_MAX_CALLS` in the shell or the watcher's plist. A raised ceiling is printed at the start of the run. A real film session needs far more than the defaults.
+- **Know the limits:** the CLI's own budget flag is checked only between a session's steps, so one cold call can overshoot (a repair call without the lean flags cost $0.71 against a $0.20 flag). The guard refuses a call that would likely cross the ceiling, but the first call of a run is only bounded after the fact.
