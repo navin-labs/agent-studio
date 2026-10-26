@@ -12,6 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import url from 'node:url';
 import {findVariants, variantDir} from '../../studio/variant.ts';
+import {keyOf, loadState} from './watch-state.mjs';
 
 const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
 const DIRS = [path.join(ROOT, 'content', 'storyboards')];
@@ -50,11 +51,11 @@ const jsonFiles = () =>
 
 fs.mkdirSync(path.dirname(STATE), {recursive: true});
 const firstRun = !fs.existsSync(STATE);
-const state = firstRun ? {} : JSON.parse(fs.readFileSync(STATE, 'utf8'));
+const state = firstRun ? {} : loadState(JSON.parse(fs.readFileSync(STATE, 'utf8')), ROOT); // keys are relative to engine/ (scripts/watch-state.mjs)
 const save = () => fs.writeFileSync(STATE, JSON.stringify(state, null, 2));
 if (firstRun) {
   // scripts that already exist (the examples) are treated as done
-  for (const f of jsonFiles()) state[f] = hash(f);
+  for (const f of jsonFiles()) state[keyOf(ROOT, f)] = hash(f);
   save();
 }
 
@@ -70,7 +71,7 @@ function next() {
   const f = queue.shift();
   if (!fs.existsSync(f)) return next();
   const h = hash(f);
-  if (state[f] === h) return next();
+  if (state[keyOf(ROOT, f)] === h) return next();
   busy = true;
   const statusFile = f.replace(/\.json$/, '.status.txt');
   // FILMS=on: a Writer board without a film goes to the Director first (studio/director.ts, run through the cost guard in studio/costguard.ts: $0.40, 6 calls and 5 minutes per run unless COSTGUARD_* is set). A film that passes
@@ -88,7 +89,7 @@ function next() {
     const said = [];
     d.stdout.on('data', (x) => said.push(String(x)));
     d.on('close', (code) => {
-      state[f] = h;
+      state[keyOf(ROOT, f)] = h;
       save();
       if (code !== 0) fs.writeFileSync(statusFile, `film held ${new Date().toISOString()} (not rendered)\n\n${said.join('')}`), log(`film held ${path.relative(ROOT, f)}`);
       busy = false;
@@ -105,7 +106,7 @@ function next() {
   p.on('close', (code) => {
     const text = out.join('').replace(/\x1b\[[0-9;]*m/g, '').replace(/\r/g, '\n');
     // ponytail: a failed file is not retried until it changes; rewrite it to retry after a network error
-    state[f] = h;
+    state[keyOf(ROOT, f)] = h;
     save();
     // QA every variant that rendered (a variant that failed to render is reported by QA as not rendered); its exact errors land in
     // the status file for Forge. Exit 1 = something the Writer fixes; a variant held only because its account is not set up is not.

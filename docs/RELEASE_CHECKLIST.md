@@ -18,8 +18,9 @@ Run before any change goes live or a channel is switched to `"live": true`. Ever
 - [ ] A dry run (`node studio/dispatch.ts`, no flags) lists exactly the expected variants and destinations.
 - [ ] YouTube credentials per channel point at the right channel; scopes reviewed in the Google console.
 - [ ] Upload one test video with `--hold` (private) and confirm it in YouTube Studio before enabling schedules.
-- [ ] **Launch agents point at `~/Dev/projects/agent-studio`, which no longer exists** (hourly tick failing since the rename; docs/RUNBOOK.md). Reinstall them from this folder as the RUNBOOK says; this also restarts the receiver and the tick together on the new code.
+- [x] Launch agents recovered from this folder on 2026-10-26 (docs/RUNBOOK.md): receiver on the current code and SQLite lock; tick loaded with `DISPATCH_LIVE=off` and `EXPERIMENTS=off` (remove them only to go live); watcher loaded with `FILMS=off`.
 - [ ] Restart the approve receiver AND the tick together on this code (the old receiver uses the old file lock, which does not exclude the new SQLite lock). Exactly one of each. Do not restart anything until you decide to.
+- [ ] **Before installing the Queue Publisher skill in Forge:** three queued items are 16+ days overdue (c2-reach Instagram `c2-2026-w41-2` and `c2-2026-w41-3`, Facebook `c2-2026-w41-3`) and the Publisher would post them at once. Decide per item: post, or hold.
 - [ ] Back up `state/` (see [RUNBOOK.md](RUNBOOK.md)).
 - [ ] Only then: `DISPATCH_LIVE=on`, `"live": true` for the channel.
 
