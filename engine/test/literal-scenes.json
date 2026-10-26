@@ -1,0 +1,18 @@
+{
+  "format": "storyboard",
+  "id": "literal-scenes",
+  "channel": "c2-knowledge",
+  "style": "c2-literal-test",
+  "hookPattern": "question",
+  "caption": "Literal scenes test.",
+  "hashtags": ["#test"],
+  "meta": {"case": "LITERAL TEST", "idea_id": "literal-scenes", "recipe_id": "literal-scenes", "hero_metaphor": "objects acting out the sentence", "devices": ["contrast"], "structure": "before-after", "cta": "none"},
+  "scenes": [
+    {"primitive": "composite", "params": {"query": "messy nightstand bedroom morning", "objectNoun": "glasses", "actionMode": "missing-ghost"}, "vo": "You wake up, reach for the nightstand, and your *glasses* are gone."},
+    {"primitive": "composite", "transition": "fold", "params": {"query": "server room cables", "objectNoun": "lock", "actionMode": "spotlight-search"}, "vo": "Somewhere in this room, a *lock* has been picked."},
+    {"primitive": "composite", "transition": "fold", "params": {"query": "watchmaker gears workshop", "objectNoun": "stopwatch", "actionMode": "rack-focus-reveal"}, "vo": "Then the *stopwatch* shows half a second lost."},
+    {"primitive": "composite", "transition": "fold", "params": {"query": "wooden shipping crate warehouse", "objectNoun": "key", "actionMode": "zoom-through"}, "vo": "The *key* was hiding inside the crate all along."},
+    {"primitive": "composite", "transition": "fold", "params": {"query": "city street night rain", "objectNoun": "magnifying glass", "actionMode": "split-action"}, "vo": "Before the *magnifying glass*, nothing. After, everything."},
+    {"primitive": "end-card", "transition": "fold", "params": {"text": "Follow", "sub": "More like this."}, "vo": "Follow for more."}
+  ]
+}

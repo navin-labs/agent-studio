@@ -170,6 +170,28 @@ export const resolvePlates = async (doc: {scenes: {primitive: string; params?: R
   return out;
 };
 
+// the literal prop of a scene: a colour SVG of its noun from Iconify's emoji sets (no key), cached like a plate;
+// null when no set has one, and the scene is then just its plate
+export const resolveObject = async (noun: string) => {
+  const slug = noun.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const cached = path.join(CACHE, 'objects', `${slug}.svg`);
+  if (!fs.existsSync(cached)) {
+    const hit = (await (await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(noun)}&limit=1&prefixes=noto,fluent-emoji-flat,twemoji`)).json()).icons?.[0] as string | undefined;
+    if (!hit) return null;
+    const [prefix, name] = hit.split(':');
+    const res = await fetch(`https://api.iconify.design/${prefix}/${name}.svg?height=512`);
+    if (!res.ok) return null;
+    fs.mkdirSync(path.dirname(cached), {recursive: true});
+    fs.writeFileSync(cached, await res.text());
+  }
+  const dst = path.join(PUBLIC, 'objects', `${slug}.svg`);
+  fs.mkdirSync(path.dirname(dst), {recursive: true});
+  fs.copyFileSync(cached, dst);
+  return `media/objects/${slug}.svg`;
+};
+export const resolveObjects = async (doc: {scenes: {params?: Record<string, unknown>}[]}) =>
+  Promise.all(doc.scenes.map(async (sc) => (sc.params?.objectNoun ? await resolveObject(String(sc.params.objectNoun)).catch(() => null) : null)));
+
 // ---- CLI ----
 const arg = (k: string) => (process.argv.includes(k) ? process.argv[process.argv.indexOf(k) + 1] : undefined);
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(import.meta.filename)) {

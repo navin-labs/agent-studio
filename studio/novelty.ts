@@ -74,13 +74,17 @@ export const checkNovelty = (fp: Fingerprint, history: Fingerprint[], o: {themes
     for (const h of before.slice(-LIMITS.topicWindow))
       if (h.topic_text && topicSimilarity(fp.topic_text, h.topic_text) >= LIMITS.topicSimilarity) v('topic', `topic too close to ${h.id} (${h.date}): "${h.topic_text}"`);
 
-  for (const h of mine.slice(-LIMITS.structureWindow)) {
+  // a video of only composites and fixed closers has no drawn shots to compare: its variety is the router's world and the Writer's
+  // per-scene props and action modes (studio/router.ts, engine/src/composer/artgate.ts)
+  const drawn = fp.primitives.some((p) => !['composite', 'end-card', 'host-hook', 'host-payoff', 'host-cta'].includes(p));
+  for (const h of drawn ? mine.slice(-LIMITS.structureWindow) : []) {
     const d = structureDistance(fp.primitives, h.primitives);
     if (d < LIMITS.structureDistance) v('structure', `shot sequence too close to ${h.id} (${h.date}): distance ${d.toFixed(2)} < ${LIMITS.structureDistance}`);
   }
 
-  if (onDay(1)?.opening === fp.opening) v('opening', `opens with ${fp.opening} like yesterday's ${onDay(1)!.id}`);
-  const week = mine.filter((h) => daysBetween(fp.date, h.date) < 7 && h.opening === fp.opening);
+  // a composite opening is a different picture every time (its world, plate and prop); only drawn openings can repeat
+  if (fp.opening !== 'composite' && onDay(1)?.opening === fp.opening) v('opening', `opens with ${fp.opening} like yesterday's ${onDay(1)!.id}`);
+  const week = fp.opening === 'composite' ? [] : mine.filter((h) => daysBetween(fp.date, h.date) < 7 && h.opening === fp.opening);
   if (week.length >= LIMITS.openingPerWeek) v('opening', `${fp.opening} already opened ${week.length} posts in the last 7 days`);
 
   if (fp.hero_metaphor) {

@@ -9,7 +9,7 @@ import {renderStill, selectComposition} from '@remotion/renderer';
 import fs from 'node:fs';
 import path from 'node:path';
 import {sceneFrames} from '../src/composer/storyboard.ts';
-import {resolvePlates} from '../src/lib/mediaHub.ts';
+import {resolveObjects, resolvePlates} from '../src/lib/mediaHub.ts';
 import {history as routerHistory, pick as routerPick} from '../../studio/router.ts';
 
 const args = process.argv.slice(2);
@@ -41,7 +41,7 @@ if (sheet) {
     script.skin = JSON.parse(fs.readFileSync(sf, 'utf8'));
     script.theme = script.skin.theme;
   }
-  if (script.scenes.some((sc) => sc.primitive === 'composite')) script.plates = await resolvePlates(script);
+  if (script.scenes.some((sc) => sc.primitive === 'composite')) { script.plates = await resolvePlates(script); script.objects = await resolveObjects(script); }
   const inputProps = {script};
   const comp = await selectComposition({serveUrl, id: 'BoardSheet', inputProps});
   const file = `${out}/${script.id}${id ? `.${id}` : ''}.sheet.png`;

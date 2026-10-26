@@ -9,6 +9,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import {worldOf} from '../engine/src/composer/worldmap.ts';
 
 const ENGINE = path.join(import.meta.dirname, '..', 'engine');
 const LEDGER = path.join(import.meta.dirname, '..', 'state', 'router.jsonl');
@@ -28,7 +29,7 @@ export const FAMILIES: Record<string, {words: RegExp; styles: string[]}> = {
 };
 export const family = (topic: string) => Object.entries(FAMILIES).find(([, f]) => f.words.test(topic))?.[0] ?? 'data';
 
-export type RouterPick = {topic: string; date: string; style: string; family: string; camera: string; fx: string; display: string; theme: string; pace: string; moves: string[]; grade: string};
+export type RouterPick = {topic: string; date: string; style: string; family: string; camera: string; fx: string; display: string; theme: string; pace: string; world: string; moves: string[]; grade: string};
 type Dna = Pick<RouterPick, 'camera' | 'fx' | 'display' | 'theme'>;
 
 // the composite's rig for a style: how plates move, how they are graded
@@ -43,14 +44,15 @@ export const pick = (topic: string, date: string, recent: RouterPick[], scenes =
   const last = recent.at(-1);
   const banned = new Set(recent.slice(-WINDOW).map((r) => r.style));
   const dna = (s: StyleFile): Dna => ({camera: s.cameraMode, fx: s.fxOverlay, display: s.fonts.display, theme: s.theme});
-  const ok = (s: StyleFile) => !banned.has(s.id) && (!last || shares(dna(s), last).length === 0);
+  // no shared DNA, and a different visual world (papercut, blueprint, newsreel, halftone, comic, scrapbook) from the last video
+  const ok = (s: StyleFile) => !banned.has(s.id) && (!last || (shares(dna(s), last).length === 0 && (worldOf(s.id) === 'clean' || worldOf(s.id) !== worldOf(last.style))));
   // fitting styles first, each family list rotated by the seed; then every other style; the first that breaks no rule wins
   const seed = hash(`${topic}|${date}`);
   const fits = FAMILIES[fam].styles;
   const order = [...fits.map((_, i) => fits[(i + seed) % fits.length]), ...STYLES.map((s) => s.id).filter((id) => !fits.includes(id)).sort((a, b) => hash(a + seed) - hash(b + seed))];
   const chosen = order.map((id) => STYLES.find((s) => s.id === id)!).find(ok) ?? STYLES.find((s) => !banned.has(s.id))!; // the second rule relaxes before a video is left without a style
   const moves = MOVES[chosen.cameraMode] ?? MOVES.still;
-  return {topic, date, style: chosen.id, family: fam, ...dna(chosen), pace: chosen.pace, grade: GRADES[chosen.fxOverlay] ?? 'teal-orange', moves: Array.from({length: scenes}, (_, i) => moves[(i + seed) % moves.length])};
+  return {topic, date, style: chosen.id, family: fam, ...dna(chosen), pace: chosen.pace, world: worldOf(chosen.id), grade: GRADES[chosen.fxOverlay] ?? 'teal-orange', moves: Array.from({length: scenes}, (_, i) => moves[(i + seed) % moves.length])};
 };
 
 export const history = (): RouterPick[] => (fs.existsSync(LEDGER) ? fs.readFileSync(LEDGER, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : []);

@@ -36,11 +36,11 @@ const rig = (move: Move, t: number, d: number, seed: number) => {
   return `scale(${1.1 + 0.14 * u}) translate(${(random(`kb${seed}`) - 0.5) * 60 * u}px, ${-30 * u}px)`; // ken burns
 };
 const gradeFilter: Record<Grade, string> = {
-  noir: 'grayscale(1) contrast(1.35) brightness(0.72)',
-  'teal-orange': 'saturate(1.25) contrast(1.18) brightness(0.8)',
-  cold: 'saturate(0.6) contrast(1.15) brightness(0.72)',
-  'warm-archive': 'sepia(0.65) contrast(1.15) brightness(0.78)',
-  'mono-tint': 'grayscale(1) contrast(1.3) brightness(0.78)',
+  noir: 'grayscale(1) contrast(1.35)',
+  'teal-orange': 'saturate(1.25) contrast(1.18)',
+  cold: 'saturate(0.6) contrast(1.15)',
+  'warm-archive': 'sepia(0.65) contrast(1.15)',
+  'mono-tint': 'grayscale(1) contrast(1.3)',
 };
 // the tint laid over the graded plate, from the theme
 const gradeTint = (g: Grade, th: Theme): React.CSSProperties =>
@@ -54,14 +54,17 @@ const gradeTint = (g: Grade, th: Theme): React.CSSProperties =>
           ? {background: alpha(th.warn, 0.25), mixBlendMode: 'multiply'}
           : {background: alpha(th.accent, 0.18), mixBlendMode: 'soft-light'};
 
-const PlateLayer: React.FC<{plate: PlateRef; move: Move; grade: Grade; t: number; d: number; seed: number}> = ({plate, move, grade, t, d, seed}) => {
+const PlateLayer: React.FC<{plate: PlateRef; move: Move; grade: Grade; t: number; d: number; seed: number; blur: number; split: boolean; look?: string}> = ({plate, move, grade, t, d, seed, blur, split, look}) => {
   const th = useTheme();
-  const media: React.CSSProperties = {position: 'absolute', inset: 0, width: 1080, height: 1920, objectFit: 'cover', filter: gradeFilter[grade]};
+  const media: React.CSSProperties = {position: 'absolute', inset: 0, width: 1080, height: 1920, objectFit: 'cover', filter: `${look ?? gradeFilter[grade]}${blur > 0.1 ? ` blur(${blur}px)` : ''}`};
+  const Media = (style: React.CSSProperties) => (plate.kind === 'video' ? <OffthreadVideo src={staticFile(plate.src)} muted style={{...media, ...style}} /> : <Img src={staticFile(plate.src)} style={{...media, ...style}} />);
   return (
     <div style={{position: 'absolute', inset: 0, overflow: 'hidden', background: th.bg}}>
       <div style={{position: 'absolute', inset: 0, transform: rig(move, t, d, seed), transformOrigin: '540px 860px'}}>
-        {plate.kind === 'video' ? <OffthreadVideo src={staticFile(plate.src)} muted style={media} /> : <Img src={staticFile(plate.src)} style={media} />}
-        <div style={{position: 'absolute', inset: 0, ...gradeTint(grade, th)}} />
+        {Media({})}
+        {split ? <div style={{position: 'absolute', inset: 0, clipPath: 'inset(0 50% 0 0)'}}>{Media({filter: 'grayscale(1) contrast(1.1) blur(4px)'})}</div> : null}
+        {split ? <div style={{position: 'absolute', left: 538, top: 0, width: 4, height: 1920, background: th.ink}} /> : null}
+        {look ? null : <div style={{position: 'absolute', inset: 0, ...gradeTint(grade, th)}} />}
       </div>
     </div>
   );
@@ -76,9 +79,9 @@ const Atmosphere: React.FC<{fx: Atmos[]; t: number; d: number; flareY: number}> 
   return (
     <div style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
       {/* the base light: a darker floor for captions, a vignette for the eye */}
-      <div style={{position: 'absolute', inset: 0, background: `linear-gradient(transparent 52%, ${alpha(th.shadow, 0.85)} 82%, ${alpha(th.shadow, 0.95)})`}} />
-      <div style={{position: 'absolute', inset: 0, background: `linear-gradient(${alpha(th.shadow, 0.7)}, transparent 22%)`}} />
-      <div style={{position: 'absolute', inset: 0, background: `radial-gradient(ellipse at 50% 42%, transparent 45%, ${alpha(th.shadow, 0.75)} 100%)`}} />
+      <div style={{position: 'absolute', inset: 0, background: `linear-gradient(transparent 60%, ${alpha(th.shadow, 0.5)} 82%, ${alpha(th.shadow, 0.65)})`}} />
+      <div style={{position: 'absolute', inset: 0, background: `linear-gradient(${alpha(th.shadow, 0.3)}, transparent 16%)`}} />
+      <div style={{position: 'absolute', inset: 0, background: `radial-gradient(ellipse at 50% 42%, transparent 55%, ${alpha(th.shadow, 0.3)} 100%)`}} />
       {fx_.has('flare') ? (
         <>
           <div style={{position: 'absolute', left: 0, right: 0, top: flareY - 3, height: 6, background: `linear-gradient(90deg, transparent, ${alpha(th.flow, 0.9)} ${(flareX / 1080) * 100}%, transparent)`, filter: 'blur(2px)'}} />
@@ -206,17 +209,21 @@ export type CompositeProps = {
   chrome: Chrome;
   caption?: CaptionLine;
   flareY?: number;
+  blur?: number; // plate defocus in px (rack focus, a blurry POV)
+  look?: string; // a world's CSS filter, replacing the grade and its tint
+  chromeOn?: boolean;
+  split?: boolean; // left half the plate drained and soft, right half as graded
   children?: React.ReactNode;
 };
 
-export const CinematicComposite: React.FC<CompositeProps> = ({t, d, seed, plate, move = 'ken-burns', grade = 'teal-orange', atmos = ['grain'], hero, artifact, chrome, caption, flareY = 700, children}) => (
+export const CinematicComposite: React.FC<CompositeProps> = ({t, d, seed, plate, move = 'ken-burns', grade = 'teal-orange', atmos = ['grain'], hero, artifact, chrome, caption, flareY = 700, blur = 0, split = false, look, chromeOn = true, children}) => (
   <div style={{position: 'absolute', inset: 0, overflow: 'hidden'}}>
-    <PlateLayer plate={plate} move={move} grade={grade} t={t} d={d} seed={seed} />
+    <PlateLayer plate={plate} move={move} grade={grade} t={t} d={d} seed={seed} blur={blur} split={split} look={look} />
     <Atmosphere fx={atmos} t={t} d={d} flareY={flareY} />
     {children}
     {hero ? <HeroStat hero={hero} t={t} at={hero.at ?? 0.35} y={hero.y ?? 560} /> : null}
     {artifact ? <Evidence artifact={artifact} t={t} at={artifact.at ?? 0.5} y={artifact.y ?? 820} /> : null}
-    <ChromeLayer chrome={chrome} credit={plate.credit} t={t} />
+    {chromeOn ? <ChromeLayer chrome={chrome} credit={plate.credit} t={t} /> : null}
     {caption ? <PowerCaptions line={caption} t={t} /> : null}
   </div>
 );

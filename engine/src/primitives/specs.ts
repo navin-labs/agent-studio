@@ -266,7 +266,7 @@ export const SPECS: Record<string, Spec> = {
     ]},
   },  composite: {
     family: 'world',
-    about: 'A documentary shot: a real photo or clip plate (found by query through the media hub), graded and moved, an illustrated overlay, one hero number or one verbatim quote, broadcast chrome.',
+    about: 'A documentary shot: a real photo or clip plate (found by query through the media hub), graded and moved, an illustrated overlay, one literal prop (objectNoun) acting out an actionMode, broadcast chrome.',
     channels: ALL,
     seconds: [2, 8],
     cues: 'optional: the frame the hero or quote lands',
@@ -280,8 +280,10 @@ export const SPECS: Record<string, Spec> = {
       source: text(44, true),
       move: {kind: 'enum', of: ['ken-burns', 'tilt', 'push', 'drift'], optional: true},
       overlay: {kind: 'enum', of: ['none', 'pulse', 'beams', 'lens', 'scan', 'spotlight', 'pins', 'ring'], optional: true},
+      objectNoun: text(24, true),
+      actionMode: {kind: 'enum', of: ['missing-ghost', 'rack-focus-reveal', 'spotlight-search', 'zoom-through', 'split-action'], optional: true},
     },
-    example: {query: 'server room dark', hero: '0.5', unit: 's', label: 'the stall', overlay: 'pulse'},
+    example: {query: 'server room dark', objectNoun: 'stopwatch', actionMode: 'rack-focus-reveal'},
   },
   'rpg-panel': {
     family: 'data',

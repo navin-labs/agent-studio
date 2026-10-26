@@ -2,6 +2,7 @@
 // Feed -> Recipe -> (Forge writes) -> (render + QA) -> Telegram approval -> Ledger -> Dispatch -> (Forge posts) -> Published
 // -> Metrics -> Learn -> next week's Recipe. Only the outside parties are fakes: Forge, the renderer, Telegram, n8n/YouTube.
 // Temp folder only; nothing is sent anywhere.
+import './drawn-beats.ts';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import os from 'node:os';

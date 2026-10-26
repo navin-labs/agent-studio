@@ -33,3 +33,10 @@ A JSON file in a scratch directory (not the repo):
  "verdict": "pass"}
 ```
 `verdict` is `pass` only if every score is at least 6, the mean at least 7.5 and every anti-slop test passes. Record it: `node studio/creative.ts review BOARD <file>`. Reply with the mean, the verdict and the top three fixes.
+
+## Craft checks (reject on any)
+- A shot where nothing changes between its first and last frame, or a plate held still for more than 2.5 s.
+- Two boundaries in a row with the same transition, or a boundary where nothing on screen carries across.
+- A sign, label or on-screen text that only restates the voice line.
+- A shot with two things to understand at once, or a key read that lands in under a second.
+- The last shot does not echo the first.

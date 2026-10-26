@@ -7,6 +7,9 @@ assert.strictEqual(family('The xz backdoor in Linux SSH'), 'security');
 assert.strictEqual(family('Bubble wrap was invented in 1957'), 'history');
 assert.deepStrictEqual(pick('xz backdoor', '2026-10-27', []), pick('xz backdoor', '2026-10-27', []), 'same input, same pick');
 
+import {WORLD_IDS, WORLD_OF} from '../engine/src/composer/worldmap.ts';
+assert.ok(STYLES.every((st) => WORLD_OF[st.id]), 'every style wears a visual world');
+assert.ok(new Set(Object.values(WORLD_OF)).size === WORLD_IDS.length, 'every world is used');
 const topics = ['xz backdoor in SSH', 'Bubble wrap invented in 1957', 'Stock market fell 7 percent', 'The game that broke the internet', 'A password leak at a bank', 'The 1920s radio boom', 'Survey: 40 percent of invoices are late', 'Festival food trucks'];
 const run: RouterPick[] = [];
 for (let i = 0; i < 120; i++) {
@@ -15,6 +18,7 @@ for (let i = 0; i < 120; i++) {
   if (prev) assert.deepStrictEqual(shares(p, prev), [], `video ${i} (${p.style}) shares ${shares(p, prev).join(', ')} with ${prev.style}`);
   assert.ok(!run.slice(-WINDOW).some((r) => r.style === p.style), `video ${i}: ${p.style} repeats inside ${WINDOW}`);
   assert.strictEqual(p.moves.length, 7);
+  if (prev && p.world !== 'clean') assert.notStrictEqual(p.world, prev.world, `video ${i}: ${p.world} twice in a row`);
   run.push(p);
 }
 const used = new Set(run.map((p) => p.style));

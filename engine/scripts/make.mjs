@@ -31,7 +31,7 @@ import {ctaKind, file as variantFile, PLATFORMS, ROUTE, variantDir} from '../../
 import {recipeDate} from '../../studio/recipe.ts';
 import {checkTextBoxes} from '../src/composer/textcheck.ts';
 import {THEMES} from '../src/themes.ts';
-import {resolvePlates} from '../src/lib/mediaHub.ts';
+import {resolvePlates, resolveObjects} from '../src/lib/mediaHub.ts';
 import {history as routerHistory, pick as routerPick, record as routerRecord} from '../../studio/router.ts';
 import {artIssues} from '../src/composer/artgate.ts';
 
@@ -628,7 +628,7 @@ for (const f of files) {
   if (flags.has('--check')) continue;
   const OUT = outFor(f);
   // composite scenes: find, cache and copy each plate (lib/mediaHub.ts); a production render records the router's pick
-  if (doc.scenes?.some((sc) => sc.primitive === 'composite')) doc.plates = await resolvePlates(doc);
+  if (doc.scenes?.some((sc) => sc.primitive === 'composite')) { doc.plates = await resolvePlates(doc); doc.objects = await resolveObjects(doc); }
   if (doc.rig && OUT === path.join(ROOT, 'out')) routerRecord(doc.rig);
   if (doc.format === 'storyboard' && doc.channel) {
     // a channel board: one render per platform, each in out/<channel>/<date>/<id>/<platform>/ (studio/variant.ts)

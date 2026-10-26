@@ -2,6 +2,7 @@
 // logs each Tier 1 change with its evidence; the Thursday recipes carry it to the Writer with a plain-words note; Tier 2 proposals
 // reach Telegram and change nothing until Navin taps; a tap changes exactly one setting; guarded things are refused; rollback is
 // one setting. Planted: conveyor loses, question captions win, "DM AUDIT" wins, 20 to 25 s videos win. Temp folder only.
+import './drawn-beats.ts';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import os from 'node:os';

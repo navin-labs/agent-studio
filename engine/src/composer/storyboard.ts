@@ -55,6 +55,7 @@ export type Storyboard = {
   preset?: StylePreset; // render-time only: the style preset itself, added by make.mjs
   formatStyle?: string; // a format style in engine/styles/ (also make.mjs --style=<id>): sets the theme, faces, spring, caption case
   skin?: FormatStyle; // render-time only: that format style itself, added by make.mjs
+  objects?: (string | null)[]; // render-time only: each composite scene's literal prop SVG (resolveObjects)
   plates?: ({src: string; kind: 'image' | 'video'; credit?: string} | null)[]; // render-time only: each composite scene's plate (lib/mediaHub.ts resolvePlates)
   rig?: {style: string; moves: string[]; grade: string}; // render-time only: the router's pick (studio/router.ts)
 };

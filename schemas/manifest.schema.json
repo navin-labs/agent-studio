@@ -148,6 +148,10 @@
           "pattern": "^c[0-9]-[a-z0-9-]+-(youtube|instagram|facebook)-[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]+\\.thumbnail\\.png$"
         }
       }
+    },
+    "fingerprint": {
+      "type": "object",
+      "description": "A Director film's creative fingerprint (format, look, suit, camera, hook, structure, cta), as chosen in agents/director; absent for composed boards."
     }
   }
 }

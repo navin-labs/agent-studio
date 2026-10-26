@@ -7,7 +7,8 @@ import {FX, type Fx} from '../fx/registry';
 import {type Shot, shotWindows} from '../fx/scene';
 import {FPS} from '../lib/timing';
 import {useTheme} from '../themes';
-import {Captions, Grain, useFilm} from './kit';
+import {faceFor, PunchLine} from '../fx/retention';
+import {Grain, useFilm} from './kit';
 import {BlockProvider, type BlockId, BLOCKS, Ground} from '../fx/blocks';
 
 const ShotView: React.FC<{s: Shot; fx: Fx; t: number; dur: number}> = ({s, fx, t, dur}) => {
@@ -19,7 +20,7 @@ const ShotView: React.FC<{s: Shot; fx: Fx; t: number; dur: number}> = ({s, fx, t
 };
 
 export const SceneFilm: React.FC = () => {
-  const {t, beats, script} = useFilm();
+  const {t, beats, script, total} = useFilm();
   const th = useTheme();
   if (!script.scene) throw new Error(`board ${script.id}: "film": "scene" needs a "scene"`);
   const shots = script.scene.shots;
@@ -40,7 +41,9 @@ export const SceneFilm: React.FC = () => {
         );
       })}
       <Grain opacity={script.scene.look?.grain ?? 0.08} />
-      <Captions style={{top: 1290, fontFamily: '"Inter Tight", Inter, sans-serif', fontWeight: 800, fontSize: 54, lineHeight: 1.15, color: th.ink}} />
+      {beats.flatMap((b, i) => (b.vo ? [{b, i}] : [])).map(({b, i}, n, all) => (
+        <PunchLine key={i} t={t} at={b.vo![0]} end={(all[n + 1]?.b.start ?? total) - 0.1} vo={script.scenes[i].vo ?? b.text} starts={b.words?.map((w) => w.s)} dur={b.vo![1] - b.vo![0]} face={faceFor(script.id)} />
+      ))}
     </AbsoluteFill>
   );
   return block ? <BlockProvider id={block}>{body}</BlockProvider> : body;

@@ -40,27 +40,27 @@ export type Guidance = {caption?: string; cta?: string; seconds?: [number, numbe
 // Video shapes: one pool of primitives per beat, and the channels each shape is for. host = the Chiku format (ADR 15, night theme,
 // C1); explainer = C1's composed manual-pain-to-automatic-flow video (8 beats, 40 to 60 s); composed = the same in 6 beats for C3;
 // reach = C2 Backstory's history stories (archive only).
-// The art gate (engine/src/composer/artgate.ts) bans text in boxes and wants 40% of a video's scenes on photo or clip plates, so
-// every format has composite-only beats (a plate, one hero number or quote); the other beats keep the drawn primitives.
+// The art gate (engine/src/composer/artgate.ts) allows only composites (a real plate with a literal prop acting out the line), the
+// host's hook, payoff and CTA, and the closing card: no drawn boxes, sheets or flow diagrams in a channel video.
 export const FORMATS = {
   host: {
     channels: ['c1-automation'],
     themes: ['night', 'night-signal'],
     transitions: ['cut', 'whip-pan', 'pixel-wipe', 'fold'],
-    beats: [['host-hook'], ['composite'], ['composite'], ['before-after-split', 'maze-to-line', 'highlighter-swipe', 'composite'], ['flow-run', 'flow-build', 'conveyor'], ['composite'], ['host-payoff'], ['host-cta']],
+    beats: [['host-hook'], ['composite'], ['composite'], ['composite'], ['composite'], ['composite'], ['host-payoff'], ['host-cta']],
   },
   // C1's composed explainer, 8 beats so it reaches the 40 s floor: hook, two pains, the contrast, the flow, the result, the payoff, follow
   explainer: {
     channels: ['c1-automation'],
     themes: ['night', 'night-signal'],
     transitions: ['cut', 'whip-pan', 'ink-wipe', 'fold'],
-    beats: [['composite', 'word-stack-slam', 'split-flap', 'zoom-dive'], ['composite'], ['composite'], ['before-after-split', 'maze-to-line', 'highlighter-swipe', 'composite'], ['flow-run', 'flow-build', 'conveyor', 'line-draw'], ['composite'], ['composite', 'split-flap', 'counter-drop', 'word-stack-slam'], ['end-card']],
+    beats: [['composite'], ['composite'], ['composite'], ['composite'], ['composite'], ['composite'], ['composite'], ['end-card']],
   },
   composed: {
     channels: ['c3-studio'],
     themes: ['paper', 'ink', 'mono', 'studio'],
     transitions: ['cut', 'whip-pan', 'ink-wipe'],
-    beats: [['composite', 'word-stack-slam', 'pile-drop', 'split-flap', 'zoom-dive', 'counter-drop', 'intertitle'], ['composite'], ['highlighter-swipe', 'flow-build', 'before-after-split', 'maze-to-line', 'line-draw', 'point-cloud'], ['flow-run', 'flow-build', 'conveyor', 'line-draw', 'stamp-hit'], ['composite'], ['end-card']],
+    beats: [['composite'], ['composite'], ['composite'], ['composite'], ['composite'], ['end-card']],
   },
   reach: {
     channels: ['c2-reach'],
@@ -68,7 +68,7 @@ export const FORMATS = {
     transitions: ['cut', 'whip-pan', 'ink-wipe'],
     // Backstory's sixty-second story (docs/FORMATS_PROPOSAL.md, locked 2026-10-03): hook, the world before, the turn, one idea shown,
     // why it matters today, follow. Plates come from the archive and period photographs; no modern UI chrome.
-    beats: [['composite', 'zoom-dive', 'split-flap', 'word-stack-slam', 'intertitle', 'counter-drop'], ['composite'], ['split-flap', 'highlighter-swipe', 'intertitle', 'line-draw', 'pile-drop'], ['composite', 'maze-to-line', 'before-after-split', 'zoom-dive', 'conveyor'], ['composite'], ['end-card']],
+    beats: [['composite'], ['composite'], ['composite'], ['composite'], ['composite'], ['end-card']],
   },
 } as const;
 export const EXPERIMENT_SHARE = 0.3; // 70% proven, 30% experiments (Learn decides what "proven" means: studio/learn.ts)
@@ -207,8 +207,7 @@ export const planWeek = (chId: string, week: string, o: {seed?: string; recipes?
   return {recipes, target, bench, proven};
 };
 
-if (import.meta.main) {
-  const args = process.argv.slice(2);
+export const cli = (args: string[]) => {
   const [chId, week] = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--seed');
   if (!chId || !/^\d{4}-W\d{2}$/.test(week ?? '')) {
     console.error('usage: node studio/recipe.ts <channel> <YYYY-Www> [--seed s] [--overwrite]');
@@ -219,4 +218,5 @@ if (import.meta.main) {
   if (r.bench.length || r.proven.length) console.log(`learn: bench ${r.bench.join(', ') || 'none'}; proven ${r.proven.join(', ') || 'none'}`);
   for (const x of r.recipes) console.log(`${x.id.padEnd(16)} ${recipeDate(x)} ${x.theme.padEnd(6)} ${x.hook_pattern.padEnd(12)} ${x.experiment ? 'exp ' : '    '}${x.primitives.join(' > ')}`);
   console.log(`-> ${path.relative(path.join(import.meta.dirname, '..'), r.target)}`);
-}
+};
+if (import.meta.main) cli(process.argv.slice(2));

@@ -1,5 +1,6 @@
 // node studio/learn.test.ts : sample metrics -> scoreboard, bench, proven list, posting times; the real Recipe command reads them.
 // Planted pattern: conveyor videos do badly, maze-to-line videos do well, YouTube at 21:00 does best. Temp folder only.
+import './drawn-beats.ts';
 import assert from 'node:assert';
 import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
@@ -68,7 +69,7 @@ assert.ok(!board.includes('99.90%'), 'the 24h numbers were replaced by 7d');
 
 // the real Recipe command reads learn.json: benched primitives never appear; the 70% use proven picks, the 30% try something new
 const env = {...process.env, STUDIO_STATE: p.state, STUDIO_RECIPES: p.recipes};
-const outText = execFileSync(process.execPath, [path.join(ROOT, 'studio/recipe.ts'), 'c1-automation', '2026-W41'], {env, encoding: 'utf8'});
+const outText = execFileSync(process.execPath, [path.join(ROOT, 'studio/drawn-cli.ts'), 'c1-automation', '2026-W41'], {env, encoding: 'utf8'});
 assert.match(outText, /learn: bench .*conveyor/);
 const week: Recipe[] = JSON.parse(fs.readFileSync(path.join(p.recipes, 'c1-automation/2026-W41.json'), 'utf8'));
 const benched = r.learned.bench.map((b) => b.primitive);
@@ -91,7 +92,7 @@ for (const x of week) {
 }
 assert.ok(eligible && used / eligible >= 0.6, `proven picks used in ${used} of ${eligible} beats`);
 // benches end: planning two weeks later ignores it
-const later = execFileSync(process.execPath, [path.join(ROOT, 'studio/recipe.ts'), 'c1-automation', '2026-W43'], {env, encoding: 'utf8'});
+const later = execFileSync(process.execPath, [path.join(ROOT, 'studio/drawn-cli.ts'), 'c1-automation', '2026-W43'], {env, encoding: 'utf8'});
 assert.ok(!/learn: bench [^;]*conveyor/.test(later), 'the bench expired');
 
 // too little data: nothing judged, no bench, no posting time

@@ -1,0 +1,115 @@
+{
+  "format": "storyboard",
+  "id": "c1-literal",
+  "channel": "c1-automation",
+  "theme": "pastel",
+  "style": "c1-night-signal-v1",
+  "host": "chiku",
+  "captionStyle": "karaoke",
+  "hookPattern": "question",
+  "scenes": [
+    {
+      "primitive": "host-hook",
+      "params": {
+        "text": "Still matching *GRNs* by hand?"
+      },
+      "vo": "Still matching challans to POs by hand, line by line?"
+    },
+    {
+      "primitive": "composite",
+      "transition": "cut",
+      "params": {
+        "query": "warehouse receiving dock boxes",
+        "objectNoun": "clipboard",
+        "actionMode": "rack-focus-reveal"
+      },
+      "vo": "Every delivery lands on the dock with a *challan* stapled to it."
+    },
+    {
+      "primitive": "composite",
+      "transition": "fold",
+      "params": {
+        "query": "stack of paper invoices on desk",
+        "objectNoun": "magnifying glass",
+        "actionMode": "spotlight-search"
+      },
+      "vo": "Then someone digs through *three papers* to find the one that matches."
+    },
+    {
+      "primitive": "composite",
+      "transition": "fold",
+      "params": {
+        "query": "tired office worker at desk night",
+        "objectNoun": "stopwatch",
+        "actionMode": "missing-ghost"
+      },
+      "vo": "Hours go missing, and the *numbers* still do not agree."
+    },
+    {
+      "primitive": "composite",
+      "transition": "fold",
+      "params": {
+        "query": "cardboard boxes shelves warehouse",
+        "objectNoun": "package",
+        "actionMode": "zoom-through"
+      },
+      "vo": "The order, the receipt and the invoice must all say the *same thing*."
+    },
+    {
+      "primitive": "composite",
+      "transition": "fold",
+      "params": {
+        "query": "clean modern office laptop morning",
+        "objectNoun": "check mark",
+        "actionMode": "split-action"
+      },
+      "vo": "Now the inbox does the matching, and only *odd ones* reach you."
+    },
+    {
+      "primitive": "host-payoff",
+      "transition": "fold",
+      "params": {
+        "text": "Challans *match themselves.* You handle the *odd ones*."
+      },
+      "vo": "So your team only touches the odd ones out, and nobody matches challans by hand again."
+    },
+    {
+      "primitive": "host-cta",
+      "transition": "fold",
+      "params": {
+        "text": "DM *AUDIT*",
+        "sub": "I'll look at your most repetitive process for free."
+      }
+    }
+  ],
+  "caption": "Still matching challans to POs by hand?\n\nA three-way match checks the order, the receipt and the invoice before anything is paid. The inbox now does it for you.\n\nExample data.\n\nSend this to whoever matches your GRNs.",
+  "hashtags": [
+    "#businessautomation",
+    "#smallbusinessindia",
+    "#procurement",
+    "#operations"
+  ],
+  "meta": {
+    "source": "https://www.youtube.com/shorts/GstovoLtIHQ",
+    "idea_id": "youtube-grn-match-manual",
+    "recipe_id": "c1-2026-w44-1",
+    "hero_metaphor": "the matching pile",
+    "title_b": "Your GRNs, matched while you sleep",
+    "devices": [
+      "open-loop",
+      "novelty",
+      "reveal",
+      "contrast",
+      "proof",
+      "stakes",
+      "number",
+      "loop"
+    ],
+    "proof": {
+      "fact": "A three-way match checks that the purchase order, goods receipt and invoice agree before payment",
+      "source": "https://www.gep.com/info-guide/three-way-matching-accounts-payable-guide"
+    },
+    "structure": "teardown",
+    "cta": "comment-keyword"
+  }
+}
