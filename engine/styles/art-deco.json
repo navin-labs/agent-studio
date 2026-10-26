@@ -1,0 +1,30 @@
+{
+  "id": "art-deco",
+  "name": "Art Deco",
+  "about": "Lacquer black, ivory and gold: geometric caps, every shot swings in on its axis.",
+  "theme": "art-deco",
+  "fonts": {
+    "display": "Limelight",
+    "title": "Poiret One",
+    "caption": "Inter",
+    "data": "Poiret One"
+  },
+  "spring": {
+    "damping": 28,
+    "stiffness": 150,
+    "mass": 0.9
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "3d-tilt",
+  "fxOverlay": "none",
+  "hostMode": "tint",
+  "pace": "steady",
+  "fits": [
+    "split-flap",
+    "counter-drop",
+    "highlighter-swipe",
+    "stamp-hit"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "telestrator",
+  "name": "Telestrator",
+  "about": "A sports breakdown: pitch green, yellow marker, condensed caps, whip cuts.",
+  "theme": "telestrator",
+  "fonts": {
+    "display": "Oswald",
+    "title": "Bebas Neue",
+    "caption": "Inter Tight",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 14,
+    "stiffness": 260,
+    "mass": 0.7
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "whip-pan",
+  "fxOverlay": "none",
+  "hostMode": "hide",
+  "pace": "quick",
+  "fits": [
+    "line-draw",
+    "counter-drop",
+    "flow-run",
+    "highlighter-swipe"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "terminal-dark",
+  "name": "Terminal Dark",
+  "about": "Amber phosphor on warm black: scanlines, colour fringe, a whip between every beat.",
+  "theme": "terminal-dark",
+  "fonts": {
+    "display": "VT323",
+    "title": "VT323",
+    "caption": "JetBrains Mono",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 30,
+    "stiffness": 420,
+    "mass": 0.6
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "whip-pan",
+  "fxOverlay": "crt",
+  "hostMode": "tint",
+  "pace": "quick",
+  "fits": [
+    "ui-diff",
+    "ui-chat",
+    "counter-drop",
+    "flow-run"
+  ]
+}

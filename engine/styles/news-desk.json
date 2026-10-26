@@ -1,0 +1,30 @@
+{
+  "id": "news-desk",
+  "name": "News Desk",
+  "about": "A news round-up: charcoal cards, lemon lower thirds, condensed caps, whip cuts.",
+  "theme": "news-desk",
+  "fonts": {
+    "display": "Bebas Neue",
+    "title": "Oswald",
+    "caption": "Inter",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 16,
+    "stiffness": 270,
+    "mass": 0.7
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "whip-pan",
+  "fxOverlay": "none",
+  "hostMode": "hide",
+  "pace": "quick",
+  "fits": [
+    "split-flap",
+    "counter-drop",
+    "ui-chat",
+    "highlighter-swipe"
+  ]
+}

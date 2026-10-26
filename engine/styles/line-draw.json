@@ -1,0 +1,30 @@
+{
+  "id": "line-draw",
+  "name": "Line Draw",
+  "about": "One continuous line: black on cream, one orange, every idea drawn live.",
+  "theme": "line-draw",
+  "fonts": {
+    "display": "Poiret One",
+    "title": "Inter",
+    "caption": "Inter",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 24,
+    "stiffness": 140,
+    "mass": 0.9
+  },
+  "caption": {
+    "case": "lowercase"
+  },
+  "cameraMode": "handheld-doc",
+  "fxOverlay": "none",
+  "hostMode": "hide",
+  "pace": "steady",
+  "fits": [
+    "line-draw",
+    "maze-to-line",
+    "highlighter-swipe",
+    "flow-build"
+  ]
+}

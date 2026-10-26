@@ -9,6 +9,7 @@ import {SIDE, TYPE} from '../theme';
 import {alpha, useTheme} from '../themes';
 import {blinkAt, mouthFromAmplitude, mouthFromWords} from './acting';
 import {powerScale} from './power';
+import {CAPTION_CASE} from '../composer/style';
 import {type Acting, Bahi, Chiku, DitherDefs, Stage, Tikku} from './mascots';
 
 export const HOSTS = {chiku: Chiku, bahi: Bahi, tikku: Tikku} as const;
@@ -17,6 +18,8 @@ export type HostName = keyof typeof HOSTS;
 // Per scene: word start frames of the vo line, and the voice clip (public/ path) if one was generated.
 export const VoiceCtx = React.createContext<{starts: number[]; audio?: string | null}>({starts: []});
 export const HostCtx = React.createContext<HostName>('chiku');
+// A format style's host: keep its own colours, tint it into the style's palette (dark to shadow, light to accent), or hide it
+export const HostModeCtx = React.createContext<'keep' | 'tint' | 'hide'>('keep');
 
 export type Mood = 'idle' | 'happy' | 'pain';
 export type HostPose = {x?: number; y?: number; scale?: number; look?: -1 | 0 | 1; mood?: Mood; moodAt?: number};
@@ -37,18 +40,29 @@ const Body: React.FC<HostPose & {mouth: number}> = ({x = 540, y = 1250, scale = 
   const {fps} = useVideoConfig();
   const th = useTheme();
   const Mascot = HOSTS[useContext(HostCtx)];
+  const mode = useContext(HostModeCtx);
   const bob = Math.sin((f / fps) * Math.PI * 1.1) * 8; // slow idle breathing
   const lean = spring({frame: f, fps, config: {damping: 16, stiffness: 90}}) * look * 7; // tilt toward the active panel
   const since = f - moodAt;
   const hop = mood === 'happy' && since >= 0 ? Math.sin(Math.min(Math.PI, (since / 14) * Math.PI)) * -60 : 0;
   const shake = mood === 'pain' && since >= 0 && since < 24 ? Math.sin(since * 1.6) * 7 * (1 - since / 24) : 0;
   const acting: Acting = {mouth, blink: blinkAt(f), tilt: lean + shake}; // pain = head shake with eyes open
+  if (mode === 'hide') return null;
+  const [lo, hi] = [th.shadow, th.accent].map((c) => [1, 3, 5].map((k) => parseInt(c.slice(k, k + 2), 16) / 255));
   return (
     <svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
       <DitherDefs />
+      {mode === 'tint' ? (
+        <filter id="host-tint">
+          <feColorMatrix type="saturate" values="0" />
+          <feComponentTransfer>
+            {(['R', 'G', 'B'] as const).map((ch, k) => React.createElement(`feFunc${ch}`, {key: ch, type: 'table', tableValues: `${lo[k]} ${hi[k]}`}))}
+          </feComponentTransfer>
+        </filter>
+      ) : null}
       <ellipse cx={x} cy={y + 20 * scale} rx={240 * scale * (1 - Math.abs(hop) / 200)} ry={34 * scale} fill={alpha(th.shadow, 0.6)} /> {/* floor shadow shrinks as the host hops */}
       {/* the mascot is drawn with its feet at (540, 1250); move and scale it from there */}
-      <g transform={`translate(${x - 540 * scale} ${y + bob + hop - 1250 * scale}) scale(${scale})`}>
+      <g transform={`translate(${x - 540 * scale} ${y + bob + hop - 1250 * scale}) scale(${scale})`} filter={mode === 'tint' ? 'url(#host-tint)' : undefined}>
         <Mascot {...acting} />
       </g>
     </svg>
@@ -88,7 +102,7 @@ export const KaraokeCaptions: React.FC<{vo: string; starts: number[]}> = ({vo, s
   const accent = parseAccent(vo).map((w) => w.accent);
   const {fps} = useVideoConfig();
   return (
-    <div data-tb="caption" style={{position: 'absolute', top: KARAOKE_TOP, left: SIDE, right: SIDE, height: 150, display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 16, fontFamily: TYPE.title, fontSize: 60, fontWeight: 800, lineHeight: 1.12, letterSpacing: '-0.02em', color: th.ink, transform: `scale(${pop})`}}>
+    <div data-tb="caption" style={{position: 'absolute', top: KARAOKE_TOP, left: SIDE, right: SIDE, height: 150, display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 16, fontFamily: TYPE.title, fontSize: 'calc(60px * var(--caption-scale, 1))', fontWeight: 800, lineHeight: 1.12, letterSpacing: '-0.02em', color: th.ink, textTransform: CAPTION_CASE, transform: `scale(${pop})`}}>
       {chunk.words.map((w, j) => {
         const i = chunk.startIdx + j;
         const scale = accent[i] ? powerScale(f, starts[i], starts[i + 1], fps) : 1;

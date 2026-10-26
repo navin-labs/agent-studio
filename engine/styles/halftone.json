@@ -1,0 +1,30 @@
+{
+  "id": "halftone",
+  "name": "Halftone",
+  "about": "A comic-print case file: navy on cream, dot screen and grain, yellow highlighter, springy punch-ins.",
+  "theme": "halftone",
+  "fonts": {
+    "display": "Bricolage Grotesque",
+    "title": "Space Grotesk",
+    "caption": "Space Grotesk",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 9,
+    "stiffness": 190,
+    "mass": 0.8
+  },
+  "caption": {
+    "case": "none"
+  },
+  "cameraMode": "kinetic-punch",
+  "fxOverlay": "print",
+  "hostMode": "tint",
+  "pace": "quick",
+  "fits": [
+    "stamp-hit",
+    "pile-drop",
+    "phone-buzz",
+    "chat-pop"
+  ]
+}

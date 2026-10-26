@@ -1,0 +1,138 @@
+{
+  "id": "style-showcase",
+  "format": "storyboard",
+  "theme": "paper",
+  "scenes": [
+    {
+      "primitive": "word-stack-slam",
+      "vo": "Forty reminders a week, *typed by hand*.",
+      "params": {
+        "text": "Forty reminders, *typed by hand*?"
+      }
+    },
+    {
+      "primitive": "ui-sheet",
+      "vo": "Every *row* checked, every reminder logged.",
+      "params": {
+        "file": "PAYMENTS.XLSX",
+        "mode": "auto",
+        "columns": [
+          "INVOICE",
+          "PARTY",
+          "STATUS"
+        ],
+        "rows": [
+          [
+            "INV-1042",
+            "Sharma",
+            "REMINDED"
+          ],
+          [
+            "INV-1043",
+            "Patel",
+            "PAID"
+          ],
+          [
+            "INV-1044",
+            "Gupta",
+            "CALL"
+          ]
+        ]
+      }
+    },
+    {
+      "primitive": "point-cloud",
+      "vo": "The whole ledger scanned, *one* flagged.",
+      "params": {
+        "label": "LEDGER SCANNED",
+        "value": "1 late"
+      }
+    },
+    {
+      "primitive": "line-draw",
+      "vo": "*Due*, *reminded*, *paid*.",
+      "params": {
+        "steps": [
+          "Due",
+          "Reminded",
+          "Paid"
+        ]
+      }
+    },
+    {
+      "primitive": "rpg-panel",
+      "vo": "*Sent* ninety two, *paid* sixty four, *late* eighteen.",
+      "params": {
+        "title": "INVOICE QUEST",
+        "stats": [
+          {
+            "label": "SENT",
+            "value": 92
+          },
+          {
+            "label": "PAID",
+            "value": 64
+          },
+          {
+            "label": "LATE",
+            "value": 18
+          }
+        ],
+        "lines": [
+          "Three reminders went out while you slept."
+        ]
+      }
+    },
+    {
+      "primitive": "intertitle",
+      "vo": "Monday, nine a.m.",
+      "params": {
+        "text": "Monday, 9 a.m. The reminders are already out.",
+        "sub": "No one typed a word"
+      }
+    },
+    {
+      "primitive": "counter-drop",
+      "vo": "Reminders left to type: *zero*.",
+      "params": {
+        "label": "TO TYPE",
+        "icon": "mail",
+        "from": 40,
+        "to": 0,
+        "tone": "ok"
+      }
+    },
+    {
+      "primitive": "flow-run",
+      "vo": "Read, *remind*, *log*, every morning.",
+      "params": {
+        "nodes": [
+          {
+            "icon": "sheet",
+            "label": "Unpaid invoices",
+            "sub": "Read at 10 AM"
+          },
+          {
+            "icon": "chat",
+            "label": "Reminder",
+            "sub": "Name and amount filled"
+          },
+          {
+            "icon": "send",
+            "label": "Sent",
+            "sub": "One per customer"
+          }
+        ],
+        "done": "SENT"
+      }
+    },
+    {
+      "primitive": "end-card",
+      "transition": "fold",
+      "params": {
+        "text": "*Follow*",
+        "sub": "More business automations."
+      }
+    }
+  ]
+}

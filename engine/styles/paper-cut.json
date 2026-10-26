@@ -1,0 +1,30 @@
+{
+  "id": "paper-cut",
+  "name": "Paper Cut",
+  "about": "Red paper cut-outs: cream type on festival red, gold highlights, print grain.",
+  "theme": "paper-cut",
+  "fonts": {
+    "display": "Bebas Neue",
+    "title": "Oswald",
+    "caption": "Space Grotesk",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 12,
+    "stiffness": 200,
+    "mass": 0.8
+  },
+  "caption": {
+    "case": "none"
+  },
+  "cameraMode": "kinetic-punch",
+  "fxOverlay": "print",
+  "hostMode": "tint",
+  "pace": "quick",
+  "fits": [
+    "word-stack-slam",
+    "stamp-hit",
+    "counter-drop",
+    "pile-drop"
+  ]
+}

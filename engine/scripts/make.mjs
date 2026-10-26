@@ -10,6 +10,7 @@
 //   --no-vo      ignore voiceover, render text-only timing
 //   --force      render even if the quality gate finds errors
 //   --only=<platform>  render one platform variant (a film's preview while it is being authored; never for production)
+//   --style=<id> wear a format style from engine/styles/ (theme, faces, spring, caption case), e.g. --style=swiss-motion
 //   --out=<dir>  renders root (default: engine/out for the Writer's boards in content/storyboards, engine/test/out for anything else)
 //
 // Where renders go: a board from content/storyboards (the Writer's folder, what the watcher renders) is production: one render per
@@ -22,7 +23,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
 import {densityIssues} from '../src/composer/density.ts';
-import {HOOK_PATTERNS, lengthIssue, probeFrames, validateStoryboard} from '../src/composer/storyboard.ts';
+import {HOOK_PATTERNS, lengthIssue, probeFrames, styledBoard, validateStoryboard} from '../src/composer/storyboard.ts';
 import {rehookIssue, scriptErrors} from '../../studio/script.ts';
 import {probeVideo} from './probe.ts';
 import {filmstrip, master, motion} from './film.mjs';
@@ -146,8 +147,24 @@ const validate = (doc) => {
 };
 
 // storyboard: engine checks from src/composer/storyboard.ts, plus the shared honesty and caption checks
+const STYLE_FLAG = process.argv.find((a) => a.startsWith('--style='))?.slice(8);
+// a format style (engine/styles/<id>.json): it decides the theme, so it is applied before anything checks the theme
+const applyFormatStyle = (doc, id, errors) => {
+  const sf = path.join(ROOT, 'styles', `${id}.json`);
+  if (!/^[a-z0-9-]+$/.test(id) || !fs.existsSync(sf)) return errors.push(`format style "${id}" not found (one of: ${fs.readdirSync(path.join(ROOT, 'styles')).filter((x) => x.endsWith('.json')).map((x) => x.slice(0, -5)).join(', ')})`);
+  if (doc.film) return errors.push(`format style ${id}: a film carries its own look; format styles are for primitive boards`);
+  doc.skin = JSON.parse(fs.readFileSync(sf, 'utf8'));
+  doc.formatStyle = id;
+  doc.theme = doc.skin.theme;
+  // a quick style speaks quick unless a line asks for its own pace
+  for (const s of doc.scenes ?? []) if (s.vo && !s.voice?.pace && doc.skin.pace !== 'steady') s.voice = {...s.voice, pace: doc.skin.pace};
+};
+
 const validateBoard = (doc) => {
-  const {errors, warnings} = validateStoryboard(doc, VOICE_ON ? 'later' : undefined); // voiced: each line is judged by its measured clip, per platform below
+  const pre = [];
+  if (STYLE_FLAG ?? doc.formatStyle) applyFormatStyle(doc, STYLE_FLAG ?? doc.formatStyle, pre);
+  const {errors, warnings} = validateStoryboard(doc, VOICE_ON ? 'later' : undefined);
+  errors.unshift(...pre); // voiced: each line is judged by its measured clip, per platform below
   if (!/^[a-z0-9-]+$/.test(doc.id || '')) errors.push('id must be lowercase-with-dashes');
   for (const s of allStrings(doc)) for (const [re, why] of BANNED) if (re.test(s)) errors.push(`banned: ${why} -> "${s.slice(0, 80)}"`);
   if (doc.hookPattern !== undefined && !HOOK_PATTERNS.includes(doc.hookPattern)) errors.push(`"hookPattern" must be one of: ${HOOK_PATTERNS.join(', ')}`);
@@ -183,7 +200,7 @@ const validateBoard = (doc) => {
       const preset = JSON.parse(fs.readFileSync(sf, 'utf8'));
       if (preset.channel !== doc.channel) errors.push(`style ${styleId} belongs to ${preset.channel}, not ${doc.channel}`);
       // a film carries its own palette (its brief); the style preset still gives the platforms and CTAs
-      if (!doc.film && (doc.theme ?? 'paper') !== preset.theme) errors.push(`style ${styleId} uses theme ${preset.theme}; the board says ${doc.theme ?? 'paper'}`);
+      if (!doc.film && !doc.skin && (doc.theme ?? 'paper') !== preset.theme) errors.push(`style ${styleId} uses theme ${preset.theme}; the board says ${doc.theme ?? 'paper'}`);
       const bad = doc.scenes.map((s) => s.transition).filter((x) => x && !preset.transitions.includes(x));
       if (bad.length) errors.push(`style ${styleId} allows transitions ${preset.transitions.join(', ')}; the board uses ${[...new Set(bad)].join(', ')}`);
       if (preset.opener === 'year-flap' && !/^[0-9]{3,4}$/.test(doc.meta?.year ?? '')) errors.push(`style ${styleId} opens on the story's year: set meta.year (e.g. "1948")`);
@@ -531,7 +548,7 @@ const renderReel = async (script, place) => {
   const issues = checkTextBoxes(frames);
   fs.writeFileSync(name('text-boxes.json'), JSON.stringify({id: script.id, measured: frames.length, issues, frames}, null, 1));
   const fr = composition.props.frames;
-  const expected = probeFrames(script, fr, fr.map((_, i) => fr.slice(0, i).reduce((a, b) => a + b, 0))).size;
+  const expected = probeFrames(styledBoard(script), fr, fr.map((_, i) => fr.slice(0, i).reduce((a, b) => a + b, 0))).size;
   if (frames.length !== expected) {
     console.log(c.red(`  error: text boxes measured on ${frames.length} of ${expected} frames (TextProbe missed some); not trusting this render`));
     return false;

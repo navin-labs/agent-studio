@@ -75,7 +75,11 @@
         "before-after-split",
         "phone-buzz",
         "maze-to-line",
-        "zoom-dive"
+        "zoom-dive",
+        "rpg-panel",
+        "point-cloud",
+        "line-draw",
+        "intertitle"
       ],
       "description": "Primitive id of the opener"
     },
@@ -104,7 +108,11 @@
           "before-after-split",
           "phone-buzz",
           "maze-to-line",
-          "zoom-dive"
+          "zoom-dive",
+          "rpg-panel",
+          "point-cloud",
+          "line-draw",
+          "intertitle"
         ]
       },
       "minItems": 3,

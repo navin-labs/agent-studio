@@ -58,6 +58,10 @@ export const sceneMotion = (primitive: string, p: Params, dur: number, cues: num
     case 'maze-to-line': { const snap = cues[0] ?? Math.round(dur * 0.45); spans.push([6, snap + 26]); break; } // the dot crawls, then the tangle snaps and it zips
     case 'pile-drop': spans.push([0, dur]); break; // cards rain for the whole shot, then the pile is buried and shakes
     case 'conveyor': { const s = cues[0] ?? 8; const count = Number(p.count) || 1; const gap = Math.max(2, Math.min(6, Math.floor((dur - s - 24) / count))); spans.push([s, s + (count - 1) * gap + 20]); break; }
+    case 'rpg-panel': { const at = steps(n(p.stats), 6, Math.round(dur * 0.45)); at.forEach((t) => events.push(t)); spans.push([at.at(-1)! + 14, at.at(-1)! + 14 + String((p.lines as string[] | undefined)?.join(' ') ?? '').length]); break; } // bars fill, then the line types on twos
+    case 'point-cloud': { for (let t = 45; t < dur; t += 45) events.push(t); events.push(cues[0] ?? Math.round(dur * 0.45)); break; } // each scan pass (45 frames), the lock
+    case 'line-draw': { const at = steps(n(p.steps), 8, dur - 16); at.forEach((t) => events.push(t)); spans.push([0, at.at(-1)!]); break; } // the pen travels between stops
+    case 'intertitle': events.push(8, cues[0] ?? Math.round(dur * 0.4), Math.round(dur * 0.72)); break; // the line, the sub line, the flourish
     default: cues.forEach((t) => events.push(t)); // host-hook, host-payoff: the accent lands and the host reacts
   }
   return {events, spans};

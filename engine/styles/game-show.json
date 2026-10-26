@@ -1,0 +1,30 @@
+{
+  "id": "game-show",
+  "name": "Game Show",
+  "about": "Prime-time game show: violet stage, gold and pink, pixel score type, a punch on every point.",
+  "theme": "game-show",
+  "fonts": {
+    "display": "Bricolage Grotesque",
+    "title": "Bebas Neue",
+    "caption": "Inter Tight",
+    "data": "VT323"
+  },
+  "spring": {
+    "damping": 10,
+    "stiffness": 280,
+    "mass": 0.6
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "kinetic-punch",
+  "fxOverlay": "none",
+  "hostMode": "hide",
+  "pace": "quick",
+  "fits": [
+    "rpg-panel",
+    "counter-drop",
+    "stamp-hit",
+    "split-flap"
+  ]
+}

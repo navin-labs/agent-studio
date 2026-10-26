@@ -1,0 +1,30 @@
+{
+  "id": "dark-keynote",
+  "name": "Dark Keynote",
+  "about": "A launch stage: near-black, one lime key light, every shot swings in on a 3D tilt.",
+  "theme": "dark-keynote",
+  "fonts": {
+    "display": "Inter Tight",
+    "title": "Space Grotesk",
+    "caption": "Inter",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 20,
+    "stiffness": 140,
+    "mass": 0.9
+  },
+  "caption": {
+    "case": "none"
+  },
+  "cameraMode": "3d-tilt",
+  "fxOverlay": "none",
+  "hostMode": "hide",
+  "pace": "steady",
+  "fits": [
+    "ui-inbox",
+    "flow-build",
+    "counter-drop",
+    "before-after-split"
+  ]
+}

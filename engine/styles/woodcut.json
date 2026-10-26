@@ -1,0 +1,30 @@
+{
+  "id": "woodcut",
+  "name": "Woodcut",
+  "about": "A woodcut folk print: black slab caps, one red, carved grain, heavy punches.",
+  "theme": "woodcut",
+  "fonts": {
+    "display": "Alfa Slab One",
+    "title": "Oswald",
+    "caption": "Space Grotesk",
+    "data": "Special Elite"
+  },
+  "spring": {
+    "damping": 16,
+    "stiffness": 200,
+    "mass": 0.8
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "kinetic-punch",
+  "fxOverlay": "print",
+  "hostMode": "tint",
+  "pace": "quick",
+  "fits": [
+    "word-stack-slam",
+    "stamp-hit",
+    "pile-drop",
+    "intertitle"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "sixties-titles",
+  "name": "Sixties Titles",
+  "about": "A 60s title sequence: flat orange, black shapes, condensed caps, whip cuts.",
+  "theme": "sixties-titles",
+  "fonts": {
+    "display": "Archivo Black",
+    "title": "Oswald",
+    "caption": "Inter",
+    "data": "Special Elite"
+  },
+  "spring": {
+    "damping": 12,
+    "stiffness": 220,
+    "mass": 0.7
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "whip-pan",
+  "fxOverlay": "print",
+  "hostMode": "hide",
+  "pace": "quick",
+  "fits": [
+    "word-stack-slam",
+    "highlighter-swipe",
+    "pile-drop",
+    "stamp-hit"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "orbit-intel",
+  "name": "Orbit Intel",
+  "about": "A satellite briefing: deep blue-black, teal scan light, radar sweep and telemetry.",
+  "theme": "orbit-intel",
+  "fonts": {
+    "display": "Share Tech Mono",
+    "title": "Oswald",
+    "caption": "Inter",
+    "data": "Share Tech Mono"
+  },
+  "spring": {
+    "damping": 26,
+    "stiffness": 180,
+    "mass": 0.9
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "3d-tilt",
+  "fxOverlay": "tactical",
+  "hostMode": "hide",
+  "pace": "steady",
+  "fits": [
+    "point-cloud",
+    "counter-drop",
+    "zoom-dive",
+    "flow-run"
+  ]
+}

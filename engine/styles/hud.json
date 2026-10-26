@@ -1,0 +1,30 @@
+{
+  "id": "hud",
+  "name": "HUD",
+  "about": "A hologram heads-up display: cyan on black, scanlines, tilted panels.",
+  "theme": "hud",
+  "fonts": {
+    "display": "Share Tech Mono",
+    "title": "Oswald",
+    "caption": "Share Tech Mono",
+    "data": "Share Tech Mono"
+  },
+  "spring": {
+    "damping": 24,
+    "stiffness": 260,
+    "mass": 0.7
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "3d-tilt",
+  "fxOverlay": "crt",
+  "hostMode": "tint",
+  "pace": "quick",
+  "fits": [
+    "point-cloud",
+    "rpg-panel",
+    "ui-diff",
+    "flow-run"
+  ]
+}

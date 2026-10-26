@@ -23,6 +23,10 @@ import {SplitFlap} from './split-flap';
 import {StampHit} from './stamp-hit';
 import {WordStackSlam} from './word-stack-slam';
 import {ZoomDive} from './zoom-dive';
+import {Intertitle} from './intertitle';
+import {LineDraw} from './line-draw';
+import {PointCloud} from './point-cloud';
+import {RpgPanel} from './rpg-panel';
 
 export const PRIMITIVES: Record<keyof typeof SPECS, React.FC<PrimitiveProps<any>>> = {
   'word-stack-slam': WordStackSlam,
@@ -47,4 +51,8 @@ export const PRIMITIVES: Record<keyof typeof SPECS, React.FC<PrimitiveProps<any>
   'phone-buzz': PhoneBuzz,
   'maze-to-line': MazeToLine,
   'zoom-dive': ZoomDive,
+  'rpg-panel': RpgPanel,
+  'point-cloud': PointCloud,
+  'line-draw': LineDraw,
+  intertitle: Intertitle,
 };

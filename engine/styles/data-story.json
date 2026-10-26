@@ -1,0 +1,30 @@
+{
+  "id": "data-story",
+  "name": "Data Story",
+  "about": "Data journalism on warm paper: serif headline, a calm sans, blue to red, a hand-held reporter camera.",
+  "theme": "data-story",
+  "fonts": {
+    "display": "Instrument Serif",
+    "title": "Space Grotesk",
+    "caption": "Inter",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 22,
+    "stiffness": 120,
+    "mass": 1
+  },
+  "caption": {
+    "case": "none"
+  },
+  "cameraMode": "handheld-doc",
+  "fxOverlay": "none",
+  "hostMode": "hide",
+  "pace": "steady",
+  "fits": [
+    "ui-sheet",
+    "counter-drop",
+    "highlighter-swipe",
+    "before-after-split"
+  ]
+}

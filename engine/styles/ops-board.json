@@ -1,0 +1,30 @@
+{
+  "id": "ops-board",
+  "name": "Ops Board",
+  "about": "An engineering status board: pale grey, amber callouts, mono telemetry, a grid behind every shot.",
+  "theme": "ops-board",
+  "fonts": {
+    "display": "Oswald",
+    "title": "Space Grotesk",
+    "caption": "Inter",
+    "data": "Share Tech Mono"
+  },
+  "spring": {
+    "damping": 24,
+    "stiffness": 200,
+    "mass": 0.8
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "3d-tilt",
+  "fxOverlay": "tactical",
+  "hostMode": "hide",
+  "pace": "steady",
+  "fits": [
+    "flow-run",
+    "ui-sheet",
+    "counter-drop",
+    "ui-diff"
+  ]
+}

@@ -3,6 +3,7 @@ import {interpolate, useCurrentFrame} from 'remotion';
 import {chunkWords, parseAccent, splitWords} from '../lib/text';
 import {FONT, ZONES} from '../theme';
 import {useTheme} from '../themes';
+import {CAPTION_CASE} from '../composer/style';
 
 // Captions for each scene's vo, 3 to 5 words per line, in ink.
 // Only *marked* words get the accent highlighter (research: selective highlights aid recall, karaoke distracts).
@@ -41,7 +42,8 @@ export const Captions: React.FC<{vo: string; starts: number[]; top?: number}> = 
           justifyContent: 'center',
           columnGap: 18,
           fontFamily: FONT,
-          fontSize: 58,
+          textTransform: CAPTION_CASE,
+          fontSize: 'calc(58px * var(--caption-scale, 1))',
           fontWeight: 800,
           lineHeight: 1.12,
           letterSpacing: '-0.02em',

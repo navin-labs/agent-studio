@@ -1,0 +1,30 @@
+{
+  "id": "screenprint",
+  "name": "Screenprint",
+  "about": "A silkscreen travel poster: flat inks on cream, slab caps, dot screen, punch-ins.",
+  "theme": "screenprint",
+  "fonts": {
+    "display": "Oswald",
+    "title": "Bebas Neue",
+    "caption": "Space Grotesk",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 14,
+    "stiffness": 180,
+    "mass": 0.8
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "kinetic-punch",
+  "fxOverlay": "print",
+  "hostMode": "tint",
+  "pace": "quick",
+  "fits": [
+    "word-stack-slam",
+    "counter-drop",
+    "before-after-split",
+    "stamp-hit"
+  ]
+}

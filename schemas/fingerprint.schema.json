@@ -59,7 +59,11 @@
           "before-after-split",
           "phone-buzz",
           "maze-to-line",
-          "zoom-dive"
+          "zoom-dive",
+          "rpg-panel",
+          "point-cloud",
+          "line-draw",
+          "intertitle"
         ]
       },
       "minItems": 1
@@ -87,7 +91,11 @@
         "before-after-split",
         "phone-buzz",
         "maze-to-line",
-        "zoom-dive"
+        "zoom-dive",
+        "rpg-panel",
+        "point-cloud",
+        "line-draw",
+        "intertitle"
       ]
     },
     "hero_metaphor": {

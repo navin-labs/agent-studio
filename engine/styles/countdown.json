@@ -1,0 +1,30 @@
+{
+  "id": "countdown",
+  "name": "Countdown",
+  "about": "A live clock: black, red seconds, condensed numerals, every beat a hit.",
+  "theme": "countdown",
+  "fonts": {
+    "display": "Oswald",
+    "title": "Bebas Neue",
+    "caption": "Inter",
+    "data": "Share Tech Mono"
+  },
+  "spring": {
+    "damping": 18,
+    "stiffness": 300,
+    "mass": 0.6
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "kinetic-punch",
+  "fxOverlay": "none",
+  "hostMode": "hide",
+  "pace": "quick",
+  "fits": [
+    "counter-drop",
+    "split-flap",
+    "zoom-dive",
+    "stamp-hit"
+  ]
+}

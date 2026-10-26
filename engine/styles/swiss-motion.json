@@ -1,0 +1,30 @@
+{
+  "id": "swiss-motion",
+  "name": "Swiss Motion",
+  "about": "A strict grid, one family, lowercase captions, one red signal; every power word punches in.",
+  "theme": "swiss-motion",
+  "fonts": {
+    "display": "Archivo Black",
+    "title": "Inter Tight",
+    "caption": "Inter",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 26,
+    "stiffness": 240,
+    "mass": 0.7
+  },
+  "caption": {
+    "case": "lowercase"
+  },
+  "cameraMode": "kinetic-punch",
+  "fxOverlay": "none",
+  "hostMode": "hide",
+  "pace": "quick",
+  "fits": [
+    "counter-drop",
+    "ui-sheet",
+    "word-stack-slam",
+    "before-after-split"
+  ]
+}

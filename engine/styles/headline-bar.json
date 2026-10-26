@@ -1,0 +1,30 @@
+{
+  "id": "headline-bar",
+  "name": "Headline Bar",
+  "about": "Social news: white page, black condensed headlines on yellow bars, a punch on every key word.",
+  "theme": "headline-bar",
+  "fonts": {
+    "display": "Bebas Neue",
+    "title": "Inter Tight",
+    "caption": "Inter Tight",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 14,
+    "stiffness": 300,
+    "mass": 0.6
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "kinetic-punch",
+  "fxOverlay": "none",
+  "hostMode": "hide",
+  "pace": "quick",
+  "fits": [
+    "word-stack-slam",
+    "highlighter-swipe",
+    "counter-drop",
+    "phone-buzz"
+  ]
+}

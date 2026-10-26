@@ -1,0 +1,30 @@
+{
+  "id": "engraving",
+  "name": "Engraving",
+  "about": "A copperplate museum label: sepia paper, old-style serif, plate grain, a slow hand-held camera.",
+  "theme": "engraving",
+  "fonts": {
+    "display": "IM Fell English",
+    "title": "IM Fell English",
+    "caption": "Instrument Serif",
+    "data": "Special Elite"
+  },
+  "spring": {
+    "damping": 30,
+    "stiffness": 100,
+    "mass": 1
+  },
+  "caption": {
+    "case": "none"
+  },
+  "cameraMode": "handheld-doc",
+  "fxOverlay": "print",
+  "hostMode": "tint",
+  "pace": "steady",
+  "fits": [
+    "intertitle",
+    "highlighter-swipe",
+    "line-draw",
+    "zoom-dive"
+  ]
+}

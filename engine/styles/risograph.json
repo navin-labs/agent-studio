@@ -1,0 +1,30 @@
+{
+  "id": "risograph",
+  "name": "Risograph",
+  "about": "Two plates off register on off-white: blue and yellow, fluoro pink alerts, grain and dot screen.",
+  "theme": "risograph",
+  "fonts": {
+    "display": "Archivo Black",
+    "title": "Space Grotesk",
+    "caption": "Space Grotesk",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 11,
+    "stiffness": 170,
+    "mass": 0.9
+  },
+  "caption": {
+    "case": "none"
+  },
+  "cameraMode": "kinetic-punch",
+  "fxOverlay": "print",
+  "hostMode": "tint",
+  "pace": "quick",
+  "fits": [
+    "word-stack-slam",
+    "pile-drop",
+    "before-after-split",
+    "conveyor"
+  ]
+}

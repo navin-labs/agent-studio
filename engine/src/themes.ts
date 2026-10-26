@@ -18,7 +18,7 @@ export type Theme = {
   reveal?: string; // the reveal (C2: the name and the year the moment they are spoken). Unset: the highlighter uses accent
 };
 
-export type ThemeName = 'paper' | 'ink' | 'mono' | 'studio' | 'night' | 'archive' | 'night-signal' | 'archive-gold' | 'cutaway' | 'scherenschnitt' | 'muster' | 'offset' | 'pop-day' | 'pop-night' | 'linen' | 'periwinkle' | 'signal' | 'journey' | 'editorial' | 'vibrant' | 'dark-luxe' | 'midnight-neon' | 'pastel' | 'earthy' | 'sepia' | 'bauhaus' | 'nordic' | 'sunset' | 'film' | 'sodium-night' | 'indigo-pixel' | 'gold-dream' | 'kinetic' | 'glass' | 'grain' | 'pop-bold';
+export type ThemeName = 'paper' | 'ink' | 'mono' | 'studio' | 'night' | 'archive' | 'night-signal' | 'archive-gold' | 'cutaway' | 'scherenschnitt' | 'muster' | 'offset' | 'pop-day' | 'pop-night' | 'linen' | 'periwinkle' | 'signal' | 'journey' | 'editorial' | 'vibrant' | 'dark-luxe' | 'midnight-neon' | 'pastel' | 'earthy' | 'sepia' | 'bauhaus' | 'nordic' | 'sunset' | 'film' | 'sodium-night' | 'indigo-pixel' | 'gold-dream' | 'kinetic' | 'glass' | 'grain' | 'pop-bold' | 'headline-bar' | 'countdown' | 'ops-board' | 'orbit-intel' | 'light-table' | 'screenprint' | 'sixties-titles' | 'art-deco' | 'pictogram' | 'isometric' | 'hud' | 'game-show' | 'newsreel' | 'telestrator' | 'engraving' | 'woodcut' | 'paper-cut' | 'whiteboard' | 'line-draw' | 'constructivist' | 'headline-bar' | 'countdown' | 'ops-board' | 'orbit-intel' | 'light-table' | 'screenprint' | 'sixties-titles' | 'art-deco' | 'pictogram' | 'isometric' | 'hud' | 'game-show' | 'newsreel' | 'telestrator' | 'engraving' | 'woodcut' | 'paper-cut' | 'whiteboard' | 'line-draw' | 'constructivist' | 'headline-bar' | 'countdown' | 'ops-board' | 'orbit-intel' | 'light-table' | 'screenprint' | 'sixties-titles' | 'art-deco' | 'pictogram' | 'isometric' | 'hud' | 'game-show' | 'newsreel' | 'telestrator' | 'engraving' | 'woodcut' | 'paper-cut' | 'whiteboard' | 'line-draw' | 'constructivist' | 'headline-bar' | 'countdown' | 'ops-board' | 'orbit-intel' | 'light-table' | 'screenprint' | 'sixties-titles' | 'art-deco' | 'pictogram' | 'isometric' | 'hud' | 'game-show' | 'newsreel' | 'telestrator' | 'engraving' | 'woodcut' | 'paper-cut' | 'whiteboard' | 'line-draw' | 'constructivist' | 'headline-bar' | 'countdown' | 'ops-board' | 'orbit-intel' | 'light-table' | 'screenprint' | 'sixties-titles' | 'art-deco' | 'pictogram' | 'isometric' | 'hud' | 'game-show' | 'newsreel' | 'telestrator' | 'engraving' | 'woodcut' | 'paper-cut' | 'whiteboard' | 'line-draw' | 'constructivist' | 'headline-bar' | 'countdown' | 'ops-board' | 'orbit-intel' | 'light-table' | 'screenprint' | 'sixties-titles' | 'art-deco' | 'pictogram' | 'isometric' | 'hud' | 'game-show' | 'newsreel' | 'telestrator' | 'engraving' | 'woodcut' | 'paper-cut' | 'whiteboard' | 'line-draw' | 'constructivist' | 'headline-bar' | 'countdown' | 'ops-board' | 'orbit-intel' | 'light-table' | 'screenprint' | 'sixties-titles' | 'art-deco' | 'pictogram' | 'isometric' | 'hud' | 'game-show' | 'newsreel' | 'telestrator' | 'engraving' | 'woodcut' | 'paper-cut' | 'whiteboard' | 'line-draw' | 'constructivist' | 'swiss-motion' | 'terminal-dark' | 'dark-keynote' | 'data-story' | 'blueprint' | 'investigation' | 'halftone' | 'risograph' | 'news-desk' | 'headline-bar' | 'countdown' | 'ops-board' | 'orbit-intel' | 'light-table' | 'screenprint' | 'sixties-titles' | 'art-deco' | 'pictogram' | 'isometric' | 'hud' | 'game-show' | 'newsreel' | 'telestrator' | 'engraving' | 'woodcut' | 'paper-cut' | 'whiteboard' | 'line-draw' | 'constructivist';
 
 // The themes channels, styles and recipes may name (their schemas list exactly these). The rest are film palettes, each added by
 // the Director for one authored film; a film board may name any theme here.
@@ -148,6 +148,124 @@ export const THEMES: Record<ThemeName, Theme> = {
   'pop-bold': {
     bg: '#F4F1E8', surface: '#FFFFFF', ink: '#111111', muted: '#444444', rule: '#111111',
     accent: '#C6FF3D', onAccent: '#111111', flow: '#8A3CFF', ok: '#111111', alert: '#FF4FD8', warn: '#C6FF3D', shadow: '#111111',
+  },
+  // Format styles (2026-10-26, engine/styles/): one palette per visual world, role tokens so every primitive renders in it.
+  // Beyond the gate's pairs, ink on flow reads at 3.2:1 or more (ui-chat's sent bubble), checked by studio/formatstyle.test.ts.
+  'swiss-motion': {
+    bg: '#F0EFEA', surface: '#FFFFFF', ink: '#141414', muted: '#5A5953', rule: '#D3D1CA',
+    accent: '#D7191F', onAccent: '#FFFFFF', flow: '#3853F1', ok: '#141414', alert: '#D7191F', warn: '#D7191F', shadow: '#141414',
+  },
+  'terminal-dark': {
+    bg: '#0A0805', surface: '#17120B', ink: '#F5A623', muted: '#C48A2C', rule: '#2B2114',
+    accent: '#F5A623', onAccent: '#0A0805', flow: '#9D420C', ok: '#F5A623', alert: '#E8552A', warn: '#E8552A', shadow: '#000000',
+  },
+  'dark-keynote': {
+    bg: '#0B0C12', surface: '#161925', ink: '#EAECF2', muted: '#8E94A6', rule: '#242938',
+    accent: '#A8F04C', onAccent: '#0B0C12', flow: '#6E5CF6', ok: '#A8F04C', alert: '#FF5D63', warn: '#FF8A2B', shadow: '#000000',
+  },
+  'data-story': {
+    bg: '#F5F1E9', surface: '#FFFFFF', ink: '#2A2520', muted: '#6B6359', rule: '#DCD4C6',
+    accent: '#E07A4F', onAccent: '#2A2520', flow: '#2F7BC4', ok: '#2F7BC4', alert: '#B5262E', warn: '#E07A4F', shadow: '#2A2520',
+  },
+  blueprint: {
+    bg: '#15306A', surface: '#1B3B7C', ink: '#EAF2FB', muted: '#AFC6E3', rule: '#2B57A0',
+    accent: '#EAF2FB', onAccent: '#15306A', flow: '#4688D2', ok: '#EAF2FB', alert: '#D0432F', warn: '#D0432F', shadow: '#0B1220',
+  },
+  investigation: {
+    bg: '#0C0D10', surface: '#15171B', ink: '#EEECE6', muted: '#8F949B', rule: '#2F333A',
+    accent: '#FF5533', onAccent: '#0C0D10', flow: '#70757D', ok: '#EEECE6', alert: '#FF5533', warn: '#FF5533', shadow: '#000000',
+  },
+  halftone: {
+    bg: '#F6EEDF', surface: '#FFF6E6', ink: '#1E2442', muted: '#4B5276', rule: '#E4D8C2',
+    accent: '#FFCB2E', onAccent: '#1E2442', flow: '#4D70DE', ok: '#4D70DE', alert: '#EB3D55', warn: '#F48C38', shadow: '#1E2442',
+  },
+  risograph: {
+    bg: '#F7F2E7', surface: '#FCF8EF', ink: '#2B3C68', muted: '#56668D', rule: '#E6DECD',
+    accent: '#FFE41A', onAccent: '#2B3C68', flow: '#73BFE9', ok: '#00878F', alert: '#FF4FAE', warn: '#FF7A7C', shadow: '#2B3C68',
+  },
+  'news-desk': {
+    bg: '#131519', surface: '#1C1F25', ink: '#F5F2EA', muted: '#A0A5AD', rule: '#252930',
+    accent: '#F4D21F', onAccent: '#131519', flow: '#A6802E', ok: '#F4D21F', alert: '#FF6C3C', warn: '#FF6C3C', shadow: '#000000',
+  },
+  'headline-bar': {
+    bg: '#FFFFFF', surface: '#F2F2F2', ink: '#0D0D0D', muted: '#555555', rule: '#DADADA',
+    accent: '#FFE600', onAccent: '#0D0D0D', flow: '#1D6BFF', ok: '#0D0D0D', alert: '#FF2D2D', warn: '#FFE600', shadow: '#0D0D0D',
+  },
+  countdown: {
+    bg: '#0E0E10', surface: '#1A1A1E', ink: '#FFFFFF', muted: '#9A9AA2', rule: '#2A2A30',
+    accent: '#FF3B30', onAccent: '#0E0E10', flow: '#3A86FF', ok: '#34C759', alert: '#FF3B30', warn: '#FF9F0A', shadow: '#000000',
+  },
+  'ops-board': {
+    bg: '#E9ECEF', surface: '#FFFFFF', ink: '#1B2430', muted: '#56606E', rule: '#CDD3DA',
+    accent: '#FFB703', onAccent: '#1B2430', flow: '#2C68EC', ok: '#15803D', alert: '#DC2626', warn: '#F59E0B', shadow: '#1B2430',
+  },
+  'orbit-intel': {
+    bg: '#06121B', surface: '#0C1D2A', ink: '#D8F3FF', muted: '#7FA6BA', rule: '#133247',
+    accent: '#36E2C2', onAccent: '#06121B', flow: '#1F8FB3', ok: '#36E2C2', alert: '#FF6B4A', warn: '#FFC24B', shadow: '#000000',
+  },
+  'light-table': {
+    bg: '#1A1814', surface: '#26231D', ink: '#F2EAD8', muted: '#A99F8B', rule: '#3A3428',
+    accent: '#E9B44C', onAccent: '#1A1814', flow: '#8F7B57', ok: '#F2EAD8', alert: '#D9533B', warn: '#E9B44C', shadow: '#000000',
+  },
+  screenprint: {
+    bg: '#F3E9D2', surface: '#FAF2DF', ink: '#213A4A', muted: '#4F6472', rule: '#E2D3B4',
+    accent: '#F7934C', onAccent: '#213A4A', flow: '#3FA7A0', ok: '#3FA7A0', alert: '#D93A2B', warn: '#F2A93B', shadow: '#213A4A',
+  },
+  'sixties-titles': {
+    bg: '#F2A03D', surface: '#FFF3DC', ink: '#111111', muted: '#3D2A12', rule: '#E08A2A',
+    accent: '#111111', onAccent: '#F2A03D', flow: '#C2391B', ok: '#111111', alert: '#C2391B', warn: '#111111', shadow: '#111111',
+  },
+  'art-deco': {
+    bg: '#0F0D0A', surface: '#1C1914', ink: '#F1E6C8', muted: '#B9A57A', rule: '#3A3222',
+    accent: '#D4AF37', onAccent: '#0F0D0A', flow: '#7A1F2B', ok: '#D4AF37', alert: '#B8323F', warn: '#D4AF37', shadow: '#000000',
+  },
+  pictogram: {
+    bg: '#FFFFFF', surface: '#F4F5F7', ink: '#0A0A0A', muted: '#555555', rule: '#DDDFE3',
+    accent: '#0A84FF', onAccent: '#0A0A0A', flow: '#FF375F', ok: '#30D158', alert: '#FF375F', warn: '#FFD60A', shadow: '#0A0A0A',
+  },
+  isometric: {
+    bg: '#EEF2F7', surface: '#FFFFFF', ink: '#1E2A3B', muted: '#566377', rule: '#D3DBE6',
+    accent: '#5B5BD6', onAccent: '#FFFFFF', flow: '#2BB3A3', ok: '#2BB3A3', alert: '#F05A5A', warn: '#F5B841', shadow: '#1E2A3B',
+  },
+  hud: {
+    bg: '#030A12', surface: '#08182A', ink: '#BDF6FF', muted: '#6FB4C8', rule: '#0F2D46',
+    accent: '#3DF0FF', onAccent: '#030A12', flow: '#1A7FA8', ok: '#3DF0FF', alert: '#FF4D8D', warn: '#FFB547', shadow: '#000000',
+  },
+  'game-show': {
+    bg: '#1B0B3A', surface: '#2A1559', ink: '#FFFFFF', muted: '#C4B5F0', rule: '#3A2475',
+    accent: '#FFD23F', onAccent: '#1B0B3A', flow: '#E8318A', ok: '#3BE07A', alert: '#FF4D4D', warn: '#FFD23F', shadow: '#000000',
+  },
+  newsreel: {
+    bg: '#1A1A1A', surface: '#262626', ink: '#EDEBE4', muted: '#A3A19A', rule: '#3A3A3A',
+    accent: '#EDEBE4', onAccent: '#1A1A1A', flow: '#6E6E6E', ok: '#EDEBE4', alert: '#C9C5B8', warn: '#C9C5B8', shadow: '#000000',
+  },
+  telestrator: {
+    bg: '#0F3D24', surface: '#154A2D', ink: '#FFFFFF', muted: '#BFD8C8', rule: '#1E5C38',
+    accent: '#FFE135', onAccent: '#0F3D24', flow: '#2B8ED9', ok: '#FFE135', alert: '#FF4A3D', warn: '#FFE135', shadow: '#000000',
+  },
+  engraving: {
+    bg: '#F2EBDD', surface: '#F8F3E8', ink: '#1F1A14', muted: '#5C5246', rule: '#DCD0BB',
+    accent: '#8C2F23', onAccent: '#F8F3E8', flow: '#5E6F5C', ok: '#1F1A14', alert: '#8C2F23', warn: '#8C2F23', shadow: '#1F1A14',
+  },
+  woodcut: {
+    bg: '#EFE4CC', surface: '#F6EDD8', ink: '#1A1410', muted: '#54473A', rule: '#D8C8A8',
+    accent: '#C23A22', onAccent: '#F6EDD8', flow: '#6C8A55', ok: '#1A1410', alert: '#C23A22', warn: '#D98B2B', shadow: '#1A1410',
+  },
+  'paper-cut': {
+    bg: '#C8102E', surface: '#9E0C25', ink: '#FFF5E8', muted: '#FFE0CC', rule: '#A30D27',
+    accent: '#F7C548', onAccent: '#5A0612', flow: '#7A0A1D', ok: '#F7C548', alert: '#F7C548', warn: '#F7C548', shadow: '#4A0510',
+  },
+  whiteboard: {
+    bg: '#F7F7F4', surface: '#FFFFFF', ink: '#1C1C1C', muted: '#595959', rule: '#E1E1DC',
+    accent: '#FFE45C', onAccent: '#1C1C1C', flow: '#2F6FDB', ok: '#21A35B', alert: '#E03A3A', warn: '#F29D2E', shadow: '#1C1C1C',
+  },
+  'line-draw': {
+    bg: '#FAF8F3', surface: '#FFFFFF', ink: '#151515', muted: '#5E5E5E', rule: '#E5E2DA',
+    accent: '#151515', onAccent: '#FAF8F3', flow: '#E4572E', ok: '#151515', alert: '#E4572E', warn: '#E4572E', shadow: '#151515',
+  },
+  constructivist: {
+    bg: '#EFE6D2', surface: '#F7F0E1', ink: '#141414', muted: '#4E4A42', rule: '#DCD0B6',
+    accent: '#B8221A', onAccent: '#F7F0E1', flow: '#666666', ok: '#141414', alert: '#D52B1E', warn: '#D52B1E', shadow: '#141414',
   },
   'gold-dream': {
     bg: '#081226', surface: '#0F1D38', ink: '#F7EBD3', muted: '#B8C2D9', rule: '#1A2B4F',

@@ -1,0 +1,30 @@
+{
+  "id": "blueprint",
+  "name": "Blueprint",
+  "about": "White line on engineering blue under a tactical grid and radar; shots tilt in like a drafting table.",
+  "theme": "blueprint",
+  "fonts": {
+    "display": "Space Grotesk",
+    "title": "Space Grotesk",
+    "caption": "Space Grotesk",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 28,
+    "stiffness": 170,
+    "mass": 0.8
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "3d-tilt",
+  "fxOverlay": "tactical",
+  "hostMode": "tint",
+  "pace": "steady",
+  "fits": [
+    "flow-build",
+    "flow-run",
+    "point-cloud",
+    "ui-diff"
+  ]
+}

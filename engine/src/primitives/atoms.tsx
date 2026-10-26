@@ -20,7 +20,12 @@ export const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as co
 export const EASE = Easing.bezier(0.65, 0, 0.35, 1);
 export const LINEAR = (t: number) => t;
 export const prog = (f: number, a: number, dur: number, e: (t: number) => number = EASE) => interpolate(f, [a, a + dur], [0, 1], {...clamp, easing: e});
-export const springFrom = (f: number, a: number, config = {}) => (f < a ? 0 : spring({frame: f - a, fps: FPS, config: {damping: 14, stiffness: 150, mass: 0.8, ...config}}));
+// ponytail: module-level spring set by the Composer from the board's format style before its children render; every frame of a
+// render gets the same props, so it stays deterministic. A context if springFrom ever runs outside a Composer render.
+const BASE_SPRING = {damping: 14, stiffness: 150, mass: 0.8};
+let styleSpring = BASE_SPRING;
+export const setStyleSpring = (s?: Partial<typeof BASE_SPRING>) => void (styleSpring = {...BASE_SPRING, ...s});
+export const springFrom = (f: number, a: number, config = {}) => (f < a ? 0 : spring({frame: f - a, fps: FPS, config: {...styleSpring, ...config}}));
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 // ---- motion (docs/MOTION.md; rules adopted from maker-motion): never linear, exits faster than entrances ----

@@ -1,0 +1,30 @@
+{
+  "id": "constructivist",
+  "name": "Constructivist",
+  "about": "Soviet montage: red and black diagonals on cream, slab caps, whip cuts, film on twos.",
+  "theme": "constructivist",
+  "fonts": {
+    "display": "Oswald",
+    "title": "Oswald",
+    "caption": "Oswald",
+    "data": "Special Elite"
+  },
+  "spring": {
+    "damping": 10,
+    "stiffness": 300,
+    "mass": 0.6
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "whip-pan",
+  "fxOverlay": "film",
+  "hostMode": "tint",
+  "pace": "quick",
+  "fits": [
+    "word-stack-slam",
+    "intertitle",
+    "counter-drop",
+    "pile-drop"
+  ]
+}

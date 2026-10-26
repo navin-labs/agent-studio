@@ -1,0 +1,30 @@
+{
+  "id": "investigation",
+  "name": "Investigation",
+  "about": "Forensic documentary: greyscale evidence on near-black, a serif title, one orange marker, case-file grid, hand-held drift.",
+  "theme": "investigation",
+  "fonts": {
+    "display": "Instrument Serif",
+    "title": "Inter",
+    "caption": "Inter",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 30,
+    "stiffness": 120,
+    "mass": 1
+  },
+  "caption": {
+    "case": "none"
+  },
+  "cameraMode": "handheld-doc",
+  "fxOverlay": "tactical",
+  "hostMode": "hide",
+  "pace": "steady",
+  "fits": [
+    "ui-inbox",
+    "highlighter-swipe",
+    "zoom-dive",
+    "stamp-hit"
+  ]
+}

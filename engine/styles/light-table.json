@@ -1,0 +1,30 @@
+{
+  "id": "light-table",
+  "name": "Light Table",
+  "about": "Prints on a glowing archive table: warm dark, serif type, film dust and flicker, a hand-held camera.",
+  "theme": "light-table",
+  "fonts": {
+    "display": "IM Fell English",
+    "title": "Instrument Serif",
+    "caption": "Inter",
+    "data": "Special Elite"
+  },
+  "spring": {
+    "damping": 30,
+    "stiffness": 110,
+    "mass": 1
+  },
+  "caption": {
+    "case": "none"
+  },
+  "cameraMode": "handheld-doc",
+  "fxOverlay": "film",
+  "hostMode": "tint",
+  "pace": "steady",
+  "fits": [
+    "intertitle",
+    "highlighter-swipe",
+    "zoom-dive",
+    "split-flap"
+  ]
+}

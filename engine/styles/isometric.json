@@ -1,0 +1,30 @@
+{
+  "id": "isometric",
+  "name": "Isometric",
+  "about": "A clean isometric explainer: cool paper, indigo and teal, shots tilt in on a 3D axis.",
+  "theme": "isometric",
+  "fonts": {
+    "display": "Space Grotesk",
+    "title": "Inter Tight",
+    "caption": "Inter",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 22,
+    "stiffness": 180,
+    "mass": 0.85
+  },
+  "caption": {
+    "case": "none"
+  },
+  "cameraMode": "3d-tilt",
+  "fxOverlay": "none",
+  "hostMode": "hide",
+  "pace": "steady",
+  "fits": [
+    "flow-build",
+    "flow-run",
+    "conveyor",
+    "ui-sheet"
+  ]
+}

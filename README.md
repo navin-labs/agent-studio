@@ -1,32 +1,43 @@
-# FORGE Content Studio: open-source AI short-video automation with Remotion and TypeScript
+<div align="center">
 
-**FORGE Content Studio** plans, writes, renders, checks and dispatches faceless short videos (YouTube Shorts, Instagram Reels, Facebook) from your own Mac. Rendering is [Remotion](https://www.remotion.dev) and TypeScript, the voice is local [Kokoro](https://github.com/hexgrad/kokoro) text-to-speech, and nothing is published until a human approves it.
+# ⚡ FORGE Content Studio
+
+**Evidence Films: short videos built from sourced numbers and real-looking work screens, rendered in code.**<br/>
+No stock footage, no video model, no paid voice API. Remotion renders it; a local voice speaks it; free code gates check it; a human approves it.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Remotion](https://img.shields.io/badge/Remotion-render-0B84F3.svg)](https://www.remotion.dev)
-[![Kokoro voice](https://img.shields.io/badge/Kokoro-local%20voice-3670a0.svg)](https://github.com/hexgrad/kokoro)
-[![n8n Orchestration](https://img.shields.io/badge/n8n-workflow-FD004F.svg)](https://n8n.io)
-[![Node 26](https://img.shields.io/badge/node-26-339933.svg)](https://nodejs.org)
+[![Remotion](https://img.shields.io/badge/Remotion-4.0-0B84F3.svg)](https://www.remotion.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6.svg)](https://www.typescriptlang.org/)
+[![Node 26](https://img.shields.io/badge/node-26-339933.svg)](https://nodejs.org)
+[![Kokoro voice](https://img.shields.io/badge/Kokoro-local%20TTS-3670a0.svg)](https://github.com/hexgrad/kokoro)
+[![n8n in Docker](https://img.shields.io/badge/n8n-Docker-FD004F.svg)](https://n8n.io)
+<br/>
+[![Density gate](https://img.shields.io/badge/density%20gate-2.5%20s-111111.svg)](engine/src/composer/density.ts)
+[![Power-word captions](https://img.shields.io/badge/captions-power%20words%201.2x-C6F432.svg)](engine/src/host/power.ts)
+[![Score ducking](https://img.shields.io/badge/music-ducked%20%E2%88%9210%20dB-E8A020.svg)](engine/src/lib/score.ts)
+[![Format styles](https://img.shields.io/badge/format%20styles-29-E30613.svg)](engine/styles/README.md)
 
-## Why FORGE: automated shorts that pass their own quality gates
+[Feature presentation](#-feature-presentation) · [Format styles](#-format-styles-and-primitives) · [4 gates](#-the-4-gate-architecture) · [Quickstart](#-quickstart)
 
-FORGE automates idea intake, hook and script writing, motion-graphic rendering, quality checks and multi-platform dispatch, and **refuses to publish anything until a human says yes**. Deterministic code gates check the script and the storyboard before any render is spent, and an approval ledger bound to the exact video hash stands between a finished render and your audience. Setup: [docs/INSTALL.md](docs/INSTALL.md). Daily use: [docs/OPERATIONS.md](docs/OPERATIONS.md).
-
----
-
-## What you can build with FORGE
-
-| Use case | What FORGE does |
-|----------|-----------------|
-| **Faceless short-video production** | Platform-specific videos (25 to 60 s, by channel) for YouTube Shorts, Instagram Reels and Facebook from listed RSS/Atom feeds; one approval tap per video |
-| **Script and hook quality control** | Free, deterministic script gate: hook rules, 15-word sentences, 10-word average, banned filler, a re-hook at least every 18 s, one sourced proof per video |
-| **Kinetic typography and motion graphics** | Remotion shot primitives (inbox, sheet, chat, diff, flow, counter); Kokoro's exact word times drive the host format's karaoke captions, where marked power words pop to 1.2x |
-| **Human-in-the-loop production** | Schema-enforced storyboards, hash-verified approvals, an append-only dispatch ledger, and no blind retries on unknown uploads |
+</div>
 
 ---
 
-## Live Demo
+### 🆕 Changelog
+
+| Date | What landed |
+|---|---|
+| 2026-10-26 | **29 format styles**: each a visual world, not a palette: its own camera (3D tilt, whip pan, kinetic punch, hand-held), texture (CRT, print, film on twos, tactical HUD), host behaviour, faces and pace. `--style=<id>` on any board |
+| 2026-10-26 | **Visual-mode primitives**: an 8-bit status screen, a scanned point cloud, a live hand-drawn line and a silent-film intertitle, beside the inbox, sheet and chat shots |
+| 2026-10-26 | **Contact sheet before render**: `npm run sheet` freezes every scene on one PNG with `remotion still`, under a second once bundled, before any voice or MP4 |
+| 2026-10-26 | **Director cost guard**: dollar, call and minute ceilings; a failing line is repaired by a micro-call, never a restart |
+| 2026-10-26 | **2.5 s density gate**: a board fails before render if 2.5 s pass with nothing new on screen |
+| 2026-10-26 | **Power-word captions**: a marked word springs to 1.2x the moment Kokoro says it, timed to the exact word |
+| 2026-10-26 | **Channel sound identity**: a music bed ducked 10 dB under the voice and a 2 s sonic bumper per channel |
+
+---
+
+## 🎬 Feature presentation
 
 <table><tr>
 <td width="360" valign="top">
@@ -36,23 +47,140 @@ https://github.com/user-attachments/assets/0b320102-7cf2-4a57-982e-5fe07f4671e2
 </td>
 <td valign="top">
 
-**A generated sample from the pipeline**: a test storyboard rendered by the engine and passed by QA (a verification render, not a channel post).
+**One board, rendered by the pipeline and passed by QA** (a verification render, not a channel post).
 
-- **Topic:** chasing unpaid invoices: payment reminders typed by hand versus a reminder flow that runs itself every morning (illustrative example data).
-- **Platform:** `c1-automation`, YouTube variant ("Subscribe" CTA and end card). The same board also renders Instagram and Facebook variants with their own CTA, end card and caption.
-- **Format:** 44.18 s (allowed 40 to 60 s), 1080x1920, 30 fps, local Kokoro voice.
-- **Built from:** `engine/test/style-c1.json`, style `c1-night-signal-v1`, recipe `style-test-c1`; 8 shots: word-stack-slam, pile-drop, ui-chat, before-after-split, flow-run, ui-sheet, counter-drop, end-card.
-- **QA:** 12 of 12 checks passed ([qa-c1.txt](docs/proof/qa-c1.txt)).
-- **Why this one:** the richer of the two verified boards (7 distinct primitives against 5), so one file exercises voice measurement, text fit and the platform CTA rules.
-
-The player is a 4.3 MB re-encode (GitHub's inline limit is 10 MB). The original is [c1-automation-youtube-2026-10-04-style-c1.mp4](docs/proof/demo/c1-automation-youtube-2026-10-04-style-c1.mp4); its SHA-256 matches [c1-youtube.json](docs/proof/manifests/c1-youtube.json).
+- **Story:** chasing unpaid invoices: reminders typed by hand against a reminder flow that runs itself (illustrative example data).
+- **Board:** `engine/test/style-c1.json`, 8 shots: word-stack-slam, pile-drop, ui-chat, before-after-split, flow-run, ui-sheet, counter-drop, end-card.
+- **Render:** 44.18 s, 1080x1920, 30 fps, local Kokoro voice, YouTube variant of C1.
+- **QA:** 12 of 12 checks passed ([qa-c1.txt](docs/proof/qa-c1.txt)). The original file's SHA-256 matches [c1-youtube.json](docs/proof/manifests/c1-youtube.json).
 
 </td>
 </tr></table>
 
+### Channel styles
+
+The two live channels each own a look. The format styles below are for any board.
+
+<table>
+<tr>
+<th>C1 Automation · Night Signal</th>
+<th>C2 Reach · Archive Gold</th>
+<th>Format style · Newsreel</th>
+<th>Format style · Orbit Intel</th>
+</tr>
+<tr>
+<td><img src="docs/media/styles/night-signal-hook.png" width="180" alt="C1 Night Signal hook frame"></td>
+<td><img src="docs/media/styles/archive-gold-evidence.png" width="180" alt="C2 Archive Gold highlighter frame"></td>
+<td><img src="docs/media/styles/newsreel-signature.png" width="180" alt="Newsreel intertitle frame"></td>
+<td><img src="docs/media/styles/orbit-intel-signature.png" width="180" alt="Orbit Intel point-cloud frame"></td>
+</tr>
+<tr>
+<td>Chiku the pixel host, lime for "automated", karaoke captions with power words</td>
+<td>Navy and one gold reveal, year split-flap opener, keyword captions</td>
+<td>Silver greys, intertitles, film dust and flicker, picture on twos, hand-held camera</td>
+<td>Teal scan light, radar sweep and telemetry, shots tilt in on a 3D axis</td>
+</tr>
+<tr>
+<td><!-- drop a C1 reel here (drag the MP4 into the GitHub editor) --></td>
+<td><!-- drop a C2 reel here --></td>
+<td><!-- drop a Newsreel reel here --></td>
+<td><!-- drop an Orbit Intel reel here --></td>
+</tr>
+</table>
+
 ---
 
-## How FORGE Works
+## 🎨 Format styles and primitives
+
+A format style is a whole visual world: palette, faces, spring, caption case, **camera** (`3d-tilt`, `whip-pan`, `kinetic-punch`, `handheld-doc`), **texture** (`crt`, `print`, `film`, `tactical`), **host** (keep, tint into the palette, or hide) and **pace**. The same board, timing and gates come out as a different film. Each pair below is one board (`engine/test/style-showcase.json`): the hook and the style's signature shot, from `npm run sheet -- test/style-showcase.json --style=<id>`.
+
+<table>
+<tr><th><code>swiss-motion</code></th><th><code>terminal-dark</code></th><th><code>newsreel</code></th><th><code>orbit-intel</code></th></tr>
+<tr><td><img src="docs/media/styles/swiss-motion-hook.png" width="88"> <img src="docs/media/styles/swiss-motion-signature.png" width="88"></td><td><img src="docs/media/styles/terminal-dark-hook.png" width="88"> <img src="docs/media/styles/terminal-dark-signature.png" width="88"></td><td><img src="docs/media/styles/newsreel-hook.png" width="88"> <img src="docs/media/styles/newsreel-signature.png" width="88"></td><td><img src="docs/media/styles/orbit-intel-hook.png" width="88"> <img src="docs/media/styles/orbit-intel-signature.png" width="88"></td></tr>
+<tr><td>kinetic punch · no overlay</td><td>whip pan · CRT</td><td>hand-held · film on twos</td><td>3D tilt · tactical HUD</td></tr>
+<tr><th><code>risograph</code></th><th><code>art-deco</code></th><th><code>game-show</code></th><th><code>whiteboard</code></th></tr>
+<tr><td><img src="docs/media/styles/risograph-hook.png" width="88"> <img src="docs/media/styles/risograph-signature.png" width="88"></td><td><img src="docs/media/styles/art-deco-hook.png" width="88"> <img src="docs/media/styles/art-deco-signature.png" width="88"></td><td><img src="docs/media/styles/game-show-hook.png" width="88"> <img src="docs/media/styles/game-show-signature.png" width="88"></td><td><img src="docs/media/styles/whiteboard-hook.png" width="88"> <img src="docs/media/styles/whiteboard-signature.png" width="88"></td></tr>
+<tr><td>kinetic punch · print</td><td>3D tilt · gold on lacquer</td><td>kinetic punch · 8-bit</td><td>hand-held · live line</td></tr>
+<tr><th><code>blueprint</code></th><th><code>headline-bar</code></th><th><code>constructivist</code></th><th><code>hud</code></th></tr>
+<tr><td><img src="docs/media/styles/blueprint-hook.png" width="88"> <img src="docs/media/styles/blueprint-signature.png" width="88"></td><td><img src="docs/media/styles/headline-bar-hook.png" width="88"> <img src="docs/media/styles/headline-bar-signature.png" width="88"></td><td><img src="docs/media/styles/constructivist-hook.png" width="88"> <img src="docs/media/styles/constructivist-signature.png" width="88"></td><td><img src="docs/media/styles/hud-hook.png" width="88"> <img src="docs/media/styles/hud-signature.png" width="88"></td></tr>
+<tr><td>3D tilt · tactical grid</td><td>kinetic punch · news bars</td><td>whip pan · film</td><td>3D tilt · CRT</td></tr>
+</table>
+
+29 styles in all, from Swiss grid to woodcut, paper-cut, countdown, ops board, telestrator and sixties titles. The full table with every style's camera, overlay, host and faces is in [engine/styles/README.md](engine/styles/README.md). Authored films rotate across a separate catalogue of 267 format x look x colour combinations ([studio/looks.json](studio/looks.json)), so a feed does not repeat itself.
+
+### Built-in primitives
+
+Code-drawn shots that every style re-skins. No footage, no screenshots: each is a React component reading role tokens.
+
+| Primitive | What it shows |
+|---|---|
+| `ui-inbox` | An inbox filling up or being triaged |
+| `ui-sheet` | A spreadsheet whose rows update, flag and fill |
+| `ui-chat` | A chat thread, typed and sent |
+| `ui-diff` | A before/after code or text diff |
+| `flow-build`, `flow-run` | An automation flow built node by node, then run |
+| `counter-drop` | A sourced number landing |
+| `before-after-split` | The manual way against the automated way |
+| `rpg-panel` | An 8-bit status screen: stepped stat bars, then a typed dialogue box |
+| `point-cloud` | A rotating scanned point cloud; a reticle locks and reads out a value |
+| `line-draw` | One hand-drawn line travels stop to stop, circling and writing each label |
+| `intertitle` | A silent-film title card: iris in, ruled frame, line, flourish |
+| `split-flap`, `highlighter-swipe`, `stamp-hit`, `zoom-dive`, `pile-drop`, `word-stack-slam` and more | Reveals, emphasis and kinetic type (`engine/src/primitives/`) |
+
+### Contact sheet before the render
+
+```bash
+cd engine
+npm run sheet -- test/style-showcase.json --style=newsreel
+# test/out/sheets/style-showcase.newsreel.sheet.png  9 scenes, still 0.7s after bundling
+```
+
+Every scene's middle frame on one PNG (hook first, payoff last), rendered with Remotion's `renderStill` from the real Composer, so layout, colour and text fit can be judged before voice or MP4. Bundling is extra: 2 to 5 s in total on an M-series Mac with a warm cache.
+
+<p align="center"><img src="docs/media/styles/contact-sheet-newsreel.png" width="640" alt="Contact sheet of the showcase board in the Newsreel style"></p>
+
+---
+
+## 🧠 The 4-gate architecture
+
+Every gate is plain code: free to run, same answer every time, and each one stops the pipeline with an exact reason.
+
+| Gate | Checks | Where |
+|---|---|---|
+| **1. Script gate** | Hook rules, 15-word sentences and a 10-word average, banned openers and filler words, a re-hook at least every 45 words (and no run over 18 s on measured clips), one sourced proof per video | `studio/script.ts` |
+| **2. Visual density gate** | No gap over 2.5 s with nothing new on screen (shot switch, cue, row, cursor, layout); checked before voicing and again on measured clips | `engine/src/composer/density.ts` |
+| **3. Audio and bumper mixer** | Channel music bed ducked 10 dB under every voice line, faded before the end; 2 s sonic bumper after the last line; the closing scene is stretched to hold it | `engine/src/lib/score.ts`, `engine/src/films/kit.tsx` |
+| **4. Remotion renderer and QA** | WCAG AA theme contrast, text boxes measured in the real browser render, then 12 checks per platform file (schema, text limits, audio, format, duration, captions, fingerprint, manifest, CTA, SEO) | `engine/scripts/theme-gate.ts`, `engine/src/composer/textcheck.ts`, `studio/qa.ts` |
+
+After the gates, nothing is published until the owner taps Approve on Telegram; the approval is bound to the video's SHA-256.
+
+---
+
+## ⚡ Quickstart
+
+**Requirements:** macOS 14+, Node 26. For the voice: Python 3.12 with uv and espeak-ng. For publishing: Docker Desktop (n8n). Rendering and `npm run check` need neither Python nor Docker. Full guide: [docs/INSTALL.md](docs/INSTALL.md).
+
+```bash
+git clone https://github.com/navin-labs/forge-content-studio.git
+cd forge-content-studio/engine
+npm install
+
+# types, theme contrast, text QA, schemas, 21 test suites
+npm run check
+
+# contact sheet in a format style (seconds), then a full render
+# (silent unless VOICE=on in engine/.env)
+npm run sheet -- test/style-showcase.json --style=terminal-dark
+npm run make -- test/demo.json --style=newsreel
+```
+
+With the local voice installed ([INSTALL section 4](docs/INSTALL.md#4-voice-local-one-time)), set `VOICE=on` in `engine/.env` and the same command speaks.
+
+Full cycle with fake Telegram and n8n (nothing is posted): `node studio/simulate.ts` from the repo root. Production setup (channels, n8n, Telegram, the agent, launchd services): [docs/INSTALL.md](docs/INSTALL.md), then [docs/SETUP.md](docs/SETUP.md).
+
+---
+
+## How FORGE works
 
 FORGE runs autonomous short-video channels on YouTube, Instagram, and Facebook from your Mac. Each week it plans the videos in code, has an AI agent write the words, renders one video per platform with a React motion engine and a local voice, checks every file with deterministic QA, and sends each passing video to you on Telegram. Nothing is published until you tap Approve, and dispatch re-verifies everything right before sending.
 
@@ -97,7 +225,9 @@ flowchart LR
 
 ---
 
-## Tech Stack: Built on Production-Grade Tools
+---
+
+## Tech stack
 
 - **Engine and renderer:** Remotion with TypeScript on Node 26 (`engine/`, render scripts `make.mjs` and `film.mjs`). No FFmpeg install is needed.
 - **Primitives and composer:** deterministic Remotion shot primitives (inbox, sheet, chat, diff, flow, counter and more), a Composer that sequences them, host karaoke captions, and `Score`, which ducks each channel's synthesised music bed 10 dB under the voice and closes with a 2 s sonic bumper.
@@ -105,55 +235,8 @@ flowchart LR
 - **Quality gates (free, no model call):** `studio/script.ts` (hook, readability, re-hook, sourced proof), `engine/src/composer/density.ts` (no 2.5 s gap with nothing new on screen), theme contrast, text-box QA, and JSON Schema contracts checked by an in-repo validator.
 - **Orchestration:** the studio is TypeScript with no build step (`studio/`); n8n runs in Docker and relays YouTube uploads, stats and feeds, asking the Mac before every upload.
 - **Human approval:** signed Telegram approvals, a SHA-256-bound append-only ledger, and fail-closed dispatch.
+- **Format styles:** `engine/styles/<id>.json` (theme, faces, spring, caption case, camera, overlay, host, pace). Faces and caption case are CSS variables, the camera moves the shot layer only, and the overlay sits outside the measured text, so no primitive changes per style.
 - **State:** JSON and JSONL files in the repo. No database is required.
-
----
-
-## Engineering Principles
-
-| Principle | Enforced By |
-|---|---|
-| Deterministic execution | Recipes, QA, routing and learning are pure functions over files; no model call decides a state transition |
-| Human-in-the-loop governance | `applyApproval` is the only code path that writes approved, only from signed links or the owner's Telegram |
-| Fail-closed behaviour | Every outward step re-checks inputs immediately and refuses with a reason; unclear results are "unknown" |
-| Hash-bound approval | Approval records SHA-256 of the exact video approved; re-render requires new approval |
-| Platform isolation | Each (channel, platform) pair has exactly one route: YouTube → n8n, Instagram/Facebook → queue |
-| Idempotent dispatch | A variant is claimed before any call; each step writes before the next; second run sends nothing |
-| Append-only state | Ledger, fingerprints, and metrics are JSONL; latest line per key wins; crashed lines are ignored |
-| Schema contracts | Every exchanged file has JSON Schema; in-repo validator throws on unsupported keywords |
-| Independent QA | QA reads rendered files, not renderer's claims; probes MP4, measures text from real browser render |
-| Reproducibility | Test boards and fixtures are in the repo; `npm run check` reproduces verification on any Mac |
-
----
-
-## 60-Second Quickstart
-
-**Requirements:** macOS 14+, Node 26, Python 3.12 with uv and espeak-ng (local voice only), Docker Desktop (n8n only; not needed to render or to run `npm run check`)
-
-```bash
-# Clone and enter
-git clone https://github.com/navin-labs/forge-content-studio.git
-cd forge-content-studio/engine
-
-# Install dependencies
-npm install
-
-# Verify (types, themes, text QA, schema validation, 19 studio test suites)
-npm run check
-
-# Run a silent smoke render
-npm run make -- test/demo.json
-
-# (With voice) Reproduce QA on the production-ready test boards
-export VOICE=on
-npm run make -- test/style-c1.json test/style-c2.json
-
-# Run the full-cycle simulation (Telegram & n8n are fakes; nothing is posted)
-cd ..
-node studio/simulate.ts
-```
-
-For production setup (channels, n8n, Telegram, the agent, launchd services): [docs/INSTALL.md](docs/INSTALL.md) → [docs/SETUP.md](docs/SETUP.md).
 
 ---
 
@@ -200,7 +283,7 @@ Each variant is independent: one platform's problem never holds the others.
 
 | Test | Result |
 |------|--------|
-| `npm run check` in `engine/` | Types, theme contrast (WCAG AA), text QA, schemas and 19 studio test suites pass (re-run 2026-10-26) |
+| `npm run check` in `engine/` | Types, theme contrast (WCAG AA), text QA, schemas and 21 test suites pass (re-run 2026-10-26) |
 | `node studio/qa.ts` on test boards | YouTube, Instagram, Facebook: 12/12 checks per variant |
 | `node studio/simulate.ts` | Full cycle: 2 videos × 3 variants approved and routed; 10 refusal cases refused; idempotent |
 
@@ -268,7 +351,8 @@ Configuration is by variable name only; values never appear in the repo. Templat
 | `studio/` | Orchestrator: feed, recipe, QA, ledger, Telegram, dispatch, metrics, learn |
 | `engine/` | Remotion renderer: primitives, themes, composer, text-fit, render, TTS bridge |
 | `schemas/` | JSON Schemas for every exchanged file, validator, samples |
-| `styles/` | Versioned style presets (YouTube, Instagram, Facebook) |
+| `styles/` | Versioned channel style presets (YouTube, Instagram, Facebook) |
+| `engine/styles/` | 29 format styles any board can wear (`--style=<id>`): palette, faces, camera, texture, host, pace |
 | `channels/` | One folder per channel: `channel.json` and rulebook |
 | `agents/` | Writer, Director, Critic skills and their contracts |
 | `n8n/` | Exported n8n workflows: YouTube, Instagram, Facebook, stats |
@@ -280,7 +364,7 @@ Configuration is by variable name only; values never appear in the repo. Templat
 
 ## License
 
-MIT, see [LICENSE](LICENSE). Third-party parts keep their own licenses: Remotion (free for individuals and small companies); fonts (SIL Open Font License); icons (Lucide, ISC). See `engine/README.md` for full licensing.
+MIT, see [LICENSE](LICENSE). Third-party parts keep their own licenses: Remotion (free for individuals and small companies); fonts (SIL Open Font License; Special Elite: Apache-2.0); icons (Lucide, ISC). See `engine/README.md` for full licensing.
 
 ---
 

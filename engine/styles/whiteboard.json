@@ -1,0 +1,30 @@
+{
+  "id": "whiteboard",
+  "name": "Whiteboard",
+  "about": "A whiteboard explainer: marker handwriting, live stroke drawing, a hand-held camera.",
+  "theme": "whiteboard",
+  "fonts": {
+    "display": "Caveat",
+    "title": "Caveat",
+    "caption": "Caveat",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 18,
+    "stiffness": 170,
+    "mass": 0.8
+  },
+  "caption": {
+    "case": "none"
+  },
+  "cameraMode": "handheld-doc",
+  "fxOverlay": "none",
+  "hostMode": "hide",
+  "pace": "steady",
+  "fits": [
+    "line-draw",
+    "flow-build",
+    "highlighter-swipe",
+    "counter-drop"
+  ]
+}

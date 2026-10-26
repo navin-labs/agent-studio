@@ -1,0 +1,30 @@
+{
+  "id": "pictogram",
+  "name": "Pictogram",
+  "about": "Olympic-style pictograms: white, black and five bright signals, quick punches.",
+  "theme": "pictogram",
+  "fonts": {
+    "display": "Space Grotesk",
+    "title": "Space Grotesk",
+    "caption": "Inter",
+    "data": "JetBrains Mono"
+  },
+  "spring": {
+    "damping": 18,
+    "stiffness": 260,
+    "mass": 0.7
+  },
+  "caption": {
+    "case": "none"
+  },
+  "cameraMode": "kinetic-punch",
+  "fxOverlay": "none",
+  "hostMode": "hide",
+  "pace": "quick",
+  "fits": [
+    "flow-build",
+    "stamp-hit",
+    "counter-drop",
+    "conveyor"
+  ]
+}

@@ -104,7 +104,11 @@
               "before-after-split",
               "phone-buzz",
               "maze-to-line",
-              "zoom-dive"
+              "zoom-dive",
+              "rpg-panel",
+              "point-cloud",
+              "line-draw",
+              "intertitle"
             ]
           },
           "params": {
@@ -273,6 +277,11 @@
       "type": "string",
       "pattern": "^c[0-9]-[a-z0-9-]+-v[0-9]+$",
       "description": "style preset id (styles/<id>.json); unset: the channel's style"
+    },
+    "formatStyle": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "A format style in engine/styles/<id>.json (theme, faces, spring, caption case); make.mjs --style=<id> sets it for one render"
     },
     "film": {
       "type": "string",

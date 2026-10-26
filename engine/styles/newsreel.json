@@ -1,0 +1,30 @@
+{
+  "id": "newsreel",
+  "name": "Newsreel",
+  "about": "A 1930s newsreel: silver greys, condensed caps, intertitles, film dust and flicker on twos.",
+  "theme": "newsreel",
+  "fonts": {
+    "display": "Oswald",
+    "title": "Oswald",
+    "caption": "Oswald",
+    "data": "Special Elite"
+  },
+  "spring": {
+    "damping": 26,
+    "stiffness": 160,
+    "mass": 0.9
+  },
+  "caption": {
+    "case": "uppercase"
+  },
+  "cameraMode": "handheld-doc",
+  "fxOverlay": "film",
+  "hostMode": "tint",
+  "pace": "steady",
+  "fits": [
+    "intertitle",
+    "split-flap",
+    "counter-drop",
+    "highlighter-swipe"
+  ]
+}

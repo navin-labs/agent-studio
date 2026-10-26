@@ -31,6 +31,16 @@ export const ensureFonts = () => {
       loadFont({family: 'Space Grotesk', url: staticFile('fonts/space-grotesk-700.woff2'), weight: '700'}),
       loadFont({family: 'Instrument Serif', url: staticFile('fonts/instrument-serif-latin-400-normal.woff2'), weight: '400'}),
       loadFont({family: 'Instrument Serif', url: staticFile('fonts/instrument-serif-latin-400-italic.woff2'), weight: '400', style: 'italic'}),
+      // the format styles' faces (engine/styles/; OFL, Special Elite Apache-2.0: public/fonts/OFL-*.txt, LICENSE-special-elite-apache2.txt)
+      loadFont({family: 'Limelight', url: staticFile('fonts/limelight-latin-400-normal.woff2'), weight: '400'}),
+      loadFont({family: 'Poiret One', url: staticFile('fonts/poiret-one-latin-400-normal.woff2'), weight: '400'}),
+      loadFont({family: 'Oswald', url: staticFile('fonts/oswald-latin-700-normal.woff2'), weight: '700'}),
+      loadFont({family: 'Alfa Slab One', url: staticFile('fonts/alfa-slab-one-latin-400-normal.woff2'), weight: '400'}),
+      loadFont({family: 'Special Elite', url: staticFile('fonts/special-elite-latin-400-normal.woff2'), weight: '400'}),
+      loadFont({family: 'IM Fell English', url: staticFile('fonts/im-fell-english-latin-400-normal.woff2'), weight: '400'}),
+      loadFont({family: 'Bebas Neue', url: staticFile('fonts/bebas-neue-latin-400-normal.woff2'), weight: '400'}),
+      loadFont({family: 'Caveat', url: staticFile('fonts/caveat-latin-700-normal.woff2'), weight: '700'}),
+      loadFont({family: 'Share Tech Mono', url: staticFile('fonts/share-tech-mono-latin-400-normal.woff2'), weight: '400'}),
     ]),
   )
     .then(() => continueRender(handle))

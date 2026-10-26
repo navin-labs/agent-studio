@@ -1,6 +1,7 @@
 // Brand constants that are not colours. Colours live only in themes.ts.
 
-export const FONT = "'Inter', system-ui, -apple-system, sans-serif";
+// A format style (engine/styles/) swaps faces by setting these CSS variables on the Composer; unset, the fallbacks render as before.
+export const FONT = "var(--font-body, 'Inter', system-ui, -apple-system, sans-serif)";
 
 export const HANDLE = '@theautomationguynavin';
 
@@ -14,9 +15,9 @@ export const ZONES = {captionTop: 1296, captionHeight: 190};
 export const SIDE = 120;
 
 export const TYPE = {
-  display: "'Inter Tight', 'Inter', sans-serif", // 900, -4% tracking, 128-160px
-  title: "'Inter Tight', 'Inter', sans-serif", // 800, 64-80px
-  caption: "'Inter', sans-serif", // 800, 58px
-  data: "'JetBrains Mono', 'Inter', monospace", // 600, 26-34px
+  display: "var(--font-display, 'Inter Tight', 'Inter', sans-serif)", // 900, -4% tracking, 128-160px
+  title: "var(--font-title, 'Inter Tight', 'Inter', sans-serif)", // 800, 64-80px
+  caption: "var(--font-caption, 'Inter', sans-serif)", // 800, 58px
+  data: "var(--font-data, 'JetBrains Mono', 'Inter', monospace)", // 600, 26-34px
   pixel: "'VT323', 'JetBrains Mono', monospace", // brand line in the host format (VT323 self-hosted, OFL)
 };

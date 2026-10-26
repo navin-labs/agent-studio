@@ -2,7 +2,7 @@
 // Pure data + timing + validation, no React, so make.mjs and agent-studio QA can use it.
 import type {Direction} from '../fx/direction';
 import {parseAccent, wordStarts} from '../lib/text.ts';
-import type {StylePreset} from './style.ts';
+import type {FormatStyle, StylePreset} from './style.ts';
 import {estimateSeconds, FPS, LEAD, TAIL_AUDIO, TAIL_EST, VOICE_WPS} from '../lib/timing.ts';
 import {SPECS, validateParams} from '../primitives/specs.ts';
 import {BUMPER_FRAMES} from './brand-audio.ts';
@@ -53,6 +53,8 @@ export type Storyboard = {
   bumper?: boolean; // render-time only: the channel's music bed and 2 s sonic bumper play (public/brand/audio, set by make.mjs)
   mark?: string; // render-time only: the channel's end-card logo (public/brand/<channel>/mark.svg), added by make.mjs
   preset?: StylePreset; // render-time only: the style preset itself, added by make.mjs
+  formatStyle?: string; // a format style in engine/styles/ (also make.mjs --style=<id>): sets the theme, faces, spring, caption case
+  skin?: FormatStyle; // render-time only: that format style itself, added by make.mjs
 };
 
 export type Timing = {durations?: (number | null)[]; audio?: (string | null)[]; words?: ({w: string; s: number; e: number}[] | null)[]};
@@ -89,6 +91,11 @@ export const sceneCues = (sc: StoryboardScene, i: number, t?: Timing) => {
 };
 
 // Settled frames the TextProbe measures: every 5th frame of each scene, skipping frames inside a transition, plus its last frame.
+// The board as the Composer plays it: a whip-pan format style turns every cut after the first shot into a whip.
+// make.mjs counts probe frames on this same board, so both sides agree.
+export const styledBoard = (sb: Storyboard): Storyboard =>
+  sb.skin?.cameraMode === 'whip-pan' ? {...sb, scenes: sb.scenes.map((s, i) => (i ? {...s, transition: 'whip-pan' as const} : s))} : sb;
+
 export const probeFrames = (sb: Storyboard, frames: number[], starts: number[]) =>
   new Set(
     sb.scenes.flatMap((sc, i) => {

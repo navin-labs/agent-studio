@@ -3,23 +3,25 @@
 // Look and motion beyond the theme come from the style preset (`preset`, styles/<id>.json via make.mjs; docs/MOTION.md).
 import {CameraMotionBlur} from '@remotion/motion-blur';
 import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
-import {AbsoluteFill, Artifact, Audio, continueRender, delayRender, Easing, getRemotionEnvironment, Sequence, staticFile, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, Artifact, Audio, continueRender, delayRender, Easing, Freeze, getRemotionEnvironment, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {ensureFonts} from '../fonts';
 import {Sfx, SfxEnabled} from '../lib/frame';
 import {pixelWipePath} from '../lib/pixels';
 import {FPS, LEAD} from '../lib/timing';
-import {cuesOr, prog, SceneCtx} from '../primitives/atoms';
+import {cuesOr, prog, SceneCtx, setStyleSpring} from '../primitives/atoms';
 import {PRIMITIVES} from '../primitives/index';
-import {HostCtx, KaraokeCaptions, VoiceCtx} from '../host/Host';
+import {SPECS} from '../primitives/specs';
+import {HostCtx, HostModeCtx, KaraokeCaptions, VoiceCtx} from '../host/Host';
+import {cameraTransform, pictureStyle, StyleOverlay} from './look';
 import {BRAND_AUDIO, BUMPER_FRAMES} from './brand-audio';
 import {Captions} from '../story/Captions';
 import {HandleCtx, MarkCtx, THEMES, ThemeCtx, useTheme} from '../themes';
 import {ArrowFold, FoldBand, foldClip, Thread, YearFlap} from './Signature';
-import {NO_STYLE} from './style';
+import {NO_STYLE, styleVars} from './style';
 import {FILMS} from '../films/index';
 import {FilmCtx, filmContext, Score} from '../films/kit';
 import type {TextBox} from './textcheck';
-import {captionsOn, probeFrames, sceneCues, sceneFrames, type Storyboard, type StoryboardScene, type Timing, TRANSITION_FRAMES as T, type Transition, voWordStarts} from './storyboard';
+import {captionsOn, probeFrames, styledBoard, sceneCues, sceneFrames, type Storyboard, type StoryboardScene, type Timing, TRANSITION_FRAMES as T, type Transition, voWordStarts} from './storyboard';
 
 ensureFonts();
 
@@ -36,6 +38,9 @@ const Moving: React.FC<{sb: Storyboard; sc: StoryboardScene; i: number; dur: num
   const e = enter === 'cut' ? 1 : prog(f, 0, T, WHIP);
   const x = exit === 'whip-pan' ? prog(f, dur, T, WHIP) : 0;
   const Shot = PRIMITIVES[sc.primitive];
+  const words = voWordStarts(sc, i, timing);
+  // closing cards are a deliberate still hold and fill the frame edge to edge: the style camera leaves them alone
+  const cam = SPECS[sc.primitive]?.closer ? undefined : cameraTransform(sb.skin?.cameraMode, f, dur, sceneCues(sc, i, timing), words.filter((_, k) => k % 4 === 0), i);
   const style: React.CSSProperties =
     enter === 'ink-wipe' && e < 1
       ? {clipPath: `inset(${(1 - e) * 100}% 0 0 0)`}
@@ -47,7 +52,13 @@ const Moving: React.FC<{sb: Storyboard; sc: StoryboardScene; i: number; dur: num
   return (
     <AbsoluteFill style={style} data-scene={i} data-primitive={sc.primitive}>
       <SceneCtx.Provider value={{camera: (sb.preset ?? NO_STYLE).camera, strike: (sb.preset ?? NO_STYLE).strike, primitive: sc.primitive}}>
-        <Shot p={sc.params} dur={dur} cues={sceneCues(sc, i, timing)} />
+        {cam ? (
+          <AbsoluteFill style={{transform: cam, transformOrigin: '540px 680px'}}>
+            <Shot p={sc.params} dur={dur} cues={sceneCues(sc, i, timing)} />
+          </AbsoluteFill>
+        ) : (
+          <Shot p={sc.params} dur={dur} cues={sceneCues(sc, i, timing)} />
+        )}
       </SceneCtx.Provider>
       {sc.vo && captionsOn(sc, sb) ? (sb.captionStyle === 'karaoke' ? <KaraokeCaptions vo={sc.vo} starts={voWordStarts(sc, i, timing)} /> : <Captions vo={sc.vo} starts={voWordStarts(sc, i, timing)} top={CAPTION_TOP} />) : null}
       {enter === 'ink-wipe' && e < 1 ? <div style={{position: 'absolute', left: 0, right: 0, top: (1 - e) * 1920, height: 40, background: th.ink}} /> : null}
@@ -68,6 +79,11 @@ const Scene: React.FC<{sb: Storyboard; sc: StoryboardScene; i: number; dur: numb
         <CameraMotionBlur samples={8} shutterAngle={240}>
           <Moving {...props} />
         </CameraMotionBlur>
+      ) : props.sb.skin?.fxOverlay === 'film' ? (
+        // film: the picture steps on twos (15 fps) like a hand-cranked projector; the voice does not
+        <Freeze frame={f - (f % 2)}>
+          <Moving {...props} />
+        </Freeze>
       ) : (
         <Moving {...props} />
       )}
@@ -190,11 +206,14 @@ const brandAudio = (sb: Storyboard, timing: Timing | undefined, frames: number[]
   );
 };
 
-export const Composer: React.FC<ComposerProps> = ({script, timing, frames: given}) => {
+export const Composer: React.FC<ComposerProps> = ({script: board, timing, frames: given}) => {
+  const script = styledBoard(board);
   const th = THEMES[script.theme ?? 'paper'];
   if (!th) throw new Error(`Unknown theme "${script.theme}". Use one of: ${Object.keys(THEMES).join(', ')}`);
   const frames = given ?? sceneFrames(script, timing);
   const style = script.preset ?? NO_STYLE;
+  setStyleSpring(script.skin?.spring);
+  const frameNow = useCurrentFrame();
   const starts = frames.map((_, i) => frames.slice(0, i).reduce((a, b) => a + b, 0));
   if (script.film) return <FilmBoard script={script} timing={timing} frames={frames} starts={starts} />;
   return (
@@ -202,8 +221,10 @@ export const Composer: React.FC<ComposerProps> = ({script, timing, frames: given
       <HandleCtx.Provider value={script.handle ?? ''}>
       <MarkCtx.Provider value={script.mark}>
       <HostCtx.Provider value={script.host ?? 'chiku'}>
+      <HostModeCtx.Provider value={script.skin?.hostMode ?? 'keep'}>
       <SfxEnabled.Provider value={script.sfx !== false}>
-        <AbsoluteFill style={{background: th.bg}}>
+        <AbsoluteFill style={{background: th.bg, ...styleVars(script.skin)}}>
+          <AbsoluteFill style={pictureStyle(script.skin?.fxOverlay, th, frameNow)}>
           {script.scenes.map((sc, i) => {
             const exit = script.scenes[i + 1]?.transition ?? 'cut';
             // the outgoing scene keeps playing under the incoming one for the transition
@@ -213,6 +234,8 @@ export const Composer: React.FC<ComposerProps> = ({script, timing, frames: given
               </Sequence>
             );
           })}
+          </AbsoluteFill>
+          <StyleOverlay fx={script.skin?.fxOverlay} />
           {brandAudio(script, timing, frames, starts)}
           {style.overlay !== 'none' ? <Thread total={starts.at(-1)!} beats={starts} reveals={reveals(script, frames, starts, timing)} paper={style.overlay === 'thread-paper'} /> : null}
           {style.opener === 'arrow-fold' ? <ArrowFold /> : null}
@@ -220,6 +243,7 @@ export const Composer: React.FC<ComposerProps> = ({script, timing, frames: given
           <TextProbe frames={probeFrames(script, frames, starts)} />
         </AbsoluteFill>
       </SfxEnabled.Provider>
+      </HostModeCtx.Provider>
       </HostCtx.Provider>
       </MarkCtx.Provider>
       </HandleCtx.Provider>
