@@ -65,54 +65,22 @@ No video model, no paid voice API. Plates come from Unsplash, Pixabay and the In
 
 <p align="center"><img src="docs/media/xz-ghost-sheet.png" width="720" alt="Contact sheet of the 500 ms SSH Ghost: one frame per shot"></p>
 
-### Channel styles
+### Channel films
 
-The two live channels each own a look. The format styles below are for any board.
+The two live channels run on the same composite format: a real photo plate, one hero number or quote, a citation bar.
 
-<table>
-<tr>
-<th>C1 Automation · Night Signal</th>
-<th>C2 Reach · Archive Gold</th>
-<th>Format style · Newsreel</th>
-<th>Format style · Orbit Intel</th>
-</tr>
-<tr>
-<td><img src="docs/media/styles/night-signal-hook.png" width="180" alt="C1 Night Signal hook frame"></td>
-<td><img src="docs/media/styles/archive-gold-evidence.png" width="180" alt="C2 Archive Gold highlighter frame"></td>
-<td><img src="docs/media/styles/newsreel-signature.png" width="180" alt="Newsreel intertitle frame"></td>
-<td><img src="docs/media/styles/orbit-intel-signature.png" width="180" alt="Orbit Intel point-cloud frame"></td>
-</tr>
-<tr>
-<td>Chiku the pixel host, lime for "automated", karaoke captions with power words</td>
-<td>Navy and one gold reveal, year split-flap opener, keyword captions</td>
-<td>Silver greys, intertitles, film dust and flicker, picture on twos, hand-held camera</td>
-<td>Teal scan light, radar sweep and telemetry, shots tilt in on a 3D axis</td>
-</tr>
-<tr>
-<td><!-- drop a C1 reel here (drag the MP4 into the GitHub editor) --></td>
-<td><!-- drop a C2 reel here --></td>
-<td><!-- drop a Newsreel reel here --></td>
-<td><!-- drop an Orbit Intel reel here --></td>
-</tr>
-</table>
+<table><tr>
+<th>C1 Automation · <code>swiss-motion</code></th><th>C2 Reach · <code>screenprint</code></th>
+</tr><tr>
+<td><img src="docs/media/c1-composite-sheet.png" width="360" alt="Contact sheet of a C1 composite film"></td>
+<td><img src="docs/media/c2-composite-sheet.png" width="360" alt="Contact sheet of a C2 composite film"></td>
+</tr></table>
 
 ---
 
 ## 🎨 Format styles and primitives
 
-A format style is a whole visual world: palette, faces, spring, caption case, **camera** (`3d-tilt`, `whip-pan`, `kinetic-punch`, `handheld-doc`), **texture** (`crt`, `print`, `film`, `tactical`), **host** (keep, tint into the palette, or hide) and **pace**. The same board, timing and gates come out as a different film. Each pair below is one board (`engine/test/style-showcase.json`): the hook and the style's signature shot, from `npm run sheet -- test/style-showcase.json --style=<id>`.
-
-<table>
-<tr><th><code>swiss-motion</code></th><th><code>terminal-dark</code></th><th><code>newsreel</code></th><th><code>orbit-intel</code></th></tr>
-<tr><td><img src="docs/media/styles/swiss-motion-hook.png" width="88"> <img src="docs/media/styles/swiss-motion-signature.png" width="88"></td><td><img src="docs/media/styles/terminal-dark-hook.png" width="88"> <img src="docs/media/styles/terminal-dark-signature.png" width="88"></td><td><img src="docs/media/styles/newsreel-hook.png" width="88"> <img src="docs/media/styles/newsreel-signature.png" width="88"></td><td><img src="docs/media/styles/orbit-intel-hook.png" width="88"> <img src="docs/media/styles/orbit-intel-signature.png" width="88"></td></tr>
-<tr><td>kinetic punch · no overlay</td><td>whip pan · CRT</td><td>hand-held · film on twos</td><td>3D tilt · tactical HUD</td></tr>
-<tr><th><code>risograph</code></th><th><code>art-deco</code></th><th><code>game-show</code></th><th><code>whiteboard</code></th></tr>
-<tr><td><img src="docs/media/styles/risograph-hook.png" width="88"> <img src="docs/media/styles/risograph-signature.png" width="88"></td><td><img src="docs/media/styles/art-deco-hook.png" width="88"> <img src="docs/media/styles/art-deco-signature.png" width="88"></td><td><img src="docs/media/styles/game-show-hook.png" width="88"> <img src="docs/media/styles/game-show-signature.png" width="88"></td><td><img src="docs/media/styles/whiteboard-hook.png" width="88"> <img src="docs/media/styles/whiteboard-signature.png" width="88"></td></tr>
-<tr><td>kinetic punch · print</td><td>3D tilt · gold on lacquer</td><td>kinetic punch · 8-bit</td><td>hand-held · live line</td></tr>
-<tr><th><code>blueprint</code></th><th><code>headline-bar</code></th><th><code>constructivist</code></th><th><code>hud</code></th></tr>
-<tr><td><img src="docs/media/styles/blueprint-hook.png" width="88"> <img src="docs/media/styles/blueprint-signature.png" width="88"></td><td><img src="docs/media/styles/headline-bar-hook.png" width="88"> <img src="docs/media/styles/headline-bar-signature.png" width="88"></td><td><img src="docs/media/styles/constructivist-hook.png" width="88"> <img src="docs/media/styles/constructivist-signature.png" width="88"></td><td><img src="docs/media/styles/hud-hook.png" width="88"> <img src="docs/media/styles/hud-signature.png" width="88"></td></tr>
-<tr><td>3D tilt · tactical grid</td><td>kinetic punch · news bars</td><td>whip pan · film</td><td>3D tilt · CRT</td></tr>
-</table>
+A format style is a whole visual world: palette, faces, spring, caption case, **camera** (`3d-tilt`, `whip-pan`, `kinetic-punch`, `handheld-doc`), **texture** (`crt`, `print`, `film`, `tactical`), **host** (keep, tint into the palette, or hide) and **pace**. The same board, timing and gates come out as a different film. Preview any style with `npm run sheet -- <board>.json --style=<id>`.
 
 29 styles in all, from Swiss grid to woodcut, paper-cut, countdown, ops board, telestrator and sixties titles. The full table with every style's camera, overlay, host and faces is in [engine/styles/README.md](engine/styles/README.md). Authored films rotate across a separate catalogue of 267 format x look x colour combinations ([studio/looks.json](studio/looks.json)), so a feed does not repeat itself.
 
@@ -145,7 +113,6 @@ npm run sheet -- test/style-showcase.json --style=newsreel
 
 Every scene's middle frame on one PNG (hook first, payoff last), rendered with Remotion's `renderStill` from the real Composer, so layout, colour and text fit can be judged before voice or MP4. Bundling is extra: 2 to 5 s in total on an M-series Mac with a warm cache.
 
-<p align="center"><img src="docs/media/styles/contact-sheet-newsreel.png" width="640" alt="Contact sheet of the showcase board in the Newsreel style"></p>
 
 ---
 
