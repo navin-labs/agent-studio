@@ -24,3 +24,7 @@ recipes/*/
 /.claude/
 /docs/BUILD_PLAN.md
 /docs/LOG.md
+
+# media hub cache and the plates a render copies in (engine/src/lib/mediaHub.ts)
+/.cache/
+/engine/public/media/

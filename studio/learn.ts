@@ -46,7 +46,7 @@ const captionKind = (opener = '') => (/\?\s*$/.test(opener) ? 'question' : /\d/.
 const lengthBand = (s?: number) => (s ? `${Math.floor(s / 5) * 5} to ${Math.floor(s / 5) * 5 + 5} s` : '');
 
 // A primitive that is the only choice in some beat can never be benched: the format would have nothing to draw.
-export const UNBENCHABLE = new Set(Object.values(FORMATS).flatMap((f) => f.beats.filter((b) => b.length === 1).flat()));
+export const UNBENCHABLE = new Set<string>(Object.values(FORMATS).flatMap((f) => f.beats.filter((b) => b.length === 1).flat()));
 
 // Per video and platform: the 7d window when present, else 24h; a later reading of the same window replaces an earlier one.
 const latest = (ms: Metric[]) => {

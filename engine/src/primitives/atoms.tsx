@@ -35,7 +35,7 @@ export const INOUT = Easing.inOut(Easing.cubic); // camera moves: start and end 
 export const EXPO = Easing.out(Easing.exp); // fast arrivals from far away (slams, the arrow fold)
 
 // The scene's style (from its preset, composer/style.ts) and primitive, so the camera can carry meaning.
-export const SceneCtx = React.createContext<{camera?: Camera; strike: boolean; primitive: string}>({strike: false, primitive: ''});
+export const SceneCtx = React.createContext<{camera?: Camera; strike: boolean; primitive: string; index?: number; start?: number}>({strike: false, primitive: ''});
 const PAIN = new Set(['pile-drop', 'ui-inbox', 'ui-sheet', 'ui-chat', 'phone-buzz', 'chat-pop', 'maze-to-line', 'zoom-dive']);
 const RESULT = new Set(['counter-drop', 'stamp-hit', 'flow-run', 'before-after-split', 'end-card', 'host-cta']);
 // One move per shot: a > 0 pushes in over the whole shot, a < 0 starts pushed in and pulls out by 60% of it.

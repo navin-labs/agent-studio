@@ -1,0 +1,138 @@
+{
+  "id": "xz-ghost",
+  "format": "storyboard",
+  "film": "xz-ghost",
+  "theme": "dark-keynote",
+  "meta": {
+    "proof": {
+      "fact": "SSH logins went from 0.299 s to 0.807 s",
+      "source": "Andres Freund, oss-security advisory, 29 March 2024 (CVE-2024-3094, xz-utils 5.6.0 and 5.6.1): https://www.openwall.com/lists/oss-security/2024/03/29/4"
+    },
+    "plates": [
+      {
+        "src": "media/3541d44394c7cae6.png",
+        "kind": "image",
+        "credit": "Photo by Valentin Lacoste on Unsplash"
+      },
+      {
+        "src": "media/203d7281e90323a3.webm",
+        "kind": "video",
+        "credit": "FindingFootage on Pixabay"
+      },
+      {
+        "src": "media/473e6444c9be2403.png",
+        "kind": "image",
+        "credit": "Photo by Safar Safarov on Unsplash"
+      },
+      {
+        "src": "media/e3bef44287443f53.png",
+        "kind": "image",
+        "credit": "Photo by Ruchindra Gunasekara on Unsplash"
+      },
+      {
+        "src": "media/82151077ac981231.webm",
+        "kind": "video",
+        "credit": "I Want to Be a Secretary, Coronet Instructional Films, Internet Archive"
+      },
+      {
+        "src": "media/39d50bd8cb340b60.png",
+        "kind": "image",
+        "credit": "Photo by John Salvino on Unsplash"
+      },
+      {
+        "src": "media/02c2a3e30caac16d.png",
+        "kind": "image",
+        "credit": "Photo by Mohammad Dadkhah on Unsplash"
+      }
+    ],
+    "plate_pages": [
+      "https://unsplash.com/photos/server-rack-filled-with-network-and-electronic-equipment-UpkcO_xS5k0",
+      "https://pixabay.com/videos/id-4001/",
+      "https://unsplash.com/photos/computer-monitor-and-laptop-programming-workspace-koOdUvfGr4c",
+      "https://unsplash.com/photos/large-warhause-GK8x_XCcDZg",
+      "https://archive.org/details/IWanttoB1941",
+      "https://unsplash.com/photos/gray-steel-chain-locked-on-gate-bqGBbLq_yfc",
+      "https://unsplash.com/photos/the-night-sky-is-lit-up-with-stars-and-clouds-abH1VgN6YZM"
+    ],
+    "rig": {
+      "router": "studio/router.ts pick \"xz backdoor in Linux SSH\" 2026-10-27",
+      "style": "dark-keynote",
+      "moves": [
+        "tilt",
+        "ken-burns",
+        "tilt",
+        "ken-burns",
+        "tilt",
+        "ken-burns",
+        "tilt"
+      ],
+      "grade": "teal-orange"
+    }
+  },
+  "scenes": [
+    {
+      "primitive": "intertitle",
+      "params": {
+        "text": "Half a second"
+      },
+      "vo": "Half a *second* of lag exposed a backdoor in Linux."
+    },
+    {
+      "primitive": "intertitle",
+      "params": {
+        "text": "0.3 s to 0.8 s"
+      },
+      "vo": "SSH logins slowed from 0.3 to *0.8* seconds. Most engineers would blame the network."
+    },
+    {
+      "primitive": "intertitle",
+      "params": {
+        "text": "liblzma"
+      },
+      "vo": "Andres Freund traced sshd *instead*. The trail led into *liblzma*."
+    },
+    {
+      "primitive": "intertitle",
+      "params": {
+        "text": "Git and tar.gz"
+      },
+      "vo": "The trigger hid in the *5.6.0* release tarball. It was never in Git."
+    },
+    {
+      "primitive": "intertitle",
+      "params": {
+        "text": "Jia Tan"
+      },
+      "vo": "How did it get there? A maintainer called *Jia Tan* spent two years earning trust."
+    },
+    {
+      "primitive": "intertitle",
+      "params": {
+        "text": "SSH"
+      },
+      "vo": "The payload sat in *test files*, disguised as broken archives. It hijacked a function SSH uses to check keys."
+    },
+    {
+      "primitive": "intertitle",
+      "params": {
+        "text": "Two years undone"
+      },
+      "vo": "It was already running on Debian unstable. Half a second of *lag* ended a two-year operation."
+    },
+    {
+      "primitive": "end-card",
+      "params": {
+        "text": "Follow",
+        "sub": "Evidence films, made in code."
+      }
+    }
+  ],
+  "voice": {
+    "engine": "kokoro",
+    "voice": "af_heart",
+    "speed": 1.15,
+    "pronounce": {
+      "Tally": "[Tally](/t\u02c8\u00e6li/)"
+    }
+  }
+}

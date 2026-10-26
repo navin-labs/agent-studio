@@ -9,5 +9,6 @@ import {Film as F_c2_2026_w40_1} from './c2-2026-w40-1';
 import {Film as F_c2_2026_w41_1} from './c2-2026-w41-1';
 import {Film as F_c1_2026_w41_3} from './c1-2026-w41-3';
 import {Film as F_c2_2026_w41_2} from './c2-2026-w41-2';
+import {Film as XzGhost} from './xz-ghost';
 
-export const FILMS: Record<string, React.FC> = {scene: SceneFilm, 'ambient-scenes': AmbientScenes, 'memory-windows': MemoryWindows, 'doodle-footage': DoodleFootage, 'c2-2026-w40-1': F_c2_2026_w40_1, 'c1-2026-w41-1': F_c1_2026_w41_1, 'c2-2026-w41-1': F_c2_2026_w41_1, 'c1-2026-w41-3': F_c1_2026_w41_3, 'c2-2026-w41-2': F_c2_2026_w41_2};
+export const FILMS: Record<string, React.FC> = {scene: SceneFilm, 'ambient-scenes': AmbientScenes, 'memory-windows': MemoryWindows, 'doodle-footage': DoodleFootage, 'c2-2026-w40-1': F_c2_2026_w40_1, 'c1-2026-w41-1': F_c1_2026_w41_1, 'c2-2026-w41-1': F_c2_2026_w41_1, 'c1-2026-w41-3': F_c1_2026_w41_3, 'c2-2026-w41-2': F_c2_2026_w41_2, 'xz-ghost': XzGhost};

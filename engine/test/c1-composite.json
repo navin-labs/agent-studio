@@ -1,0 +1,152 @@
+{
+  "format": "storyboard",
+  "id": "c1-composite",
+  "channel": "c1-automation",
+  "style": "c1-night-signal-v1",
+  "hookPattern": "question",
+  "caption": "Still typing payment reminders by hand?\n\nThe unpaid list is read every morning, a reminder is written for each customer and sent at 10 AM, and the sheet marks who paid.\n\nExample data.\n\nSend this to whoever chases payments.",
+  "hashtags": [
+    "#automation",
+    "#smallbusinessindia",
+    "#payments"
+  ],
+  "meta": {
+    "source": "https://www.indiacode.nic.in/handle/123456789/2013",
+    "idea_id": "composite-c1-payment-reminder",
+    "recipe_id": "composite-c1",
+    "hero_metaphor": "a desk buried in unpaid invoices",
+    "case": "FILE 45-DAY RULE",
+    "devices": [
+      "open-loop",
+      "reveal",
+      "contrast",
+      "proof",
+      "stakes",
+      "loop",
+      "number",
+      "second-person"
+    ],
+    "proof": {
+      "fact": "Buyers must pay micro and small suppliers within 45 days of acceptance",
+      "source": "https://www.indiacode.nic.in/handle/123456789/2013"
+    },
+    "structure": "before-after",
+    "cta": "none"
+  },
+  "scenes": [
+    {
+      "primitive": "composite",
+      "params": {
+        "query": "stack of paper invoices on desk",
+        "hero": "40",
+        "unit": "bills",
+        "label": "typed by hand",
+        "overlay": "scan"
+      },
+      "vo": "Still typing *payment reminders* by hand, one customer at a time?"
+    },
+    {
+      "primitive": "composite",
+      "transition": "fold",
+      "params": {
+        "query": "calendar pages office",
+        "quote": "shall exceed forty-five days from the day of acceptance",
+        "source": "MSMED ACT 2006, SECTION 15",
+        "overlay": "lens"
+      },
+      "vo": "Every Monday, forty of them. But Indian law gives small suppliers *45 days* to get paid. So most chase it by hand."
+    },
+    {
+      "primitive": "composite",
+      "transition": "cut",
+      "params": {
+        "query": "person typing on laptop at night",
+        "hero": "3",
+        "unit": "days",
+        "label": "per reply",
+        "overlay": "pulse"
+      },
+      "vo": "Each reminder is typed from *scratch*. But the reply comes days *later*. Until you start again. Your whole Monday goes."
+    },
+    {
+      "primitive": "before-after-split",
+      "transition": "fold",
+      "params": {
+        "before": {
+          "title": "BY HAND",
+          "lines": [
+            "Check",
+            "Type",
+            "Send"
+          ]
+        },
+        "after": {
+          "title": "AUTOMATIC",
+          "lines": [
+            "Read",
+            "Write",
+            "Sent"
+          ]
+        }
+      },
+      "vo": "Here is the same Monday job, done *by hand*, then done *automatically*."
+    },
+    {
+      "primitive": "flow-run",
+      "transition": "cut",
+      "params": {
+        "nodes": [
+          {
+            "icon": "sheet",
+            "label": "Unpaid list",
+            "sub": "At ten"
+          },
+          {
+            "icon": "chat",
+            "label": "Reminder",
+            "sub": "Named"
+          },
+          {
+            "icon": "send",
+            "label": "Sent",
+            "sub": "Each one"
+          }
+        ],
+        "done": "SENT"
+      },
+      "vo": "So each morning the unpaid list is *read*. A reminder is *written*. Each customer gets *one*, with their name and amount."
+    },
+    {
+      "primitive": "composite",
+      "transition": "fold",
+      "params": {
+        "query": "sunrise city office window",
+        "hero": "10",
+        "unit": "AM",
+        "label": "every morning",
+        "overlay": "beams"
+      },
+      "vo": "At ten every morning, it runs on its own. Nobody types a word. Nobody forgets a name."
+    },
+    {
+      "primitive": "composite",
+      "transition": "cut",
+      "params": {
+        "query": "calm empty office desk morning",
+        "hero": "0",
+        "unit": "typed",
+        "label": "this week",
+        "overlay": "ring"
+      },
+      "vo": "So reminders your team still types by hand this week: *zero*. The Monday pile is gone, for good."
+    },
+    {
+      "primitive": "end-card",
+      "transition": "fold",
+      "params": {
+        "text": "*Follow*",
+        "sub": "More business automations."
+      }
+    }
+  ]
+}

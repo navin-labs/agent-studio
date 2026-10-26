@@ -63,7 +63,8 @@
           "rpg-panel",
           "point-cloud",
           "line-draw",
-          "intertitle"
+          "intertitle",
+          "composite"
         ]
       },
       "minItems": 1
@@ -95,7 +96,8 @@
         "rpg-panel",
         "point-cloud",
         "line-draw",
-        "intertitle"
+        "intertitle",
+        "composite"
       ]
     },
     "hero_metaphor": {

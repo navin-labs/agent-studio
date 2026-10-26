@@ -31,6 +31,9 @@ import {ctaKind, file as variantFile, PLATFORMS, ROUTE, variantDir} from '../../
 import {recipeDate} from '../../studio/recipe.ts';
 import {checkTextBoxes} from '../src/composer/textcheck.ts';
 import {THEMES} from '../src/themes.ts';
+import {resolvePlates} from '../src/lib/mediaHub.ts';
+import {history as routerHistory, pick as routerPick, record as routerRecord} from '../../studio/router.ts';
+import {artIssues} from '../src/composer/artgate.ts';
 
 const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
@@ -162,7 +165,14 @@ const applyFormatStyle = (doc, id, errors) => {
 
 const validateBoard = (doc) => {
   const pre = [];
+  // a channel board with no look of its own gets the router's: never the previous video's camera, texture, face or palette
+  if (doc.channel && !doc.film && !(STYLE_FLAG ?? doc.formatStyle)) {
+    doc.rig = routerPick(doc.meta?.idea ?? doc.caption ?? doc.id, doc.date ?? new Date().toISOString().slice(0, 10), routerHistory());
+    doc.formatStyle = doc.rig.style;
+  }
   if (STYLE_FLAG ?? doc.formatStyle) applyFormatStyle(doc, STYLE_FLAG ?? doc.formatStyle, pre);
+  // the art gate: scenes are pictures with a few words on them, never text in boxes (src/composer/artgate.ts)
+  if (doc.channel && !doc.film) pre.push(...artIssues(doc));
   const {errors, warnings} = validateStoryboard(doc, VOICE_ON ? 'later' : undefined);
   errors.unshift(...pre); // voiced: each line is judged by its measured clip, per platform below
   if (!/^[a-z0-9-]+$/.test(doc.id || '')) errors.push('id must be lowercase-with-dashes');
@@ -617,6 +627,9 @@ for (const f of files) {
   if (!errors.length) console.log(c.green('  quality gate passed'));
   if (flags.has('--check')) continue;
   const OUT = outFor(f);
+  // composite scenes: find, cache and copy each plate (lib/mediaHub.ts); a production render records the router's pick
+  if (doc.scenes?.some((sc) => sc.primitive === 'composite')) doc.plates = await resolvePlates(doc);
+  if (doc.rig && OUT === path.join(ROOT, 'out')) routerRecord(doc.rig);
   if (doc.format === 'storyboard' && doc.channel) {
     // a channel board: one render per platform, each in out/<channel>/<date>/<id>/<platform>/ (studio/variant.ts)
     console.log(c.dim(`  renders -> ${path.relative(ROOT, OUT) || '.'}/${doc.channel}/${doc.date}/${doc.id}/<platform>/`));

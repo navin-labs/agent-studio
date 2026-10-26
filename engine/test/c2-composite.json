@@ -1,0 +1,101 @@
+{
+  "format": "storyboard",
+  "id": "c2-composite",
+  "channel": "c2-reach",
+  "style": "c2-archive-gold-v1",
+  "hookPattern": "before-after",
+  "caption": "Bubble Wrap was failed wallpaper in 1957\n\nAlfred Fielding and Marc Chavannes sealed shower curtains and trapped air. It flopped twice, until IBM needed it for computers.\n\nSend this to whoever pops bubble wrap.\nSource: https://www.youtube.com/watch?v=7SKukIvI_WE",
+  "hashtags": [
+    "#history",
+    "#inventions",
+    "#backstory",
+    "#didyouknow"
+  ],
+  "meta": {
+    "source": "https://www.youtube.com/watch?v=7SKukIvI_WE",
+    "idea_id": "composite-c2-bubble-wrap",
+    "recipe_id": "composite-c2",
+    "hero_metaphor": "the failed wallpaper",
+    "year": "1957",
+    "case": "FILE BUBBLE WRAP 1957",
+    "devices": [
+      "open-loop",
+      "reveal",
+      "contrast",
+      "proof",
+      "stakes",
+      "loop",
+      "failed-attempt"
+    ],
+    "proof": {
+      "fact": "Bubble Wrap began in 1957 as a failed textured wallpaper",
+      "source": "https://www.youtube.com/watch?v=7SKukIvI_WE"
+    },
+    "structure": "story",
+    "cta": "none"
+  },
+  "scenes": [
+    {
+      "primitive": "composite",
+      "params": {
+        "query": "bubble wrap macro",
+        "hero": "1957",
+        "label": "a wallpaper idea",
+        "overlay": "scan"
+      },
+      "vo": "*1957.* Two engineers tried to sell bubbly wallpaper. It flopped, hard."
+    },
+    {
+      "primitive": "composite",
+      "transition": "cut",
+      "params": {
+        "query": "1950s home living room",
+        "video": true,
+        "hero": "2",
+        "unit": "sheets",
+        "label": "shower curtains",
+        "overlay": "scan"
+      },
+      "vo": "*Alfred Fielding* and *Marc Chavannes* sealed two shower curtains. Trapped air made bubbles, row after row."
+    },
+    {
+      "primitive": "intertitle",
+      "transition": "ink-wipe",
+      "params": {
+        "text": "Nobody wanted bubbly walls.",
+        "sub": "Then greenhouses failed too"
+      },
+      "vo": "But nobody wanted plastic walls. So they tried greenhouses. That failed too."
+    },
+    {
+      "primitive": "composite",
+      "transition": "ink-wipe",
+      "params": {
+        "query": "vintage mainframe computer room",
+        "hero": "IBM",
+        "label": "ships its computers",
+        "overlay": "beams"
+      },
+      "vo": "Until a computer maker needed to ship fragile machines across the country, safely."
+    },
+    {
+      "primitive": "composite",
+      "transition": "cut",
+      "params": {
+        "query": "packing boxes warehouse",
+        "quote": "failed wallpaper became the armor of shipping",
+        "source": "BACKSTORY, FROM THE SOURCE VIDEO",
+        "overlay": "lens"
+      },
+      "vo": "Instead of wallpaper, the bubbles became the armor of shipping. And it still pops today."
+    },
+    {
+      "primitive": "end-card",
+      "transition": "ink-wipe",
+      "params": {
+        "text": "*Send* it",
+        "sub": "To someone who pops every bubble."
+      }
+    }
+  ]
+}

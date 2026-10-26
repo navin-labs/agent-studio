@@ -108,7 +108,8 @@
               "rpg-panel",
               "point-cloud",
               "line-draw",
-              "intertitle"
+              "intertitle",
+              "composite"
             ]
           },
           "params": {
@@ -251,6 +252,7 @@
           },
           "description": "The storytelling devices this script uses (docs/CREATIVE_BIBLE.md section 13; studio/script.ts checks them)"
         },
+        "case": {"type": "string", "maxLength": 28, "description": "The case tag a composite shows top left (e.g. \"CASE CVE-2024-3094\"); unset: FILE <id>"},
         "proof": {
           "type": "object",
           "required": [

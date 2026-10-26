@@ -1,7 +1,7 @@
 // node studio/improve.test.ts : the self-improving loop on planted data, driven by the real hourly tick. Learn finds what wins and
 // logs each Tier 1 change with its evidence; the Thursday recipes carry it to the Writer with a plain-words note; Tier 2 proposals
 // reach Telegram and change nothing until Navin taps; a tap changes exactly one setting; guarded things are refused; rollback is
-// one setting. Planted: stamp-hit loses, question captions win, "DM AUDIT" wins, 20 to 25 s videos win. Temp folder only.
+// one setting. Planted: conveyor loses, question captions win, "DM AUDIT" wins, 20 to 25 s videos win. Temp folder only.
 import assert from 'node:assert';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -30,11 +30,11 @@ for (const w of ['2026-W37', '2026-W38', '2026-W39', '2026-W40']) history = [...
 const fps = history.map((f, i) => ({...f, topic_text: `task ${i}`, caption_opener: i % 2 ? 'Still typing bills?' : 'Bills get typed by hand.', cta: i % 3 === 0 ? 'DM AUDIT' : 'Follow', seconds: i % 5 < 2 ? 22 : 38, style: 'c1-night-v0'}));
 lines(fingerprintFile(p), fps);
 lines(ledgerFile(p), fps.map((f) => ({storyboard_id: f.id, channel: f.channel, platform: 'instagram', status: 'published', approved_by: 'navin', approved_at: '2026-09-01T10:00:00Z', sha256: '0'.repeat(64), scheduled_for: `${f.date}T19:00:00+05:30`, style: f.style, updated_at: '2026-09-01T10:00:00Z'})));
-const kpi = (f: (typeof fps)[number]) => (f.primitives.includes('stamp-hit') ? 4 : 20) * (f.caption_opener.endsWith('?') ? 1.5 : 1) * (f.cta === 'DM AUDIT' ? 2 : 1) * (f.seconds < 25 ? 2 : 1);
+const kpi = (f: (typeof fps)[number]) => (f.primitives.includes('conveyor') ? 4 : 20) * (f.caption_opener.endsWith('?') ? 1.5 : 1) * (f.cta === 'DM AUDIT' ? 2 : 1) * (f.seconds < 25 ? 2 : 1);
 lines(metricsFile(p), fps.map((f): Metric => ({storyboard_id: f.id, channel: f.channel, platform: 'instagram', window: '7d', reach: 1000, dms: Math.round(kpi(f) * 5), profile_visits: Math.round(kpi(f) * 5)})));
-// stamp-hit was rested once before (an earlier Learn run): a second rest makes it a grammar candidate
+// conveyor was rested once before (an earlier Learn run): a second rest makes it a grammar candidate
 fs.mkdirSync(path.dirname(changesFile(p)), {recursive: true});
-lines(changesFile(p), [{at: '2026-09-10T03:30:00Z', channel: 'c1-automation', tier: 1, what: 'rested stamp-hit until 2026-W39', evidence: 'earlier run'}]);
+lines(changesFile(p), [{at: '2026-09-10T03:30:00Z', channel: 'c1-automation', tier: 1, what: 'rested conveyor until 2026-W39', evidence: 'earlier run'}]);
 
 // the hourly tick on a Thursday (IST): Learn runs (daily), next week is planned with the note, Tier 2 proposals are sent
 const msgs: {text: string; buttons: string[]}[] = [];
@@ -47,23 +47,23 @@ assert.deepEqual(r1.problems, [], r1.problems.join('\n'));
 // Tier 1: machine-readable findings, each change logged once with its evidence
 const L = JSON.parse(fs.readFileSync(learnFile('c1-automation', p), 'utf8'));
 assert.equal(L.updated, '2026-10-08');
-assert.ok(L.scores.primitives.find((x: {primitive: string}) => x.primitive === 'stamp-hit').kpi < L.scores.primitives.find((x: {primitive: string}) => x.primitive === 'flow-run').kpi);
+assert.ok(L.scores.primitives.find((x: {primitive: string}) => x.primitive === 'conveyor').kpi < L.scores.primitives.find((x: {primitive: string}) => x.primitive === 'flow-run').kpi);
 assert.deepEqual(L.scores.styles.map((x: {value: string; n: number}) => [x.value, x.n]), [['c1-night-v0', 28]], 'per-style-version score');
 assert.deepEqual([L.guidance.writer.caption, L.guidance.writer.cta, L.guidance.writer.seconds], ['question', 'DM AUDIT', [20, 25]], JSON.stringify(L.guidance));
 const changes = readJsonl<{what: string; evidence: string}>(changesFile(p)).slice(1);
-for (const want of [/^rested stamp-hit until /, /^Writer guidance: question captions, CTA "DM AUDIT", 20 to 25 s$/]) assert.ok(changes.some((c) => want.test(c.what)), `${want}: ${changes.map((c) => c.what).join(' | ')}`);
+for (const want of [/^rested conveyor until /, /^Writer guidance: question captions, CTA "DM AUDIT", 20 to 25 s$/]) assert.ok(changes.some((c) => want.test(c.what)), `${want}: ${changes.map((c) => c.what).join(' | ')}`);
 assert.ok(changes.every((c) => c.evidence.length > 10), 'every change has its evidence');
 assert.deepEqual(runLearn('c1-automation', '2026-W42', p, THU).changes, [], 'the same data changes nothing twice');
 
 // the Thursday recipes: style recorded, Learn's guidance for the Writer, the rested primitive absent, and the plain-words note
 const week = JSON.parse(fs.readFileSync(path.join(p.recipes, 'c1-automation', '2026-W42.json'), 'utf8'));
-assert.ok(week.every((r: {style: string; guidance: {cta: string}; primitives: string[]}) => r.style === 'c1-night-v0' && r.guidance.cta === 'DM AUDIT' && !r.primitives.includes('stamp-hit')));
+assert.ok(week.every((r: {style: string; guidance: {cta: string}; primitives: string[]}) => r.style === 'c1-night-v0' && r.guidance.cta === 'DM AUDIT' && !r.primitives.includes('conveyor')));
 const note = msgs.find((m) => m.text.includes('what the system learned'))!.text;
-for (const s of ['Changed by itself this week:', '- rested stamp-hit until', 'Why: videos with stamp-hit scored', 'Waiting for your tap:\n- Switch c1-automation to c1-night-signal-v1', 'Testing next:']) assert.ok(note.includes(s), `note: ${s}\n${note}`);
+for (const s of ['Changed by itself this week:', '- rested conveyor until', 'Why: videos with conveyor scored', 'Waiting for your tap:\n- Switch c1-automation to c1-night-signal-v1', 'Testing next:']) assert.ok(note.includes(s), `note: ${s}\n${note}`);
 
 // Tier 2: proposed with before/after evidence and buttons; nothing applied until the tap
 const sent = msgs.filter((m) => m.buttons.some((b) => b.startsWith('p|')));
-assert.deepEqual(sent.map((m) => m.buttons[0]), ['p|style:c1-automation:c1-night-signal-v1|yes', 'p|grammar:c1-automation:stamp-hit|yes']);
+assert.deepEqual(sent.map((m) => m.buttons[0]), ['p|style:c1-automation:c1-night-signal-v1|yes', 'p|grammar:c1-automation:conveyor|yes']);
 assert.match(sent[0].text, /Now: c1-night-v0: .* over 28 videos\.\nAfter: Night Signal with the folded arrow.*\nLearn expects: Recognised in the first 2 seconds/s);
 assert.deepEqual(JSON.parse(fs.readFileSync(chFile, 'utf8')), before, 'nothing applies itself');
 await run(THU + 3600_000);
@@ -77,9 +77,9 @@ assert.match((await tap('p|style:c1-automation:c1-night-signal-v1|yes'))!, /^App
 const after = JSON.parse(fs.readFileSync(chFile, 'utf8'));
 assert.deepEqual({...after, style: before.style}, before, 'only "style" changed: voice, live, CTAs, publishers untouched');
 assert.equal(after.style, 'c1-night-signal-v1');
-assert.match((await tap('p|grammar:c1-automation:stamp-hit|no'))!, /^Not now/);
+assert.match((await tap('p|grammar:c1-automation:conveyor|no'))!, /^Not now/);
 assert.ok(!fs.existsSync(grammarFile(p, 'c1-automation')));
-assert.match((await tap('p|grammar:c1-automation:stamp-hit|yes'))!, /Refused: .*already declined/);
+assert.match((await tap('p|grammar:c1-automation:conveyor|yes'))!, /Refused: .*already declined/);
 assert.deepEqual(proposals(p).map((x) => x.status), ['approved', 'declined']);
 
 // the next week is planned in the new style; rolling back is the same one setting

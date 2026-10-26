@@ -79,7 +79,8 @@
         "rpg-panel",
         "point-cloud",
         "line-draw",
-        "intertitle"
+        "intertitle",
+        "composite"
       ],
       "description": "Primitive id of the opener"
     },
@@ -112,7 +113,8 @@
           "rpg-panel",
           "point-cloud",
           "line-draw",
-          "intertitle"
+          "intertitle",
+          "composite"
         ]
       },
       "minItems": 3,

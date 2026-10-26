@@ -13,9 +13,10 @@ import {PRIMITIVES} from '../primitives/index';
 import {SPECS} from '../primitives/specs';
 import {HostCtx, HostModeCtx, KaraokeCaptions, VoiceCtx} from '../host/Host';
 import {cameraTransform, pictureStyle, StyleOverlay} from './look';
+import {StoryCtx, storyOf} from './story';
 import {BRAND_AUDIO, BUMPER_FRAMES} from './brand-audio';
 import {Captions} from '../story/Captions';
-import {HandleCtx, MarkCtx, THEMES, ThemeCtx, useTheme} from '../themes';
+import {HandleCtx, isLight, MarkCtx, type Theme, THEMES, ThemeCtx, useTheme} from '../themes';
 import {ArrowFold, FoldBand, foldClip, Thread, YearFlap} from './Signature';
 import {NO_STYLE, styleVars} from './style';
 import {FILMS} from '../films/index';
@@ -28,6 +29,9 @@ ensureFonts();
 export type ComposerProps = {script: Storyboard; timing?: Timing; frames?: number[]};
 
 const WHIP = Easing.bezier(0.75, 0, 0.25, 1);
+// a composite is a graded, darkened photo: on a light theme its words take the light side of the palette (ink from surface,
+// muted from bg, shadow from ink) so they read on the plate; a dark theme already does
+const onPlate = (th: Theme): Theme => (isLight(th.ink) ? th : {...th, ink: th.surface, muted: th.bg, shadow: th.ink});
 const CAPTION_TOP = 1120; // just under the primitives' stage band (y 280 to 1080)
 
 // The moving part of a scene: shot + captions, shifted or clipped by the transitions at its edges.
@@ -39,8 +43,9 @@ const Moving: React.FC<{sb: Storyboard; sc: StoryboardScene; i: number; dur: num
   const x = exit === 'whip-pan' ? prog(f, dur, T, WHIP) : 0;
   const Shot = PRIMITIVES[sc.primitive];
   const words = voWordStarts(sc, i, timing);
-  // closing cards are a deliberate still hold and fill the frame edge to edge: the style camera leaves them alone
-  const cam = SPECS[sc.primitive]?.closer ? undefined : cameraTransform(sb.skin?.cameraMode, f, dur, sceneCues(sc, i, timing), words.filter((_, k) => k % 4 === 0), i);
+  // closing cards are a deliberate still hold and fill the frame edge to edge, and a composite moves its plate with its own rig:
+  // the style camera leaves both alone
+  const cam = SPECS[sc.primitive]?.closer || sc.primitive === 'composite' ? undefined : cameraTransform(sb.skin?.cameraMode, f, dur, sceneCues(sc, i, timing), words.filter((_, k) => k % 4 === 0), i);
   const style: React.CSSProperties =
     enter === 'ink-wipe' && e < 1
       ? {clipPath: `inset(${(1 - e) * 100}% 0 0 0)`}
@@ -49,9 +54,9 @@ const Moving: React.FC<{sb: Storyboard; sc: StoryboardScene; i: number; dur: num
         : enter === 'fold' && e < 1
           ? {clipPath: foldClip(e)}
         : {transform: `translateX(${(enter === 'whip-pan' ? 1080 * (1 - e) : 0) - 1080 * x}px)`};
-  return (
+  const scene = (
     <AbsoluteFill style={style} data-scene={i} data-primitive={sc.primitive}>
-      <SceneCtx.Provider value={{camera: (sb.preset ?? NO_STYLE).camera, strike: (sb.preset ?? NO_STYLE).strike, primitive: sc.primitive}}>
+      <SceneCtx.Provider value={{camera: (sb.preset ?? NO_STYLE).camera, strike: (sb.preset ?? NO_STYLE).strike, primitive: sc.primitive, index: i}}>
         {cam ? (
           <AbsoluteFill style={{transform: cam, transformOrigin: '540px 680px'}}>
             <Shot p={sc.params} dur={dur} cues={sceneCues(sc, i, timing)} />
@@ -64,6 +69,7 @@ const Moving: React.FC<{sb: Storyboard; sc: StoryboardScene; i: number; dur: num
       {enter === 'ink-wipe' && e < 1 ? <div style={{position: 'absolute', left: 0, right: 0, top: (1 - e) * 1920, height: 40, background: th.ink}} /> : null}
     </AbsoluteFill>
   );
+  return sc.primitive === 'composite' ? <ThemeCtx.Provider value={onPlate(th)}>{scene}</ThemeCtx.Provider> : scene;
 };
 
 const Scene: React.FC<{sb: Storyboard; sc: StoryboardScene; i: number; dur: number; exit: Transition; timing?: Timing}> = (props) => {
@@ -222,6 +228,7 @@ export const Composer: React.FC<ComposerProps> = ({script: board, timing, frames
       <MarkCtx.Provider value={script.mark}>
       <HostCtx.Provider value={script.host ?? 'chiku'}>
       <HostModeCtx.Provider value={script.skin?.hostMode ?? 'keep'}>
+      <StoryCtx.Provider value={storyOf(script as Parameters<typeof storyOf>[0], starts)}>
       <SfxEnabled.Provider value={script.sfx !== false}>
         <AbsoluteFill style={{background: th.bg, ...styleVars(script.skin)}}>
           <AbsoluteFill style={pictureStyle(script.skin?.fxOverlay, th, frameNow)}>
@@ -243,6 +250,7 @@ export const Composer: React.FC<ComposerProps> = ({script: board, timing, frames
           <TextProbe frames={probeFrames(script, frames, starts)} />
         </AbsoluteFill>
       </SfxEnabled.Provider>
+      </StoryCtx.Provider>
       </HostModeCtx.Provider>
       </HostCtx.Provider>
       </MarkCtx.Provider>

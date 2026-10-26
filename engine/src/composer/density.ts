@@ -58,6 +58,19 @@ export const sceneMotion = (primitive: string, p: Params, dur: number, cues: num
     case 'maze-to-line': { const snap = cues[0] ?? Math.round(dur * 0.45); spans.push([6, snap + 26]); break; } // the dot crawls, then the tangle snaps and it zips
     case 'pile-drop': spans.push([0, dur]); break; // cards rain for the whole shot, then the pile is buried and shakes
     case 'conveyor': { const s = cues[0] ?? 8; const count = Number(p.count) || 1; const gap = Math.max(2, Math.min(6, Math.floor((dur - s - 24) / count))); spans.push([s, s + (count - 1) * gap + 20]); break; }
+    case 'composite': {
+      // the hero or quote landing, the quote typing, and the overlay's own motion (composer/overlays.tsx)
+      const land = cues[0] ?? Math.round(dur * 0.3);
+      if (p.hero || p.quote) events.push(land);
+      if (p.quote) spans.push([land, land + Math.round((String(p.quote).length / 38) * 30)]);
+      const o = String(p.overlay ?? 'none');
+      if (o === 'pulse') spans.push([0, dur]); // the line scrolls, stalls, scrolls on
+      else if (o === 'beams') spans.push([9, Math.round(dur * 0.95)]);
+      else if (o === 'lens' || o === 'ring') spans.push([0, dur]); // the lens sweeps; the ring grows and is cut
+      else if (o === 'scan') spans.push([6, Math.round(dur * 0.8)]);
+      else if (o === 'pins') for (let k = 0; k < 5; k++) events.push(Math.round(dur * 0.3 + k * 7.5));
+      break;
+    }
     case 'rpg-panel': { const at = steps(n(p.stats), 6, Math.round(dur * 0.45)); at.forEach((t) => events.push(t)); spans.push([at.at(-1)! + 14, at.at(-1)! + 14 + String((p.lines as string[] | undefined)?.join(' ') ?? '').length]); break; } // bars fill, then the line types on twos
     case 'point-cloud': { for (let t = 45; t < dur; t += 45) events.push(t); events.push(cues[0] ?? Math.round(dur * 0.45)); break; } // each scan pass (45 frames), the lock
     case 'line-draw': { const at = steps(n(p.steps), 8, dur - 16); at.forEach((t) => events.push(t)); spans.push([0, at.at(-1)!]); break; } // the pen travels between stops

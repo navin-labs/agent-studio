@@ -9,6 +9,8 @@ import {renderStill, selectComposition} from '@remotion/renderer';
 import fs from 'node:fs';
 import path from 'node:path';
 import {sceneFrames} from '../src/composer/storyboard.ts';
+import {resolvePlates} from '../src/lib/mediaHub.ts';
+import {history as routerHistory, pick as routerPick} from '../../studio/router.ts';
 
 const args = process.argv.slice(2);
 const board = args.includes('--board') ? args[args.indexOf('--board') + 1] : null;
@@ -30,13 +32,16 @@ const shoot = async (id, script, frames, name) => {
 if (sheet) {
   const t0 = Date.now();
   const script = JSON.parse(fs.readFileSync(sheet, 'utf8'));
-  const id = styleId ?? script.formatStyle;
+  // a channel board gets the router's look, exactly as make.mjs gives it
+  if (script.channel && !script.film && !(styleId ?? script.formatStyle)) script.rig = routerPick(script.meta?.idea ?? script.caption ?? script.id, new Date().toISOString().slice(0, 10), routerHistory());
+  const id = styleId ?? script.formatStyle ?? script.rig?.style;
   if (id) {
     const sf = path.resolve('styles', `${id}.json`);
     if (!fs.existsSync(sf)) throw new Error(`format style ${id} not found (engine/styles/)`);
     script.skin = JSON.parse(fs.readFileSync(sf, 'utf8'));
     script.theme = script.skin.theme;
   }
+  if (script.scenes.some((sc) => sc.primitive === 'composite')) script.plates = await resolvePlates(script);
   const inputProps = {script};
   const comp = await selectComposition({serveUrl, id: 'BoardSheet', inputProps});
   const file = `${out}/${script.id}${id ? `.${id}` : ''}.sheet.png`;

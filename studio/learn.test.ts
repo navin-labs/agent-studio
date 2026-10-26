@@ -1,5 +1,5 @@
 // node studio/learn.test.ts : sample metrics -> scoreboard, bench, proven list, posting times; the real Recipe command reads them.
-// Planted pattern: stamp-hit videos do badly, chat-pop videos do well, YouTube at 21:00 does best. Temp folder only.
+// Planted pattern: conveyor videos do badly, maze-to-line videos do well, YouTube at 21:00 does best. Temp folder only.
 import assert from 'node:assert';
 import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
@@ -28,7 +28,7 @@ const at = (i: number) => `${fps[i].date}T${hours[i % 4]}:00:00+05:30`;
 lines(fingerprintFile(p), fps);
 lines(ledgerFile(p), fps.flatMap((f, i) => (['instagram', 'youtube'] as const).map((platform) => ({storyboard_id: f.id, platform, channel: f.channel, status: 'published', approved_by: 'navin', approved_at: '2026-09-01T10:00:00Z', sha256: '0'.repeat(64), scheduled_for: at(i), updated_at: '2026-09-01T10:00:00Z'}))));
 const metrics: Metric[] = fps.flatMap((f, i) => {
-  const base = f.primitives.includes('stamp-hit') ? 4 : f.primitives.includes('chat-pop') ? 40 : 20;
+  const base = f.primitives.includes('conveyor') ? 4 : f.primitives.includes('maze-to-line') ? 40 : 20;
   const yt = base + (hours[i % 4] === '21' ? 30 : 0);
   return [
     {storyboard_id: f.id, channel: f.channel, platform: 'instagram', window: '24h', reach: 1000, dms: 999, profile_visits: 999}, // superseded by the 7d numbers
@@ -39,7 +39,7 @@ const metrics: Metric[] = fps.flatMap((f, i) => {
 // the rarest other primitive keeps fewer than MIN_N measured videos: shown, never judged
 const uses = new Map<string, number>();
 for (const f of fps) for (const x of new Set(f.primitives)) uses.set(x, (uses.get(x) ?? 0) + 1);
-const rare = [...uses].filter(([x]) => !['stamp-hit', 'chat-pop', 'end-card'].includes(x)).sort((a, b) => a[1] - b[1])[0][0];
+const rare = [...uses].filter(([x]) => !['conveyor', 'maze-to-line', 'end-card'].includes(x)).sort((a, b) => a[1] - b[1])[0][0];
 const unmeasured = new Set(fps.filter((f) => f.primitives.includes(rare)).slice(MIN_N - 1).map((f) => f.id));
 lines(metricsFile(p), metrics.filter((m) => !unmeasured.has(m.storyboard_id)));
 
@@ -48,12 +48,12 @@ fs.mkdirSync(path.join(p.state, 'learn'), {recursive: true});
 fs.writeFileSync(path.join(p.state, 'learn/posting-times.json'), JSON.stringify({'c1-automation': {facebook: '12:30'}, 'c2-reach': {youtube: '20:00'}}));
 const r = runLearn('c1-automation', '2026-W41', p);
 const prim = new Map(r.tables.primitive.map((x) => [x.value, x]));
-assert.ok(fps.filter((f) => f.primitives.includes('stamp-hit')).length >= MIN_N, 'the sample has enough stamp-hit videos to judge');
-assert.ok(r.learned.bench.some((b) => b.primitive === 'stamp-hit'), `stamp-hit benched: ${JSON.stringify(r.learned.bench)}`);
+assert.ok(fps.filter((f) => f.primitives.includes('conveyor')).length >= MIN_N, 'the sample has enough conveyor videos to judge');
+assert.ok(r.learned.bench.some((b) => b.primitive === 'conveyor'), `conveyor benched: ${JSON.stringify(r.learned.bench)}`);
 assert.ok(r.learned.bench.every((b) => b.until === '2026-W43'), `bench lasts ${BENCH_WEEKS} weeks`);
 assert.ok(r.learned.bench.every((b) => !UNBENCHABLE.has(b.primitive)), 'a beat is never left empty');
-assert.ok(r.learned.proven.includes('chat-pop') && !r.learned.proven.includes('stamp-hit'));
-assert.ok(prim.get('chat-pop')!.kpi > prim.get('stamp-hit')!.kpi);
+assert.ok(r.learned.proven.includes('maze-to-line') && !r.learned.proven.includes('conveyor'));
+assert.ok(prim.get('maze-to-line')!.kpi > prim.get('conveyor')!.kpi);
 const thinRows = r.tables.primitive.filter((x) => x.n < MIN_N);
 assert.ok(thinRows.length, 'the sample has a primitive with too few videos');
 for (const x of thinRows) assert.ok(!r.learned.proven.includes(x.value) && !r.learned.bench.some((b) => b.primitive === x.value), `${x.value}: too few videos, shown but not judged`);
@@ -69,7 +69,7 @@ assert.ok(!board.includes('99.90%'), 'the 24h numbers were replaced by 7d');
 // the real Recipe command reads learn.json: benched primitives never appear; the 70% use proven picks, the 30% try something new
 const env = {...process.env, STUDIO_STATE: p.state, STUDIO_RECIPES: p.recipes};
 const outText = execFileSync(process.execPath, [path.join(ROOT, 'studio/recipe.ts'), 'c1-automation', '2026-W41'], {env, encoding: 'utf8'});
-assert.match(outText, /learn: bench .*stamp-hit/);
+assert.match(outText, /learn: bench .*conveyor/);
 const week: Recipe[] = JSON.parse(fs.readFileSync(path.join(p.recipes, 'c1-automation/2026-W41.json'), 'utf8'));
 const benched = r.learned.bench.map((b) => b.primitive);
 assert.ok(week.every((x) => x.primitives.every((q) => !benched.includes(q))), 'no benched primitive in the week');
@@ -82,7 +82,7 @@ for (const x of week) {
   if (x.experiment) assert.ok(x.primitives.some((q, i) => beats[i].length > 1 && !r.learned.proven.includes(q)), `${x.id} experiment tries something unproven`);
   else
     x.primitives.forEach((q, i) => {
-      const provenHere = beats[i].filter((b) => r.learned.proven.includes(b) && !benched.includes(b));
+      const provenHere: string[] = beats[i].filter((b) => r.learned.proven.includes(b) && !benched.includes(b));
       if (beats[i].length > 1 && provenHere.length && !x.primitives.slice(0, i).some((u) => provenHere.includes(u))) {
         eligible++;
         used += +provenHere.includes(q);
@@ -92,7 +92,7 @@ for (const x of week) {
 assert.ok(eligible && used / eligible >= 0.6, `proven picks used in ${used} of ${eligible} beats`);
 // benches end: planning two weeks later ignores it
 const later = execFileSync(process.execPath, [path.join(ROOT, 'studio/recipe.ts'), 'c1-automation', '2026-W43'], {env, encoding: 'utf8'});
-assert.ok(!/learn: bench [^;]*stamp-hit/.test(later), 'the bench expired');
+assert.ok(!/learn: bench [^;]*conveyor/.test(later), 'the bench expired');
 
 // too little data: nothing judged, no bench, no posting time
 const thin = learn('c1-automation', '2026-W41', {metrics: metrics.slice(0, 6), fingerprints: fps, scheduled: new Map(), kpi: c1.kpi});

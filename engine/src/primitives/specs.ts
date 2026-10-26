@@ -11,8 +11,8 @@ export type Field =
   | {kind: 'text'; max: number; optional?: boolean} // max characters, *accent* markers not counted
   | {kind: 'icon'}
   | {kind: 'int'; min: number; max: number}
-  | {kind: 'bool'}
-  | {kind: 'enum'; of: string[]}
+  | {kind: 'bool'; optional?: boolean}
+  | {kind: 'enum'; of: string[]; optional?: boolean}
   | {kind: 'object'; fields: Record<string, Field>}
   | {kind: 'list'; min: number; max: number; of: Field};
 
@@ -264,7 +264,26 @@ export const SPECS: Record<string, Spec> = {
       {icon: 'file', label: 'SB-4403.pdf', sub: 'Page 1 of 1'},
       {icon: 'keyboard', label: 'Rs 38,500', sub: 'Typed by hand. Again.'},
     ]},
-  },  'rpg-panel': {
+  },  composite: {
+    family: 'world',
+    about: 'A documentary shot: a real photo or clip plate (found by query through the media hub), graded and moved, an illustrated overlay, one hero number or one verbatim quote, broadcast chrome.',
+    channels: ALL,
+    seconds: [2, 8],
+    cues: 'optional: the frame the hero or quote lands',
+    params: {
+      query: text(48),
+      video: {kind: 'bool', optional: true},
+      hero: text(8, true),
+      unit: text(6, true),
+      label: text(20, true),
+      quote: text(64, true),
+      source: text(44, true),
+      move: {kind: 'enum', of: ['ken-burns', 'tilt', 'push', 'drift'], optional: true},
+      overlay: {kind: 'enum', of: ['none', 'pulse', 'beams', 'lens', 'scan', 'spotlight', 'pins', 'ring'], optional: true},
+    },
+    example: {query: 'server room dark', hero: '0.5', unit: 's', label: 'the stall', overlay: 'pulse'},
+  },
+  'rpg-panel': {
     family: 'data',
     about: 'An 8-bit status screen: stepped stat bars fill one per cue, then a dialogue box types its line.',
     channels: ALL,
@@ -320,7 +339,7 @@ const len = (s: string) => s.replace(/\*/g, '').length;
 
 const check = (f: Field, v: unknown, at: string, errs: string[]): void => {
   if (v === undefined || v === null) {
-    if (!(f.kind === 'text' && f.optional)) errs.push(`${at}: missing`);
+    if (!((f.kind === 'text' || f.kind === 'enum' || f.kind === 'bool') && f.optional)) errs.push(`${at}: missing`);
     return;
   }
   switch (f.kind) {

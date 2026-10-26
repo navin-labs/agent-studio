@@ -40,34 +40,35 @@ export type Guidance = {caption?: string; cta?: string; seconds?: [number, numbe
 // Video shapes: one pool of primitives per beat, and the channels each shape is for. host = the Chiku format (ADR 15, night theme,
 // C1); explainer = C1's composed manual-pain-to-automatic-flow video (8 beats, 40 to 60 s); composed = the same in 6 beats for C3;
 // reach = C2 Backstory's history stories (archive only).
-const PAIN = ['ui-inbox', 'ui-sheet', 'ui-chat', 'pile-drop', 'counter-drop', 'phone-buzz', 'zoom-dive'];
+// The art gate (engine/src/composer/artgate.ts) bans text in boxes and wants 40% of a video's scenes on photo or clip plates, so
+// every format has composite-only beats (a plate, one hero number or quote); the other beats keep the drawn primitives.
 export const FORMATS = {
   host: {
     channels: ['c1-automation'],
     themes: ['night', 'night-signal'],
     transitions: ['cut', 'whip-pan', 'pixel-wipe', 'fold'],
-    beats: [['host-hook'], PAIN, PAIN, ['ui-diff', 'highlighter-swipe', 'word-stack-slam', 'before-after-split', 'maze-to-line'], ['flow-run', 'flow-build', 'conveyor'], ['ui-sheet', 'ui-chat', 'ui-inbox', 'stamp-hit', 'chat-pop'], ['host-payoff'], ['host-cta']],
+    beats: [['host-hook'], ['composite'], ['composite'], ['before-after-split', 'maze-to-line', 'highlighter-swipe', 'composite'], ['flow-run', 'flow-build', 'conveyor'], ['composite'], ['host-payoff'], ['host-cta']],
   },
   // C1's composed explainer, 8 beats so it reaches the 40 s floor: hook, two pains, the contrast, the flow, the result, the payoff, follow
   explainer: {
     channels: ['c1-automation'],
     themes: ['night', 'night-signal'],
     transitions: ['cut', 'whip-pan', 'ink-wipe', 'fold'],
-    beats: [['word-stack-slam', 'pile-drop', 'counter-drop', 'highlighter-swipe', 'chat-pop', 'split-flap', 'phone-buzz', 'zoom-dive'], ['pile-drop', 'ui-inbox', 'ui-sheet', 'phone-buzz', 'zoom-dive', 'chat-pop'], ['ui-chat', 'ui-sheet', 'ui-inbox', 'pile-drop', 'counter-drop', 'conveyor'], ['before-after-split', 'maze-to-line', 'highlighter-swipe', 'ui-diff'], ['flow-run', 'flow-build', 'conveyor'], ['ui-sheet', 'ui-inbox', 'ui-chat', 'stamp-hit', 'counter-drop'], ['word-stack-slam', 'highlighter-swipe', 'split-flap', 'counter-drop'], ['end-card']],
+    beats: [['composite', 'word-stack-slam', 'split-flap', 'zoom-dive'], ['composite'], ['composite'], ['before-after-split', 'maze-to-line', 'highlighter-swipe', 'composite'], ['flow-run', 'flow-build', 'conveyor', 'line-draw'], ['composite'], ['composite', 'split-flap', 'counter-drop', 'word-stack-slam'], ['end-card']],
   },
   composed: {
     channels: ['c3-studio'],
     themes: ['paper', 'ink', 'mono', 'studio'],
     transitions: ['cut', 'whip-pan', 'ink-wipe'],
-    beats: [['word-stack-slam', 'pile-drop', 'counter-drop', 'highlighter-swipe', 'chat-pop', 'split-flap', 'phone-buzz', 'zoom-dive'], ['pile-drop', 'counter-drop', 'conveyor', 'chat-pop', 'word-stack-slam', 'phone-buzz'], ['highlighter-swipe', 'word-stack-slam', 'flow-build', 'before-after-split', 'maze-to-line'], ['flow-run', 'flow-build', 'conveyor'], ['stamp-hit', 'chat-pop', 'counter-drop', 'split-flap'], ['end-card']],
+    beats: [['composite', 'word-stack-slam', 'pile-drop', 'split-flap', 'zoom-dive', 'counter-drop', 'intertitle'], ['composite'], ['highlighter-swipe', 'flow-build', 'before-after-split', 'maze-to-line', 'line-draw', 'point-cloud'], ['flow-run', 'flow-build', 'conveyor', 'line-draw', 'stamp-hit'], ['composite'], ['end-card']],
   },
   reach: {
     channels: ['c2-reach'],
     themes: ['archive', 'archive-gold'],
     transitions: ['cut', 'whip-pan', 'ink-wipe'],
     // Backstory's sixty-second story (docs/FORMATS_PROPOSAL.md, locked 2026-10-03): hook, the world before, the turn, one idea shown,
-    // why it matters today, follow. No modern UI chrome (chat-pop, phone-buzz): it breaks the period feel.
-    beats: [['word-stack-slam', 'zoom-dive', 'split-flap', 'highlighter-swipe', 'counter-drop'], ['pile-drop', 'conveyor', 'counter-drop', 'before-after-split'], ['split-flap', 'highlighter-swipe', 'word-stack-slam'], ['maze-to-line', 'before-after-split', 'conveyor', 'zoom-dive'], ['counter-drop', 'word-stack-slam', 'split-flap'], ['end-card']],
+    // why it matters today, follow. Plates come from the archive and period photographs; no modern UI chrome.
+    beats: [['composite', 'zoom-dive', 'split-flap', 'word-stack-slam', 'intertitle', 'counter-drop'], ['composite'], ['split-flap', 'highlighter-swipe', 'intertitle', 'line-draw', 'pile-drop'], ['composite', 'maze-to-line', 'before-after-split', 'zoom-dive', 'conveyor'], ['composite'], ['end-card']],
   },
 } as const;
 export const EXPERIMENT_SHARE = 0.3; // 70% proven, 30% experiments (Learn decides what "proven" means: studio/learn.ts)
@@ -137,7 +138,8 @@ export const generateWeek = (ch: Channel, week: string, history: Fingerprint[], 
       const proven = opts.proven?.length ? opts.proven : null;
       const exp = experiments.has(slot);
       for (const beat of f.beats) {
-        const all_ = beat.filter((p) => allowed(p) && !primitives.includes(p));
+        // a primitive appears once per video; a composite is a container (its own plate, overlay and hero each time), so it may repeat
+        const all_ = beat.filter((p) => allowed(p) && (p === 'composite' || !primitives.includes(p)));
         const kept = primitives.length ? all_ : all_.filter((p) => !opts.leaks?.includes(p));
         const pool = kept.length ? kept : all_;
         const best = proven && !exp && attempt < ATTEMPTS / 2 ? pool.filter((p) => proven.includes(p)) : []; // a preference: if proven picks cannot pass novelty, the second half draws from the whole pool

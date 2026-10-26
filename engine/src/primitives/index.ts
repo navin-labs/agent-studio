@@ -27,6 +27,7 @@ import {Intertitle} from './intertitle';
 import {LineDraw} from './line-draw';
 import {PointCloud} from './point-cloud';
 import {RpgPanel} from './rpg-panel';
+import {Composite} from './composite';
 
 export const PRIMITIVES: Record<keyof typeof SPECS, React.FC<PrimitiveProps<any>>> = {
   'word-stack-slam': WordStackSlam,
@@ -55,4 +56,5 @@ export const PRIMITIVES: Record<keyof typeof SPECS, React.FC<PrimitiveProps<any>
   'point-cloud': PointCloud,
   'line-draw': LineDraw,
   intertitle: Intertitle,
+  composite: Composite,
 };

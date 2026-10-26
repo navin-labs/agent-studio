@@ -52,8 +52,13 @@ const jaccard = <T,>(a: Set<T>, b: Set<T>) => {
 // ponytail: character-trigram Jaccard; TF-IDF if near-duplicate topics slip through with reworded titles.
 export const topicSimilarity = (a: string, b: string) => jaccard(trigrams(a), trigrams(b));
 // Shot set plus ordered neighbour pairs, so the same shots in a new order still count as different.
+// composites are left out: each carries its own plate, overlay and hero, and the router keeps their look apart (studio/router.ts),
+// so two videos differ by the drawn shots between them
 export const structureDistance = (a: string[], b: string[]) => {
-  const bag = (p: string[]) => new Set([...p, ...p.slice(1).map((x, i) => `${p[i]}>${x}`)]);
+  const bag = (all: string[]) => {
+    const p = all.filter((x) => x !== 'composite');
+    return new Set([...p, ...p.slice(1).map((x, i) => `${p[i]}>${x}`)]);
+  };
   return 1 - jaccard(bag(a), bag(b));
 };
 

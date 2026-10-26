@@ -2,8 +2,8 @@
 
 # ⚡ FORGE Content Studio
 
-**Evidence Films: short videos built from sourced numbers and real-looking work screens, rendered in code.**<br/>
-No stock footage, no video model, no paid voice API. Remotion renders it; a local voice speaks it; free code gates check it; a human approves it.
+**Evidence Films: documentary shorts built from sourced numbers, verbatim quotes and real photographic plates, composited in code.**<br/>
+No video model, no paid voice API. Plates come from Unsplash, Pixabay and the Internet Archive with credits on screen; Remotion composites them; a local voice speaks; free code gates check it; a human approves it.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Remotion](https://img.shields.io/badge/Remotion-4.0-0B84F3.svg)](https://www.remotion.dev)
@@ -27,6 +27,8 @@ No stock footage, no video model, no paid voice API. Remotion renders it; a loca
 
 | Date | What landed |
 |---|---|
+| 2026-10-27 | **Art gate**: channel videos are built on composites. Text-in-box shots are rejected, a scene shows at most 12 words, and at least 40% of scenes sit on a real photo or clip plate. Recipes, the Writer and the router follow it for C1 and C2 |
+| 2026-10-27 | **Cinematic composites**: real plates from Unsplash, Pixabay and the Internet Archive (`mediaHub`, cached and credited), four-layer documentary shots (`CinematicComposite`), and a topic router that never repeats a look. Flagship: *The 500 ms SSH Ghost* |
 | 2026-10-26 | **29 format styles**: each a visual world, not a palette: its own camera (3D tilt, whip pan, kinetic punch, hand-held), texture (CRT, print, film on twos, tactical HUD), host behaviour, faces and pace. `--style=<id>` on any board |
 | 2026-10-26 | **Visual-mode primitives**: an 8-bit status screen, a scanned point cloud, a live hand-drawn line and a silent-film intertitle, beside the inbox, sheet and chat shots |
 | 2026-10-26 | **Contact sheet before render**: `npm run sheet` freezes every scene on one PNG with `remotion still`, under a second once bundled, before any voice or MP4 |
@@ -42,20 +44,26 @@ No stock footage, no video model, no paid voice API. Remotion renders it; a loca
 <table><tr>
 <td width="360" valign="top">
 
-https://github.com/user-attachments/assets/0b320102-7cf2-4a57-982e-5fe07f4671e2
+<a href="docs/media/xz-ghost.mp4"><img src="docs/media/xz-ghost-cover.png" width="340" alt="The 500 ms SSH Ghost: cover frame, 0.5 s over a server rack"></a>
+
+<!-- drop docs/media/xz-ghost.mp4 here in the GitHub editor for an inline player -->
 
 </td>
 <td valign="top">
 
-**One board, rendered by the pipeline and passed by QA** (a verification render, not a channel post).
+**The 500 ms SSH Ghost** (CVE-2024-3094): how half a second of login lag exposed the xz-utils backdoor. [Watch the film](docs/media/xz-ghost.mp4) (38 s, voiced).
 
-- **Story:** chasing unpaid invoices: reminders typed by hand against a reminder flow that runs itself (illustrative example data).
-- **Board:** `engine/test/style-c1.json`, 8 shots: word-stack-slam, pile-drop, ui-chat, before-after-split, flow-run, ui-sheet, counter-drop, end-card.
-- **Render:** 44.18 s, 1080x1920, 30 fps, local Kokoro voice, YouTube variant of C1.
-- **QA:** 12 of 12 checks passed ([qa-c1.txt](docs/proof/qa-c1.txt)). The original file's SHA-256 matches [c1-youtube.json](docs/proof/manifests/c1-youtube.json).
+- **Sourced:** every number and quote is from Andres Freund's [oss-security advisory](https://www.openwall.com/lists/oss-security/2024/03/29/4) of 29 March 2024: logins went from 0.299 s to 0.807 s.
+- **Plates:** Unsplash and Pixabay photos and clips plus a 1941 public-domain film from the Internet Archive, fetched and cached by `engine/src/lib/mediaHub.ts`, credited in the citation bar.
+- **Composite:** each shot is four layers (`engine/src/composer/CinematicComposite.tsx`): graded plate on a camera rig, light and texture, one hero number or verbatim quote, broadcast chrome with power-word captions.
+- **Look:** chosen by `studio/router.ts` from the topic (security, so `dark-keynote`); the next video never shares its camera, texture, face or palette.
+- **Sound:** local Kokoro voice, music bed ducked 10 dB under every line, 2 s sonic bumper, mastered to -14 LUFS.
+- **Checks:** 235 frames measured, 0 text outside the platform safe areas. Board: [`engine/test/showcase/xz-ghost.json`](engine/test/showcase/xz-ghost.json).
 
 </td>
 </tr></table>
+
+<p align="center"><img src="docs/media/xz-ghost-sheet.png" width="720" alt="Contact sheet of the 500 ms SSH Ghost: one frame per shot"></p>
 
 ### Channel styles
 
@@ -150,6 +158,7 @@ Every gate is plain code: free to run, same answer every time, and each one stop
 | **1. Script gate** | Hook rules, 15-word sentences and a 10-word average, banned openers and filler words, a re-hook at least every 45 words (and no run over 18 s on measured clips), one sourced proof per video | `studio/script.ts` |
 | **2. Visual density gate** | No gap over 2.5 s with nothing new on screen (shot switch, cue, row, cursor, layout); checked before voicing and again on measured clips | `engine/src/composer/density.ts` |
 | **3. Audio and bumper mixer** | Channel music bed ducked 10 dB under every voice line, faded before the end; 2 s sonic bumper after the last line; the closing scene is stretched to hold it | `engine/src/lib/score.ts`, `engine/src/films/kit.tsx` |
+| **Art gate** | No text-in-box shots (inbox, sheet, chat, diff), at most 12 on-screen words per scene, 40% of scenes on photo or clip plates | `engine/src/composer/artgate.ts` |
 | **4. Remotion renderer and QA** | WCAG AA theme contrast, text boxes measured in the real browser render, then 12 checks per platform file (schema, text limits, audio, format, duration, captions, fingerprint, manifest, CTA, SEO) | `engine/scripts/theme-gate.ts`, `engine/src/composer/textcheck.ts`, `studio/qa.ts` |
 
 After the gates, nothing is published until the owner taps Approve on Telegram; the approval is bound to the video's SHA-256.
