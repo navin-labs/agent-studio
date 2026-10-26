@@ -16,7 +16,7 @@ Why: nothing reaches social media without an approved ledger entry, and each pla
 - Dry-run by default until Navin switches it on.
 
 Code: `studio/dispatch.ts` (`node studio/dispatch.ts [--live] [--hold]`), test `studio/dispatch.test.ts` in `npm run check`.
-- Live needs both `--live` and `DISPATCH_LIVE=on` in agent-studio/.env; otherwise a dry run that sends and writes nothing.
+- Live needs both `--live` and `DISPATCH_LIVE=on` in the repo-root `.env`; otherwise a dry run that sends and writes nothing.
 - Only the latest ledger line per (video, platform) counts. Re-checked right before sending, each a refusal with its reason (Telegram "agent-studio needs you" on the hourly tick):
   - the ledger line is schema-valid (approver, time, the approved video's `sha256`), its platform is youtube, instagram or facebook, its channel exists and owns the storyboard;
   - the variant was rendered and has a schema-valid manifest whose channel, platform and video id match the ledger line;

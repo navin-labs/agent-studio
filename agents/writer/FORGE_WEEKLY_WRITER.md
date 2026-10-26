@@ -2,7 +2,7 @@
 
 Forge follows this skill to write one channel's week of videos. Code has already picked each video's shape (the recipe); Forge only writes the words. Each board Forge writes becomes three videos, one per platform (YouTube, Instagram, Facebook), each with that platform's own call to action, end card and caption ending. Navin approves each video once on Telegram. Nothing is posted by Forge with this skill.
 
-All paths are absolute. The project is `~/Dev/projects/agent-studio` (below: `STUDIO`).
+All paths are absolute. The project is the folder this repository is cloned into (on this Mac `~/Dev/projects/forge-content-studio`; it was called `agent-studio` before the rename). If that folder does not exist, stop and tell Navin; do not search for another copy (below: `STUDIO`).
 
 ---
 

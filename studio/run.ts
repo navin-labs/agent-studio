@@ -37,7 +37,7 @@ const ist = (now: number) => {
   return {date: d.toISOString().slice(0, 10), weekday: d.getUTCDay()};
 };
 
-// Production renders with THIS repo's engine: the studiowatch LaunchAgent must be loaded and point at agent-studio/engine.
+// Production renders with THIS repo's engine: the studiowatch LaunchAgent must be loaded and point at this repo's engine/ (the folder it is cloned into).
 // (The old v1 watcher, com.theautomationguy.reelwatch, only watches ~/Dev/projects/reel-engine and never sees these boards.)
 export const WATCH_LABEL = 'com.theautomationguy.studiowatch';
 export const OLD_WATCH_LABEL = 'com.theautomationguy.reelwatch'; // the v1 watcher (reel-engine)

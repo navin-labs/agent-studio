@@ -7,7 +7,7 @@ Approve link (GET `/webhook/agent-studio-approve`) -> forwards the signed query 
 (`http://host.docker.internal:5680/approve`) -> shows the receiver's answer. n8n never holds `APPROVAL_SECRET`.
 
 Setup (Navin):
-1. In `agent-studio/.env`: `APPROVAL_WEBHOOK_URL=http://localhost:5678/webhook/agent-studio-approve` and `APPROVAL_SECRET=<16+ random characters>`.
+1. In the repo-root `.env`: `APPROVAL_WEBHOOK_URL=http://localhost:5678/webhook/agent-studio-approve` and `APPROVAL_SECRET=<16+ random characters>`.
 2. Run the receiver: `node studio/approve-server.ts --install` (LaunchAgent com.theautomationguy.approve, starts at login, log state/approve.log). Remove: `launchctl unload ~/Library/LaunchAgents/com.theautomationguy.approve.plist`.
 3. n8n UI -> Import from file -> `n8n/approval-webhook.json` -> Activate. Keep a copy of the exported JSON wherever you keep your n8n workflows.
 4. Check: open a link from `node studio/approval-page.ts c1-automation 2026-W41`; the receiver log shows `GET /approve -> 200`.
