@@ -7,6 +7,7 @@ import React, {createContext, useContext, useLayoutEffect, useMemo, useRef} from
 import {Audio, continueRender, delayRender, Easing, interpolate, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import rough from 'roughjs';
 import type {Storyboard, Timing} from '../composer/storyboard';
+import {scoreDb} from '../lib/score';
 import {FPS, LEAD} from '../lib/timing';
 
 // ---------- easing and time ----------
@@ -138,16 +139,11 @@ export const Painted: React.FC<{paint: (b: Brush) => void; seed?: number; w?: nu
 // ---------- sound ----------
 // Score (levels from the audio POC: ~7 dB under the voice in gaps, ~17 dB under while it speaks): the film's own ACE-Step cue (public/music/<id>.wav, node scripts/film.mjs score), ducked under every voice line, shaped by
 // shape [[t, dB]] (linear between points) and cut to silence in hush spans [from, to] (silence is a design tool).
-export const Score: React.FC<{src: string; shape?: [number, number][]; hush?: [number, number][]; duck?: number; base?: number}> = ({src, shape = [[0, 0]], hush = [], duck = 10, base = -17}) => {
-  const {beats} = useFilm();
-  const db = (s: number) => {
-    const i = shape.findIndex((p) => p[0] > s);
-    const lvl = i < 0 ? shape.at(-1)![1] : i === 0 ? shape[0][1] : interpolate(s, [shape[i - 1][0], shape[i][0]], [shape[i - 1][1], shape[i][1]]);
-    const talking = Math.max(0, ...beats.filter((b) => b.vo).map((b) => Math.min(k(s, [b.vo![0] - 0.25, b.vo![0]], [0, 1]), k(s, [b.vo![1], b.vo![1] + 0.4], [1, 0]))));
-    const hushed = Math.max(0, ...hush.map(([a, b]) => Math.min(k(s, [a - 0.12, a], [0, 1]), k(s, [b, b + 0.3], [1, 0]))));
-    return base + lvl - talking * duck - hushed * 60;
-  };
-  return <Audio src={staticFile(src)} volume={(f) => Math.pow(10, db(f / FPS) / 20)} />;
+// talk: the voice spans [from, to] in seconds when the music is not inside a film (the Composer passes its scenes' voice lines).
+export const Score: React.FC<{src: string; shape?: [number, number][]; hush?: [number, number][]; duck?: number; base?: number; talk?: [number, number][]}> = ({src, shape, hush, duck, base, talk}) => {
+  const film = useContext(FilmCtx);
+  const spans = talk ?? film?.beats.filter((b) => b.vo).map((b) => b.vo!) ?? [];
+  return <Audio src={staticFile(src)} volume={(f) => Math.pow(10, scoreDb(f / FPS, {shape, hush, duck, base, talk: spans}) / 20)} />;
 };
 // Foley: physical sounds (public/sfx/foley/<name>.wav, scripts/foley.py) on story events. No UI blips.
 export const FOLEY = ['page', 'flip', 'book', 'cloth', 'tear', 'swish', 'land', 'soft', 'sack', 'press', 'latch', 'catch', 'pop', 'wood', 'plank', 'stamp', 'thump', 'pen', 'chalk', 'switch', 'glass', 'coin', 'drop', 'tin', 'metal', 'bell', 'creak', 'door', 'step', 'knife'] as const; // scripts/foley.py

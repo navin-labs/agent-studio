@@ -25,7 +25,30 @@ const GREETING = /^(hey|hi|hello|welcome|so,? today|today (we|i)|in this video|l
 const HOOK_TRIGGER = /\?|\d|\b(never|nobody|no one|actually|wrong|secret|without|stop|nothing|everyone|you've|you have|why|how|what if|until)\b/i;
 const TURN = /\b(but|instead|actually|so|until|yet|except|turns out|therefore)\b/gi;
 const CONTRAST = /\b(then|now|before|after|vs|versus|instead|tiny|huge|small|big|manual|automatic|old|new|once|today|never|always)\b/i;
-const BANNED = [/\bin this video\b/i, /\bdon'?t forget\b/i, /\bsmash\b/i, /\blet'?s dive\b/i, /\bgame[- ]changer\b/i, /\bhey guys\b/i, /^\s*(and )?then\b/i];
+const BANNED = [/\bin this video\b/i, /\bdon'?t forget\b/i, /\bsmash\b/i, /\blet'?s dive\b/i, /\bgame[- ]?changers?\b/i, /\bhey guys\b/i, /^\s*(and )?then\b/i,
+  /\bdid you know\b/i, /\bhere are\b/i, /\bdelv(e|es|ed|ing)\b/i, /\btapestry\b/i, /\btestament\b/i, /\bcrucial(ly)?\b/i, /\bsymphony\b/i, /\bunlock(s|ed|ing)?\b/i];
+// readability: a spoken line is one sentence (a punchy burst), not a whole scene's voiceover
+export const MAX_LINE_WORDS = 15;
+export const MAX_AVG_WORDS = 10;
+// a re-hook (turn, contrast or a direct "look at this") must land at least every ~45 words, about 18 s of Kokoro voice
+export const REHOOK_WORDS = 45;
+export const REHOOK_SECONDS = 18;
+const REHOOK = /\b(here'?s (where|the)|here is (where|the)|what happens next|but look|watch this|wait|and yet|that'?s when|look at)\b/i;
+export const sentences = (vo: string) => vo.replace(/\*/g, '').split(/(?<=[.!?])\s+/).filter((s) => words(s).length);
+export const isRehook = (s: string) => new RegExp(TURN.source, 'i').test(s) || REHOOK.test(s);
+
+// the same rule on measured voice (Kokoro clip lengths): the longest run of scenes with no re-hook, in seconds. A scene with
+// a re-hook resets the clock at its start; the run before the first one counts from 0. Returns an error text or null.
+export const rehookIssue = (vos: (string | undefined)[], seconds: (number | null | undefined)[]): string | null => {
+  let run = 0, worst = 0, at = -1;
+  vos.forEach((vo, i) => {
+    if (!vo?.trim() || seconds[i] == null) return;
+    if (i > 0 && sentences(vo).some(isRehook)) run = 0;
+    run += seconds[i]!;
+    if (run > worst) [worst, at] = [run, i];
+  });
+  return worst > REHOOK_SECONDS ? `re-hook: ${worst.toFixed(1)} s of voice (up to scene ${at + 1}) with no turn, contrast or re-hook; the limit is ${REHOOK_SECONDS} s` : null;
+};
 // the devices every script needs: a reason to stay (novelty or an open loop), a new reveal, a contrast, sourced proof,
 // stakes or urgency, and a loop back to the start
 const REQUIRED: (Device | Device[])[] = [['novelty', 'open-loop'], 'reveal', 'contrast', 'proof', ['stakes', 'urgency'], 'loop'];
@@ -62,9 +85,19 @@ export const scriptErrors = (doc: Board): string[] => {
   if (!/\d/.test(all) && !/\b(one|two|three|four|five|six|seven|eight|nine|ten|hundred|thousand|million|nineteen|twenty)\b/i.test(all)) e.push('specificity: no number or date in the voice lines; say one hard, specific fact');
   if (!CONTRAST.test(all)) e.push('contrast: no contrast frame (then/now, before/after, tiny/huge, manual/automatic)');
   lines.forEach((l, i) => {
-    if (words(l).length > 22) e.push(`line ${i + 1}: ${words(l).length} words; one idea per line, 22 words at most`);
     for (const b of BANNED) if (b.test(l)) e.push(`line ${i + 1}: "${l.match(b)![0].trim()}" is a flat or banned phrase`);
   });
+  // readability: punchy sentences, 15 words at most, 10 on average across the script
+  const sents = lines.flatMap(sentences);
+  sents.forEach((s, i) => { if (words(s).length > MAX_LINE_WORDS) e.push(`sentence ${i + 1}: ${words(s).length} words; one idea per sentence, ${MAX_LINE_WORDS} words at most ("${s.trim().slice(0, 50)}...")`); });
+  const avg = sents.reduce((a, s) => a + words(s).length, 0) / Math.max(1, sents.length);
+  if (avg > MAX_AVG_WORDS) e.push(`readability: sentences average ${avg.toFixed(1)} words; keep the script average at ${MAX_AVG_WORDS} or fewer`);
+  // re-hook: never more than ~45 words (about 18 s of voice) without a turn, contrast or "look at this"
+  let since = 0, flagged = false;
+  for (const s of sents) {
+    since = isRehook(s) ? 0 : since + words(s).length;
+    if (since > REHOOK_WORDS && !flagged) { e.push(`re-hook: more than ${REHOOK_WORDS} words (about ${REHOOK_SECONDS} s) with no turn, contrast or re-hook near "${s.trim().slice(0, 40)}..."; add a "but", "until", "here's where" beat`); flagged = true; }
+  }
   // the loop: the last spoken line hands back to the first (they share a content word)
   const key = (s: string) => new Set(words(s).filter((w) => w.length >= 4 && !STOP.has(w)));
   const first = key(lines[0]);

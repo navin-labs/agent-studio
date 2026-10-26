@@ -21,8 +21,9 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'node:url';
+import {densityIssues} from '../src/composer/density.ts';
 import {HOOK_PATTERNS, lengthIssue, probeFrames, validateStoryboard} from '../src/composer/storyboard.ts';
-import {scriptErrors} from '../../studio/script.ts';
+import {rehookIssue, scriptErrors} from '../../studio/script.ts';
 import {probeVideo} from './probe.ts';
 import {filmstrip, master, motion} from './film.mjs';
 import {ctaKind, file as variantFile, PLATFORMS, ROUTE, variantDir} from '../../studio/variant.ts';
@@ -156,6 +157,8 @@ const validateBoard = (doc) => {
   if (doc.hashtags && (doc.hashtags.length < 3 || doc.hashtags.length > 5)) errors.push('use 3 to 5 hashtags (Instagram caps at 5)');
   // a channel board's words must hold attention (docs/CREATIVE_BIBLE.md section 13): checked before any render is spent
   if (doc.channel) for (const e of scriptErrors(doc)) errors.push(`script: ${e}`);
+  // visual density: no gap over 2.5 s with nothing new on screen (voiced boards are checked per platform on measured clips)
+  if (doc.channel && !doc.film && !VOICE_ON) errors.push(...densityIssues(doc));
   // the closer shows the channel's own account: read it from channels/<id>/channel.json (no channel = test board, default handle)
   if (doc.channel) {
     const cf = path.join(ROOT, '..', 'channels', doc.channel, 'channel.json');
@@ -169,6 +172,8 @@ const validateBoard = (doc) => {
     else errors.push(`channel ${doc.channel} has no Instagram handle yet (channels/${doc.channel}/channel.json): the end card would show the wrong account`);
     // the channel's own end-card logo, else the studio mark (C1); a board without a channel (demo, test) shows no logo and no account
     doc.mark = fs.existsSync(path.join(ROOT, 'public', 'brand', doc.channel, 'mark.svg')) ? `brand/${doc.channel}/mark.svg` : 'brand/mark.png';
+    // the channel's music bed and sonic bumper (scripts/brand_audio.py); a channel without them renders as before
+    doc.bumper = fs.existsSync(path.join(ROOT, 'public', 'brand', 'audio', `${doc.channel}-bumper.wav`)) && fs.existsSync(path.join(ROOT, 'public', 'brand', 'audio', `${doc.channel}-bed.wav`)) || undefined;
     // the style preset (styles/<id>.json, docs/MOTION.md): the board's own, else the channel's setting
     const styleId = doc.style ?? ch?.style;
     const sf = styleId && path.join(ROOT, '..', 'styles', `${styleId}.json`);
@@ -538,6 +543,9 @@ const renderReel = async (script, place) => {
   const long = lengthIssue(script, (await probeVideo(name('mp4'))).seconds); // measured on the file, exactly as QA measures it
   const voiced = script.scenes.every((s, i) => !s.vo || durations[i] != null);
   if (long) console.log((voiced ? c.red : c.yellow)(`  ${voiced ? 'error' : 'warn'}: ${long}${voiced ? '' : ' (estimated, no voice)'}`));
+  // re-hook on the measured voice: no more than 18 s without a turn (a channel board with every line voiced)
+  const stale = script.channel && voiced ? rehookIssue(script.scenes.map((s) => s.vo), durations) : null;
+  if (stale) console.log(c.red(`  error: ${stale}`));
   // the variant's manifest, written last: what it is, for whom, and where its files are (QA fills in its status)
   if (script.variant) {
     const v = script.variant;
@@ -546,7 +554,7 @@ const renderReel = async (script, place) => {
     const {platform: _p, ...destination} = v.publisher;
     fs.writeFileSync(name('manifest.json'), JSON.stringify({channel: script.channel, platform: v.platform, video_id: script.id, date: script.date, style_version: script.preset.id, ...(script.direction ? {fingerprint: script.direction.style} : {}), voice: voice ?? null, cta_kind: v.kind, cta_text: v.text.replace(/\*/g, ''), cta_say: script.scenes.at(-1).vo, end_card_handle: script.handle || null, destination: {via: destination.via, handle: destination.handle, ...(destination.page_id ? {page_id: destination.page_id} : {})}, size: v.size, video_sha256: sha, qa_status: 'pending', files}, null, 2) + '\n');
   }
-  return errs === 0 && !(long && voiced);
+  return errs === 0 && !(long && voiced) && !stale;
 };
 
 // A platform variant of a channel board: the closing card's CTA, its spoken line and the caption's CTA line come from the style
@@ -612,7 +620,7 @@ for (const f of files) {
       // voiced: generate (or reuse) this platform's clips first, so every line is judged by its real length
       const heard = VOICE_ON && !flags.has('--no-vo') ? await prepareVoice(vs) : null;
       if (heard?.fresh) serveUrl = null; // clips written here are not "fresh" again in renderReel: rebuild the bundle now
-      const verr = validateStoryboard(vs, heard?.durations).errors;
+      const verr = [...validateStoryboard(vs, heard?.durations).errors, ...(heard && vs.channel && !vs.film ? densityIssues(vs, {durations: heard.durations}) : [])];
       if (verr.length) {
         verr.forEach((e) => console.log(c.red(`  error: ${platform}: ${e}`)));
         failed++;

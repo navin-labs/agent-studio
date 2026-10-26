@@ -85,7 +85,7 @@ fs.mkdirSync(agents);
 assert.match(watcherProblem({agents})!, /not installed/);
 const plist = path.join(agents, `${WATCH_LABEL}.plist`);
 fs.writeFileSync(plist, '<string>/Users/x/Dev/projects/reel-engine/scripts/watch.mjs</string>');
-assert.match(watcherProblem({agents})!, /does not run .*agent-studio\/engine\/scripts\/watch.mjs/);
+assert.match(watcherProblem({agents})!, /does not run .*\/engine\/scripts\/watch.mjs/);
 fs.writeFileSync(plist, `<string>${path.join(ROOT, 'engine/scripts/watch.mjs')}</string>`);
 assert.match(watcherProblem({agents, loaded: () => '123\t0\tcom.theautomationguy.reelwatch'})!, /not running/);
 assert.equal(watcherProblem({agents, loaded: () => `123\t0\t${WATCH_LABEL}`}), null);

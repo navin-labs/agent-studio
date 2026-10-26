@@ -1,13 +1,13 @@
 // Self-test for studio/script.ts: a crafted script passes, a flat one fails with its exact reasons.
 import assert from 'node:assert';
-import {hookType, scriptErrors} from './script.ts';
+import {hookType, rehookIssue, scriptErrors, sentences} from './script.ts';
 
 const crafted = {
   scenes: [
     {vo: "You've touched this every day and never noticed it."},
-    {vo: 'In 1941, a dog came home from the Alps covered in burrs.'},
+    {vo: 'In 1941, a dog came home covered in burrs.'},
     {vo: 'Most people would brush them off. But George de Mestral put one under a microscope.'},
-    {vo: 'Every burr was covered in hundreds of tiny hooks, so it gripped anything with a loop.'},
+    {vo: 'Every burr held hundreds of tiny hooks. So it gripped anything with a loop.'},
     {vo: 'Fourteen years later, US patent 2,717,437 turned that into a fastener.'},
     {vo: "Today it holds astronauts' gear in space, and the thing you touched today."},
     {},
@@ -34,4 +34,20 @@ const tag = (feels: string[], holds: number[] = []) => ({...crafted, scenes: cra
 assert.deepStrictEqual(scriptErrors(tag(['curious', 'tense', 'surprised', 'warm', 'calm', 'triumphant'], [2])), []);
 const flatVoice = scriptErrors(tag(['calm', 'calm', 'calm', 'calm', 'calm', 'calm'], [0, 1, 2]));
 for (const want of ['fewer than 3 different feels', 'the hook is calm', 'more than 2 held silences']) assert.ok(flatVoice.some((x) => x.includes(want)), `flat voice must fail on "${want}"; got:\n${flatVoice.join('\n')}`);
+// session 45: banned phrases, readable lines, and a re-hook at least every ~45 words
+const withLine = (vo: string) => ({...crafted, scenes: [...crafted.scenes.slice(0, 5), {vo}, {}]});
+const clean = scriptErrors(withLine("Today it holds astronauts' gear in space, and the thing you touched today."));
+assert.deepStrictEqual(clean, [], 'the changed last scene still passes');
+for (const bad of ['Did you know the thing you touched today is old?', 'Here are the thing you touched today.', 'Let us delve into the thing you touched today.', 'A crucial tapestry, the thing you touched today.', 'Unlock the thing you touched today.', 'A game-changer, the thing you touched today.'])
+  assert.ok(scriptErrors(withLine(bad)).some((x) => x.includes('flat or banned phrase')), `must ban: ${bad}`);
+assert.ok(scriptErrors(withLine('Today it holds the gear of astronauts in space and also the very thing that you touched today.')).some((x) => x.includes('sentence') && x.includes('15 words at most')), 'a 16 word sentence fails');
+const long = (n: number) => Array.from({length: n}, () => 'word').join(' ') + '.';
+assert.ok(scriptErrors({...crafted, scenes: [crafted.scenes[0], {vo: `${long(14)} ${long(14)} ${long(14)} ${long(14)} you touched today`}, ...crafted.scenes.slice(2)]}).some((x) => x.includes('readability')), 'an average above 10 fails');
+const dull = 'A flat fact about the thing you touched today and nothing else here.';
+const noHook = {...crafted, scenes: [crafted.scenes[0], {vo: `${dull} ${dull} ${dull} ${dull}`}, crafted.scenes[5]]};
+assert.ok(scriptErrors(noHook).some((x) => x.startsWith('re-hook')), 'over 45 words without a turn fails');
+assert.ok(!scriptErrors({...noHook, scenes: [noHook.scenes[0], {vo: `${dull} ${dull} But look at what happens next. ${dull}`}, noHook.scenes[2]]}).some((x) => x.startsWith('re-hook')), 'a turn resets the re-hook count');
+assert.deepStrictEqual(sentences('One *two* three. Four five?  Six'), ['One two three.', 'Four five?', 'Six'], 'sentences strip emphasis marks');
+assert.strictEqual(rehookIssue(['Hook here.', 'A fact.', 'Another fact.', 'But look at this.'], [3, 8, 9, 4]), 're-hook: 20.0 s of voice (up to scene 3) with no turn, contrast or re-hook; the limit is 18 s', 'a 20 s run with no re-hook fails');
+assert.strictEqual(rehookIssue(['Hook here.', 'A fact.', 'But look at this.', 'More.'], [3, 8, 9, 4]), null, 'a re-hook resets the clock');
 console.log(`script ok: a crafted script passes; a flat one fails on ${e.length} exact reasons`);

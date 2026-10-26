@@ -5,6 +5,7 @@ import {parseAccent, wordStarts} from '../lib/text.ts';
 import type {StylePreset} from './style.ts';
 import {estimateSeconds, FPS, LEAD, TAIL_AUDIO, TAIL_EST, VOICE_WPS} from '../lib/timing.ts';
 import {SPECS, validateParams} from '../primitives/specs.ts';
+import {BUMPER_FRAMES} from './brand-audio.ts';
 import {THEMES, type ThemeName} from '../themes.ts';
 import type {Brief} from '../films/brief.ts';
 import {type Scene, sceneErrors} from '../fx/scene.ts';
@@ -49,6 +50,7 @@ export type Storyboard = {
   scene?: Scene; // an effect-driven film ("film": "scene"): shots of src/fx effects on the voice beats (src/fx/scene.ts)
   channel?: string;
   handle?: string; // render-time only (not in the file): the channel's Instagram handle, added by make.mjs
+  bumper?: boolean; // render-time only: the channel's music bed and 2 s sonic bumper play (public/brand/audio, set by make.mjs)
   mark?: string; // render-time only: the channel's end-card logo (public/brand/<channel>/mark.svg), added by make.mjs
   preset?: StylePreset; // render-time only: the style preset itself, added by make.mjs
 };
@@ -58,7 +60,14 @@ export type Timing = {durations?: (number | null)[]; audio?: (string | null)[]; 
 const voSecs = (sc: StoryboardScene, i: number, t?: Timing) => t?.durations?.[i] ?? (sc.vo ? estimateSeconds(sc.vo, VOICE_WPS) : 0);
 
 // Frames per scene: long enough for the vo, within the primitive's min/max. Measured voice is never cut.
-export const sceneFrames = (sb: Storyboard, t?: Timing): number[] =>
+export const sceneFrames = (sb: Storyboard, t?: Timing): number[] => {
+  const frames = sceneFramesBase(sb, t);
+  // the channel's 2 s sonic bumper plays after the last voice line: the closing scene is long enough to hold it
+  const last = sb.scenes.length - 1;
+  if (sb.bumper && !sb.film && last >= 0 && sb.scenes[last].vo) frames[last] = Math.max(frames[last], LEAD + Math.ceil(voSecs(sb.scenes[last], last, t) * FPS) + BUMPER_FRAMES);
+  return frames;
+};
+const sceneFramesBase = (sb: Storyboard, t?: Timing): number[] =>
   sb.scenes.map((sc, i) => {
     const [lo, hi] = SPECS[sc.primitive].seconds;
     const measured = t?.durations?.[i] != null;

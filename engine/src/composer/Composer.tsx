@@ -7,16 +7,17 @@ import {AbsoluteFill, Artifact, Audio, continueRender, delayRender, Easing, getR
 import {ensureFonts} from '../fonts';
 import {Sfx, SfxEnabled} from '../lib/frame';
 import {pixelWipePath} from '../lib/pixels';
-import {LEAD} from '../lib/timing';
+import {FPS, LEAD} from '../lib/timing';
 import {cuesOr, prog, SceneCtx} from '../primitives/atoms';
 import {PRIMITIVES} from '../primitives/index';
 import {HostCtx, KaraokeCaptions, VoiceCtx} from '../host/Host';
+import {BRAND_AUDIO, BUMPER_FRAMES} from './brand-audio';
 import {Captions} from '../story/Captions';
 import {HandleCtx, MarkCtx, THEMES, ThemeCtx, useTheme} from '../themes';
 import {ArrowFold, FoldBand, foldClip, Thread, YearFlap} from './Signature';
 import {NO_STYLE} from './style';
 import {FILMS} from '../films/index';
-import {FilmCtx, filmContext} from '../films/kit';
+import {FilmCtx, filmContext, Score} from '../films/kit';
 import type {TextBox} from './textcheck';
 import {captionsOn, probeFrames, sceneCues, sceneFrames, type Storyboard, type StoryboardScene, type Timing, TRANSITION_FRAMES as T, type Transition, voWordStarts} from './storyboard';
 
@@ -166,6 +167,29 @@ const reveals = (sb: Storyboard, frames: number[], starts: number[], timing?: Ti
     return [];
   });
 
+// The channel's sound identity: its music bed under the voice (Score ducks it ~10 dB while a line speaks and fades it out before the
+// end) and its 2 s sonic bumper, which starts once the last voice line is done (sceneFrames makes the closing scene long enough).
+const brandAudio = (sb: Storyboard, timing: Timing | undefined, frames: number[], starts: number[]) => {
+  const brand = sb.bumper && sb.sfx !== false ? BRAND_AUDIO[sb.channel ?? ''] : undefined;
+  if (!brand) return null;
+  const total = starts.at(-1)! + frames.at(-1)!;
+  const talk: [number, number][] = [];
+  sb.scenes.forEach((sc, i) => {
+    const secs = timing?.audio?.[i] ? timing.durations?.[i] : null;
+    if (sc.vo && secs) talk.push([(starts[i] + LEAD) / FPS, (starts[i] + LEAD) / FPS + secs]);
+  });
+  const voiceEnd = Math.round((talk.at(-1)?.[1] ?? 0) * FPS);
+  const from = Math.max(voiceEnd, total - BUMPER_FRAMES);
+  return (
+    <>
+      <Score src={brand.bed} base={-20} duck={10} talk={talk} shape={[[0, -12], [0.8, 0], [from / FPS - 0.5, 0], [from / FPS, -40]]} />
+      <Sequence from={from} durationInFrames={Math.max(1, total - from)}>
+        <Audio src={staticFile(brand.bumper)} volume={0.35} />
+      </Sequence>
+    </>
+  );
+};
+
 export const Composer: React.FC<ComposerProps> = ({script, timing, frames: given}) => {
   const th = THEMES[script.theme ?? 'paper'];
   if (!th) throw new Error(`Unknown theme "${script.theme}". Use one of: ${Object.keys(THEMES).join(', ')}`);
@@ -189,6 +213,7 @@ export const Composer: React.FC<ComposerProps> = ({script, timing, frames: given
               </Sequence>
             );
           })}
+          {brandAudio(script, timing, frames, starts)}
           {style.overlay !== 'none' ? <Thread total={starts.at(-1)!} beats={starts} reveals={reveals(script, frames, starts, timing)} paper={style.overlay === 'thread-paper'} /> : null}
           {style.opener === 'arrow-fold' ? <ArrowFold /> : null}
           {style.opener === 'year-flap' ? <YearFlap year={script.meta?.year ?? ''} /> : null}

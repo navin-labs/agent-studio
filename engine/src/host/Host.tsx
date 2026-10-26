@@ -8,6 +8,7 @@ import {LEAD} from '../lib/timing';
 import {SIDE, TYPE} from '../theme';
 import {alpha, useTheme} from '../themes';
 import {blinkAt, mouthFromAmplitude, mouthFromWords} from './acting';
+import {powerScale} from './power';
 import {type Acting, Bahi, Chiku, DitherDefs, Stage, Tikku} from './mascots';
 
 export const HOSTS = {chiku: Chiku, bahi: Bahi, tikku: Tikku} as const;
@@ -85,12 +86,14 @@ export const KaraokeCaptions: React.FC<{vo: string; starts: number[]}> = ({vo, s
   const active = starts.reduce((a, s, i) => (s <= f ? i : a), -1);
   const pop = interpolate(f - starts[chunk.startIdx], [0, 4], [0.92, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   const accent = parseAccent(vo).map((w) => w.accent);
+  const {fps} = useVideoConfig();
   return (
     <div data-tb="caption" style={{position: 'absolute', top: KARAOKE_TOP, left: SIDE, right: SIDE, height: 150, display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', columnGap: 16, fontFamily: TYPE.title, fontSize: 60, fontWeight: 800, lineHeight: 1.12, letterSpacing: '-0.02em', color: th.ink, transform: `scale(${pop})`}}>
       {chunk.words.map((w, j) => {
         const i = chunk.startIdx + j;
+        const scale = accent[i] ? powerScale(f, starts[i], starts[i + 1], fps) : 1;
         return (
-          <span key={i} style={{display: 'inline-block', color: i === active || (accent[i] && i < active) ? th.accent : th.ink, opacity: i <= active ? 1 : 0.45}}>
+          <span key={i} style={{display: 'inline-block', transform: `scale(${scale})`, color: i === active || (accent[i] && i < active) ? th.accent : th.ink, opacity: i <= active ? 1 : 0.45}}>
             {w}
           </span>
         );
