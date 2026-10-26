@@ -16,7 +16,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {spawnSync} from 'node:child_process';
-import {CostGuard, type Limits, LIMITS} from './costguard.ts';
+import {assertLimits, CostGuard, type Limits, LIMITS} from './costguard.ts';
 import {creativeErrors, readFilms} from './creative.ts';
 import {boardDirectionErrors} from './direction.ts';
 import {gateFailures} from './gates.ts';
@@ -32,10 +32,22 @@ export type Outcome = {id: string; ok: boolean; problems: string[]; minutes: num
 // deliberate act in the shell or the watcher's plist, printed loudly. Without them the defaults in costguard.ts apply.
 export const limitsFromEnv = (env = process.env): Partial<Limits> => {
   const o: Partial<Limits> = {};
-  if (env.COSTGUARD_MAX_USD) o.MAX_RUN_COST_USD = Number(env.COSTGUARD_MAX_USD);
-  if (env.COSTGUARD_MAX_MS) o.MAX_WALL_CLOCK_MS = Number(env.COSTGUARD_MAX_MS);
-  if (env.COSTGUARD_MAX_CALLS) o.MAX_TOTAL_CALLS_PER_RUN = Number(env.COSTGUARD_MAX_CALLS);
+  // a value that is not a positive number is an error, never "no ceiling" (Number('abc') is NaN and NaN compares false with everything)
+  const num = (name: string) => {
+    const raw = env[name];
+    if (raw === undefined) return undefined;
+    const n = Number(raw);
+    if (raw.trim() === '' || !Number.isFinite(n) || n <= 0) throw new Error(`${name} must be a positive number, got "${raw}"`);
+    return n;
+  };
+  const usd = num('COSTGUARD_MAX_USD');
+  const ms = num('COSTGUARD_MAX_MS');
+  const calls = num('COSTGUARD_MAX_CALLS');
+  if (usd !== undefined) o.MAX_RUN_COST_USD = usd;
+  if (ms !== undefined) o.MAX_WALL_CLOCK_MS = ms;
+  if (calls !== undefined) o.MAX_TOTAL_CALLS_PER_RUN = Math.floor(calls);
   if (o.MAX_RUN_COST_USD) o.WARN_COST_USD = o.MAX_RUN_COST_USD * (LIMITS.WARN_COST_USD / LIMITS.MAX_RUN_COST_USD);
+  assertLimits({...LIMITS, ...o}); // also the absolute maxima
   return o;
 };
 

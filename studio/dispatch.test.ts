@@ -3,6 +3,7 @@
 // manifest, unknown pair, wrong destination, changed video or second queueing is refused. Dry run sends and writes nothing.
 // Temp folder only.
 import assert from 'node:assert';
+import {spawn} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -206,6 +207,31 @@ fs.writeFileSync(vf('v-approved', 'youtube', 'mp4'), 'swapped in after the plan'
 assert.match((await dispatch(ytOnly(swapped), {live: true, fetch: noCall, paths: p})).failed[0], /youtube v-approved: the video changed after it was approved; not sent/);
 assert.equal(status('v-approved'), 'approved');
 fs.writeFileSync(vf('v-approved', 'youtube', 'mp4'), real);
+
+// a second PROCESS changes the ledger between the dispatcher's check and its claim (the claim is a compare-and-set under the ledger
+// lock): another process holds the lock and takes the approval back; the claim waits, sees the rejection and sends nothing
+{
+  const before = currentStatus(p).get(lkey('v-approved', 'youtube'))!;
+  const script = path.join(tmp, 'rival.ts');
+  fs.writeFileSync(script, `import {appendJsonl, ledgerFile, withLedgerLock} from ${JSON.stringify(path.join(ROOT, 'studio/ledger.ts'))};
+const p = ${JSON.stringify(p)};
+withLedgerLock(p, () => {
+  console.log('locked');
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1500);
+  appendJsonl(ledgerFile(p), [{...${JSON.stringify(before)}, status: 'rejected', updated_at: '2026-10-01T10:00:01.000Z'}]);
+});
+`);
+  const rival = spawn(process.execPath, [script], {stdio: ['ignore', 'pipe', 'inherit']});
+  await new Promise<void>((r) => rival.stdout.once('data', () => r()));
+  const t0 = Date.now();
+  const raced = await dispatch(ytOnly(), {live: true, fetch: noCall, paths: p});
+  assert.ok(Date.now() - t0 > 1000, 'the claim waited for the other process');
+  assert.match(raced.failed[0], /youtube v-approved: the ledger changed while it was being claimed; not sent/);
+  assert.equal(status('v-approved'), 'rejected', 'nothing was claimed over the rejection');
+  await new Promise((r) => rival.once('close', r));
+  fs.appendFileSync(ledgerFile(p), JSON.stringify({...before, updated_at: T}) + '\n'); // approved again for the tests below
+  assert.equal(status('v-approved'), 'approved');
+}
 
 // live: the approved video's three variants go to their three destinations, each marked dispatched on its own line
 const calls: {url: string; job: Record<string, unknown>; video: number; thumb: boolean}[] = [];

@@ -109,6 +109,7 @@ Structure, in this order:
 7. **Stakes or urgency:** why it matters to the viewer, now.
 8. **Payoff at about 70%, as a picture:** close the gap the hook opened, and end on an image, not a summary line (the cart riding into the sunset, the pin in a museum case, today's shoe strap closing). Name it in `meta.payoff_image`. For a history story, real archival photos near the end prove the animated story true.
 9. **Loop:** the last spoken line reuses a key word of the hook, so a replay feels natural.
+10. **Short sentences (the script gate rejects anything else):** one idea per sentence, **15 words at most**, and **10 words on average** across the whole script. Count before you hand it in. If a sentence runs past 15, cut it where the second idea starts ("Most people would brush them off. But he put one under a microscope."), never join with "and" or a comma. A 20-word sentence is two sentences. The same gate checks that no 45 words pass without a turn, contrast or "look at this".
 
 Idea first: write the one-line idea (`meta.idea`), the hook and the payoff picture in plain words before anything else. If the idea is only interesting with effects, rewrite the idea. The Director cannot start a film without `meta.idea`, `meta.hook_image` and `meta.payoff_image`.
 

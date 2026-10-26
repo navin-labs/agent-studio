@@ -217,7 +217,7 @@ if (import.meta.main) {
   if (fs.existsSync(envFile)) process.loadEnvFile(envFile);
   const {TELEGRAM_BOT_TOKEN: token, TELEGRAM_CHAT_ID: chatId} = process.env;
   if (!token || !chatId) {
-    console.error('Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in agent-studio/.env first.');
+    console.error('Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in the repo-root .env first.');
     process.exit(2);
   }
   const ids = await send(telegram(token), chatId, channel, week, PATHS, {again: process.argv.includes('--again')});

@@ -26,6 +26,8 @@ import {densityIssues} from '../src/composer/density.ts';
 import {HOOK_PATTERNS, lengthIssue, probeFrames, styledBoard, validateStoryboard} from '../src/composer/storyboard.ts';
 import {rehookIssue, scriptErrors} from '../../studio/script.ts';
 import {probeVideo} from './probe.ts';
+import {channelAssets, musicErrors} from './required-assets.mjs';
+import {CharBudget, charLimit, paidProvider} from './tts-budget.mjs';
 import {filmstrip, master, motion} from './film.mjs';
 import {ctaKind, file as variantFile, PLATFORMS, ROUTE, variantDir} from '../../studio/variant.ts';
 import {recipeDate} from '../../studio/recipe.ts';
@@ -35,7 +37,8 @@ import {resolvePlates, resolveObjects} from '../src/lib/mediaHub.ts';
 import {history as routerHistory, pick as routerPick, record as routerRecord} from '../../studio/router.ts';
 import {artIssues} from '../src/composer/artgate.ts';
 
-const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
+// FORGE_TEST_ROOT: tests point the engine's files (public/, channels, styles, out) at a temporary tree; never set in production
+const ROOT = process.env.FORGE_TEST_ROOT ? path.resolve(process.env.FORGE_TEST_ROOT) : path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
 const PUBLIC = path.join(ROOT, 'public');
 const OUT_FLAG = process.argv.find((a) => a.startsWith('--out='))?.slice(6);
 const PRODUCTION = path.join(ROOT, 'content', 'storyboards');
@@ -174,6 +177,7 @@ const validateBoard = (doc) => {
   // the art gate: scenes are pictures with a few words on them, never text in boxes (src/composer/artgate.ts)
   if (doc.channel && !doc.film) pre.push(...artIssues(doc));
   const {errors, warnings} = validateStoryboard(doc, VOICE_ON ? 'later' : undefined);
+  const fatal = []; // missing REQUIRED assets: reported with the errors but never bypassed by --force
   errors.unshift(...pre); // voiced: each line is judged by its measured clip, per platform below
   if (!/^[a-z0-9-]+$/.test(doc.id || '')) errors.push('id must be lowercase-with-dashes');
   for (const s of allStrings(doc)) for (const [re, why] of BANNED) if (re.test(s)) errors.push(`banned: ${why} -> "${s.slice(0, 80)}"`);
@@ -187,6 +191,7 @@ const validateBoard = (doc) => {
   // visual density: no gap over 2.5 s with nothing new on screen (voiced boards are checked per platform on measured clips)
   if (doc.channel && !doc.film && !VOICE_ON) errors.push(...densityIssues(doc));
   // the closer shows the channel's own account: read it from channels/<id>/channel.json (no channel = test board, default handle)
+  fatal.push(...musicErrors(PUBLIC, doc.music)); // a board that names a music file needs it (renderReel refuses too)
   if (doc.channel) {
     const cf = path.join(ROOT, '..', 'channels', doc.channel, 'channel.json');
     const ch = fs.existsSync(cf) ? JSON.parse(fs.readFileSync(cf, 'utf8')) : null;
@@ -197,10 +202,14 @@ const validateBoard = (doc) => {
     if (real) doc.handle = ig;
     else if (process.env.PREVIEW_HANDLE) (doc.handle = process.env.PREVIEW_HANDLE), warnings.push(`preview handle ${doc.handle}: channel ${doc.channel} has no Instagram handle yet; this render can never be dispatched`);
     else errors.push(`channel ${doc.channel} has no Instagram handle yet (channels/${doc.channel}/channel.json): the end card would show the wrong account`);
-    // the channel's own end-card logo, else the studio mark (C1); a board without a channel (demo, test) shows no logo and no account
-    doc.mark = fs.existsSync(path.join(ROOT, 'public', 'brand', doc.channel, 'mark.svg')) ? `brand/${doc.channel}/mark.svg` : 'brand/mark.png';
-    // the channel's music bed and sonic bumper (scripts/brand_audio.py); a channel without them renders as before
-    doc.bumper = fs.existsSync(path.join(ROOT, 'public', 'brand', 'audio', `${doc.channel}-bumper.wav`)) && fs.existsSync(path.join(ROOT, 'public', 'brand', 'audio', `${doc.channel}-bed.wav`)) || undefined;
+    // the channel's own end-card logo, else the studio mark (C1); a board without a channel (demo, test) shows no logo and no account.
+    // The mark and, for a live channel, the music bed and sonic bumper (scripts/brand_audio.py) are REQUIRED: a missing one is an error,
+    // never a quiet fallback (scripts/required-assets.mjs). Only a channel that is not live yet may go without brand audio, with a warning.
+    const assets = channelAssets(PUBLIC, doc.channel, ch?.live === true);
+    fatal.push(...assets.errors);
+    warnings.push(...assets.warnings);
+    doc.mark = assets.mark;
+    doc.bumper = assets.bumper || undefined;
     // the style preset (styles/<id>.json, docs/MOTION.md): the board's own, else the channel's setting
     const styleId = doc.style ?? ch?.style;
     const sf = styleId && path.join(ROOT, '..', 'styles', `${styleId}.json`);
@@ -221,7 +230,7 @@ const validateBoard = (doc) => {
     const recipe = rf.flatMap((x) => JSON.parse(fs.readFileSync(path.join(ROOT, '..', 'recipes', x), 'utf8'))).find((r) => r.id === doc.meta?.recipe_id);
     doc.date = recipe ? recipeDate(recipe) : new Date(Date.now() + 5.5 * 3600_000).toISOString().slice(0, 10);
   }
-  return {errors, warnings};
+  return {errors, warnings, fatal};
 };
 
 // pile-to-flow: label lengths that fit the cards, and the accent words that cue the animation
@@ -298,7 +307,10 @@ const ttsText = (s, extra = {}) => {
 // Voice: local, open-source engines with built-in voices (no cloning, no paid voice API). Each channel sets its voice in
 // channels/<id>/channel.json "voice": {"engine": "kokoro" | "parler" | "chatterbox", "voice", "speed"}; the engine runs from
 // engine/.venv-voice/<engine>/ via scripts/tts_local.py (setup: README "Voice"). OpenAI / ElevenLabs only via TTS_PROVIDER.
-const API_PROVIDER = (process.env.TTS_PROVIDER || (process.env.ELEVENLABS_API_KEY ? 'elevenlabs' : process.env.OPENAI_API_KEY ? 'openai' : 'none')).toLowerCase();
+// paid TTS only when TTS_PROVIDER names it (a key in .env is not consent), within a per-run character ceiling (scripts/tts-budget.mjs)
+const API_PROVIDER = paidProvider(process.env);
+const TTS_BUDGET = new CharBudget(charLimit(process.env));
+if (API_PROVIDER !== 'none') console.log(`paid TTS: ${API_PROVIDER}, at most ${TTS_BUDGET.max} characters this run`);
 const channelVoice = (script) => {
   const f = script.channel && path.join(ROOT, '..', 'channels', script.channel, 'channel.json');
   if (!script.channel) return script.voice ?? null; // a demo or test board may name its own voice; a channel board never does
@@ -311,6 +323,7 @@ const INSTRUCTIONS =
   'Voice: a friendly, confident Indian English business consultant talking to a busy business owner. Pace: natural and slightly brisk, about 155 words per minute. Tone: practical and warm, never salesy or dramatic. Keep the same energy and pitch in every clip so the clips join seamlessly.';
 
 const ttsOpenAI = async (text) => {
+  TTS_BUDGET.spend(text.length); // before the request, counted whether or not it succeeds
   const res = await fetch('https://api.openai.com/v1/audio/speech', {
     method: 'POST',
     headers: {Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json'},
@@ -321,6 +334,7 @@ const ttsOpenAI = async (text) => {
 };
 
 const ttsEleven = async (text, prev, next) => {
+  TTS_BUDGET.spend(text.length + (prev?.length ?? 0) + (next?.length ?? 0)); // the neighbouring lines are billed context too
   const voice = process.env.ELEVENLABS_VOICE_ID;
   if (!voice) throw new Error('Set ELEVENLABS_VOICE_ID in .env');
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}?output_format=mp3_44100_128`, {
@@ -384,9 +398,11 @@ const prepareVoice = async (script) => {
       console.log(c.dim(`  ${base}: using your recording ${path.basename(existing)}`));
     } else if (PROVIDER !== 'none' && (!existing || flags.has('--force-vo') || entry?.hash !== hash)) {
       process.stdout.write(c.dim(`  ${base}: generating voice (${PROVIDER})... `));
+      const made = path.join(dir, `${base}.local.wav`);
+      if (PROVIDER === 'local' && !(fs.existsSync(made) && fs.statSync(made).size > 44)) throw new Error(`${base}: the voice engine wrote no clip for this line (or an empty one)`);
       const buf =
         PROVIDER === 'local'
-          ? fs.readFileSync(path.join(dir, `${base}.local.wav`))
+          ? fs.readFileSync(made)
           : PROVIDER === 'elevenlabs' ? await ttsEleven(inputs[i], inputs[i - 1], inputs[i + 1]) : await ttsOpenAI(inputs[i]);
       file = path.join(dir, PROVIDER === 'local' ? `${base}.wav` : `${base}.mp3`);
       if (existing && existing !== file) fs.renameSync(existing, `${existing}.old`);
@@ -416,6 +432,8 @@ const prepareVoice = async (script) => {
   const missing = audio.filter((a, i) => !a && inputs[i] !== null).length;
   if (missing && missing === inputs.filter((x) => x !== null).length) console.log(c.yellow(`  No voiceover: set "voice" in channels/${script.channel ?? '<id>'}/channel.json (README "Voice"), or drop your recordings into ` + path.relative(ROOT, dir) + '/s01.mp3, s02.mp3 ...'));
   else if (missing) console.log(c.yellow(`  ${missing} scene(s) have no voiceover`));
+  // a channel with a voice configured never ships a voiced video with lines left silent (a board with no channel voice may, with the warning above)
+  if (missing && lv) throw new Error(`${missing} of ${inputs.filter((x) => x !== null).length} voiced line(s) have no clip although channel ${script.channel ?? '?'} has a voice configured`);
   return {audio, durations, words, voice: audio.some(Boolean) ? (lv ? localKey(lv) : PROVIDER) : null, fresh};
 };
 
@@ -485,8 +503,10 @@ const renderReel = async (script, place) => {
   const {audio, durations, words, voice, fresh} = await prepareVoice(script);
   if (flags.has('--vo-only')) return;
   if (fresh) serveUrl = null; // the bundle copies public/ when it is built; new voice clips need a new one
-  const music = script.music && fs.existsSync(path.join(PUBLIC, 'music', script.music)) ? `music/${script.music}` : null;
-  if (script.music && !music) console.log(c.yellow(`  music file public/music/${script.music} not found, rendering without music`));
+  // a board that names a music file needs it: no music is only for a board that names none (--force does not bypass this)
+  const lacking = musicErrors(PUBLIC, script.music);
+  if (lacking.length) throw new Error(lacking[0]);
+  const music = script.music ? `music/${script.music}` : null;
   const inputProps = {script, timing: {audio, durations, words, music}};
   const browserExecutable = findBrowser();
   const url = await getBundle();
@@ -616,17 +636,21 @@ let failed = 0;
 for (const f of files) {
   const doc = JSON.parse(fs.readFileSync(path.resolve(f), 'utf8'));
   console.log(c.bold(`\n${doc.id} (${doc.format})`));
-  const {errors, warnings} = validate(doc);
+  const {errors, warnings, fatal = []} = validate(doc);
   warnings.forEach((w) => console.log(c.yellow(`  warn: ${w}`)));
+  const OUT = outFor(f);
+  // a channel that has a voice never ships a silent production video: --no-vo and VOICE off are for previews (--out=...) only
+  if (doc.format === 'storyboard' && doc.channel && channelVoice(doc) && (flags.has('--no-vo') || !VOICE_ON) && OUT === path.join(ROOT, 'out') && !flags.has('--check'))
+    fatal.push(`channel ${doc.channel} has a voice configured: a production render needs VOICE=on and no --no-vo (render a preview with --out=<dir> to go without)`);
   errors.forEach((e) => console.log(c.red(`  error: ${e}`)));
-  if (errors.length && !flags.has('--force')) {
-    console.log(c.red(`  Quality gate failed (${errors.length}). Fix the script or rerun with --force.`));
+  fatal.forEach((e) => console.log(c.red(`  error (required, --force cannot skip it): ${e}`)));
+  if (fatal.length || (errors.length && !flags.has('--force'))) {
+    console.log(c.red(`  ${fatal.length ? `Required asset or setting missing (${fatal.length}); --force does not apply to these.` : `Quality gate failed (${errors.length}). Fix the script or rerun with --force.`}`));
     failed++;
     continue;
   }
   if (!errors.length) console.log(c.green('  quality gate passed'));
   if (flags.has('--check')) continue;
-  const OUT = outFor(f);
   // composite scenes: find, cache and copy each plate (lib/mediaHub.ts); a production render records the router's pick
   if (doc.scenes?.some((sc) => sc.primitive === 'composite')) { doc.plates = await resolvePlates(doc); doc.objects = await resolveObjects(doc); }
   if (doc.rig && OUT === path.join(ROOT, 'out')) routerRecord(doc.rig);
@@ -648,7 +672,14 @@ for (const f of files) {
         continue;
       }
       // voiced: generate (or reuse) this platform's clips first, so every line is judged by its real length
-      const heard = VOICE_ON && !flags.has('--no-vo') ? await prepareVoice(vs) : null;
+      let heard = null;
+      try {
+        heard = VOICE_ON && !flags.has('--no-vo') ? await prepareVoice(vs) : null;
+      } catch (e) {
+        console.log(c.red(`  error: ${platform}: ${e.message.split('\n')[0]}`));
+        failed++;
+        continue;
+      }
       if (heard?.fresh) serveUrl = null; // clips written here are not "fresh" again in renderReel: rebuild the bundle now
       const verr = [...validateStoryboard(vs, heard?.durations).errors, ...(heard && vs.channel && !vs.film ? densityIssues(vs, {durations: heard.durations}) : [])];
       if (verr.length) {

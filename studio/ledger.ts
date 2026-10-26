@@ -9,6 +9,7 @@
 import {createHash, createHmac, timingSafeEqual} from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import {DatabaseSync} from 'node:sqlite';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import type {Fingerprint} from './novelty.ts';
 import {type Recipe, recipeDate} from './recipe.ts';
@@ -56,7 +57,41 @@ export const appendJsonl = (f: string, rows: unknown[]) => {
 };
 const readLines = readJsonl;
 const append = appendJsonl;
+// One writer at a time across processes (the approve receiver and the dispatch run are separate processes). Every "read the
+// status, decide, append" sequence runs inside this lock, so an approval can never overwrite a claim made between its read and
+// its write (which would let a video upload twice).
+// The lock is an exclusive SQLite transaction on state/ledger.lock.db (node:sqlite, in Node's core: no dependency). SQLite takes an
+// operating-system file lock for it, which the kernel drops the moment the holding process dies, however it dies. So there is no
+// lock file to judge stale, no takeover, and no window in which two processes believe they hold it; a holder that is merely stalled
+// (stopped, swapped out, stuck) keeps the lock and others wait, then give up with an error, rather than steal it.
+// Limits: POSIX advisory locks on a local disk, one machine; a network file system or a copy of state/ on two machines is not covered.
+// A leftover state/ledger.lock from the previous file-based lock is ignored. Not re-entrant.
+let held = false;
+export const withLedgerLock = <T,>(p: Paths, fn: () => T, waitMs = 30_000): T => {
+  if (held) throw new Error('ledger lock is not re-entrant');
+  fs.mkdirSync(p.state, {recursive: true});
+  const db = new DatabaseSync(path.join(p.state, 'ledger.lock.db'), {timeout: waitMs});
+  try {
+    try {
+      db.exec('BEGIN EXCLUSIVE');
+    } catch {
+      throw new Error(`ledger is locked by another process (waited ${waitMs} ms); try again`);
+    }
+    held = true;
+    try {
+      return fn();
+    } finally {
+      held = false;
+      db.exec('ROLLBACK'); // nothing was written to the lock database; this only releases the lock
+    }
+  } finally {
+    db.close();
+  }
+};
 export const ledgerFile = (p = PATHS) => path.join(p.state, 'ledger.jsonl');
+// The ONLY way a line reaches state/ledger.jsonl: under the ledger lock (taken here if the caller does not already hold it), so every
+// writer in every process serialises on the same lock and the same database file.
+export const appendLedger = (p: Paths, rows: unknown[]) => (held ? append(ledgerFile(p), rows) : withLedgerLock(p, () => append(ledgerFile(p), rows)));
 export const fingerprintFile = (p = PATHS) => path.join(p.state, 'fingerprints.jsonl');
 // The latest line per variant, keyed lkey(id, platform).
 export const currentStatus = (p = PATHS) => new Map(readLines<LedgerEntry>(ledgerFile(p)).map((e) => [lkey(e.storyboard_id, e.platform), e]));
@@ -141,7 +176,8 @@ export const weekVideos = (channel: string, week: string, p = PATHS) => {
   });
 };
 
-export const applyApproval = (raw: string, secret: string, opts: {now?: number; paths?: Paths} = {}) => {
+export const applyApproval = (raw: string, secret: string, opts: {now?: number; paths?: Paths} = {}) => withLedgerLock(opts.paths ?? PATHS, () => applyApprovalLocked(raw, secret, opts));
+const applyApprovalLocked = (raw: string, secret: string, opts: {now?: number; paths?: Paths} = {}) => {
   const p = opts.paths ?? PATHS;
   const now = opts.now ?? Date.now();
   const a = verifyApproval(raw, secret, now);
@@ -190,7 +226,7 @@ export const applyApproval = (raw: string, secret: string, opts: {now?: number; 
     }
   }
   // ledger first, then fingerprints; a crash between the two is healed by repairFingerprints (every approval and every tick)
-  append(ledgerFile(p), written);
+  appendLedger(p, written);
   append(fingerprintFile(p), prints);
   return {written, skipped};
 };
@@ -223,14 +259,14 @@ export const repairFingerprints = (p = PATHS) => {
 
 // Navin takes back an approval before it went out. Only "approved" variants are rejected; a variant already dispatching or sent is
 // left as it is (reported), so this can never orphan an upload.
-export const reject = (ids: string[], p = PATHS, now = Date.now()) => {
+export const reject = (ids: string[], p = PATHS, now = Date.now()) => withLedgerLock(p, () => {
   const lines = [...currentStatus(p).values()].filter((e) => ids.includes(e.storyboard_id));
   const ok = lines.filter((e) => e.status === 'approved');
   const kept = lines.filter((e) => e.status !== 'approved').map((e) => `${e.storyboard_id} ${e.platform} is ${e.status}`);
   if (!ok.length) throw new Error(`only approved videos can be rejected: ${kept.join(', ') || `${ids.join(', ')}: not in the ledger`}`);
-  append(ledgerFile(p), ok.map((e) => ({...e, status: 'rejected', updated_at: new Date(now).toISOString()})));
+  appendLedger(p, ok.map((e) => ({...e, status: 'rejected', updated_at: new Date(now).toISOString()})));
   return {rejected: ok.map((e) => `${e.storyboard_id} ${e.platform}`), kept};
-};
+});
 
 if (import.meta.main) {
   const [cmd, arg] = process.argv.slice(2);

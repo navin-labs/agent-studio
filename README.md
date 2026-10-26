@@ -139,9 +139,9 @@ After the gates, nothing is published until the owner taps Approve on Telegram; 
 ```bash
 git clone https://github.com/navin-labs/forge-content-studio.git
 cd forge-content-studio/engine
-npm install
+npm ci
 
-# types, theme contrast, text QA, schemas, 21 test suites
+# types, theme contrast, text QA, schemas and every test suite (no secrets, no network publishing, no model calls)
 npm run check
 
 # contact sheet in a format style (seconds), then a full render

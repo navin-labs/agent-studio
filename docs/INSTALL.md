@@ -44,13 +44,13 @@ Start Docker Desktop once and keep it set to start at login.
 
 ## 3. Get the code and its dependencies
 ```bash
-git clone https://github.com/navin-labs/agent-studio.git
-cd agent-studio/engine
-npm install
-npm run check    # types, themes, text QA, schemas, 12 test suites: must end without errors
+git clone https://github.com/navin-labs/forge-content-studio.git
+cd forge-content-studio/engine
+npm ci           # exact versions from package-lock.json
+npm run check    # types, themes, text QA, schemas and every test suite: must exit 0
 ```
 The studio (`studio/`) has no dependencies of its own. Remotion downloads a headless Chromium on the first render.
-The code finds its files relative to the clone. The agent skills (section 7) and `docs/SETUP.md` assume the clone is at `~/Dev/projects/agent-studio` (`STUDIO`); clone there, or change the `STUDIO` line at the top of each skill (the only edit a skill needs).
+The code finds its files relative to the clone. The agent skills (section 7) and `docs/SETUP.md` assume the clone is at `~/Dev/projects/forge-content-studio` (`STUDIO`); clone there, or change the `STUDIO` line at the top of each skill (the only edit a skill needs).
 
 ## 4. Voice (local, one time)
 ```bash

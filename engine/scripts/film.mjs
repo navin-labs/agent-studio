@@ -14,23 +14,38 @@ import zlib from 'node:zlib';
 
 const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..');
 const BIN = path.join(ROOT, 'node_modules/@remotion/compositor-darwin-arm64');
-const ff = (args, opts = {}) => {
-  const r = spawnSync(path.join(BIN, 'ffmpeg'), ['-hide_banner', '-nostdin', ...args], {env: {...process.env, DYLD_LIBRARY_PATH: BIN}, maxBuffer: 1 << 30, ...opts});
-  if (r.status !== 0) throw new Error(`ffmpeg ${args.join(' ').slice(0, 120)}: ${String(r.stderr).split('\n').slice(-4).join(' ')}`);
+// The ffmpeg every step here runs. `tool` is exported so tests can point it at a fake (missing, failing, hanging, lying) program.
+export const tool = {bin: path.join(BIN, 'ffmpeg'), env: {DYLD_LIBRARY_PATH: BIN}, timeoutMs: 10 * 60_000};
+export const ff = (args, opts = {}) => {
+  const r = spawnSync(tool.bin, ['-hide_banner', '-nostdin', ...args], {env: {...process.env, ...tool.env}, maxBuffer: 1 << 30, timeout: tool.timeoutMs, killSignal: 'SIGKILL', ...opts});
+  if (r.error) throw new Error(`ffmpeg ${r.error.code === 'ETIMEDOUT' ? `timed out after ${tool.timeoutMs} ms and was killed` : `could not run (${r.error.code ?? r.error.message})`}`);
+  if (r.status !== 0) throw new Error(`ffmpeg exited ${r.status ?? `on signal ${r.signal}`}: ${args.join(' ').slice(0, 120)}: ${String(r.stderr ?? '').split('\n').slice(-4).join(' ')}`);
   return r;
 };
 
 // ---------- loudness ----------
 export const TARGET = {I: -14, TP: -1.5, LRA: 11};
+const measure = (mp4, spec, what) => {
+  const m = String(ff(['-i', mp4, '-vn', '-af', `loudnorm=${spec}:print_format=json`, '-f', 'null', '-']).stderr).match(/\{[^{}]*"input_i"[^{}]*\}/);
+  if (!m) throw new Error(`loudnorm measured nothing${what ? ` ${what}` : ''} (no audio stream?)`);
+  try {
+    return JSON.parse(m[0]);
+  } catch {
+    throw new Error(`loudnorm output was not valid JSON${what ? ` ${what}` : ''}`);
+  }
+};
 export const master = (mp4) => {
   const spec = `I=${TARGET.I}:TP=${TARGET.TP}:LRA=${TARGET.LRA}`;
-  const m = String(ff(['-i', mp4, '-vn', '-af', `loudnorm=${spec}:print_format=json`, '-f', 'null', '-']).stderr).match(/\{[^{}]*"input_i"[^{}]*\}/);
-  if (!m) throw new Error('loudnorm measured nothing');
-  const j = JSON.parse(m[0]);
+  const j = measure(mp4, spec, 'before mastering');
   const tmp = mp4.replace(/\.mp4$/, '.master.mp4');
-  ff(['-y', '-i', mp4, '-c:v', 'copy', '-af', `loudnorm=${spec}:measured_I=${j.input_i}:measured_TP=${j.input_tp}:measured_LRA=${j.input_lra}:measured_thresh=${j.input_thresh}:offset=${j.target_offset}:linear=true`, '-ar', '48000', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', tmp]);
-  fs.renameSync(tmp, mp4);
-  const after = JSON.parse(String(ff(['-i', mp4, '-vn', '-af', `loudnorm=${spec}:print_format=json`, '-f', 'null', '-']).stderr).match(/\{[^{}]*"input_i"[^{}]*\}/)[0]);
+  try {
+    ff(['-y', '-i', mp4, '-c:v', 'copy', '-af', `loudnorm=${spec}:measured_I=${j.input_i}:measured_TP=${j.input_tp}:measured_LRA=${j.input_lra}:measured_thresh=${j.input_thresh}:offset=${j.target_offset}:linear=true`, '-ar', '48000', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', tmp]);
+    if (!fs.existsSync(tmp) || !fs.statSync(tmp).size) throw new Error('mastering produced no file');
+    fs.renameSync(tmp, mp4); // the original is replaced only by a finished file
+  } finally {
+    fs.rmSync(tmp, {force: true}); // a failed or killed pass leaves no .master.mp4 behind
+  }
+  const after = measure(mp4, spec, 'after mastering');
   return {before: +j.input_i, lufs: +after.input_i, true_peak: +after.input_tp};
 };
 
@@ -56,6 +71,7 @@ export const motion = (mp4) => {
     const m = mean(a);
     return Math.sqrt(mean([...a].map((v) => (v - m) ** 2)));
   };
+  if (f.length < 4) throw new Error(`motion: only ${f.length} frame(s) decoded; the video is empty or unreadable`);
   const d = f.slice(1).map((x, i) => diff(f[i], x));
   // longest run where nothing visibly changes (camera drift and grain alone stay under 0.35), ignoring the last 2.5 s (end card hold)
   const still = 0.35;
@@ -104,7 +120,14 @@ export const filmstrip = (mp4, out) => {
     const [x0, y0] = [GAP + (i % COLS) * (W + GAP), GAP + Math.floor(i / COLS) * (H + GAP)];
     for (let y = 0; y < H; y++) t.copy(img, ((y0 + y) * cw + x0) * 3, y * W * 3, (y + 1) * W * 3);
   });
-  fs.writeFileSync(out, png(cw, ch, img));
+  if (!hook.length || !body.length) throw new Error(`filmstrip: ${hook.length} hook and ${body.length} body frames decoded; the video is empty or unreadable`);
+  const tmpOut = `${out}.tmp`;
+  try {
+    fs.writeFileSync(tmpOut, png(cw, ch, img));
+    fs.renameSync(tmpOut, out); // a full disk or a kill never leaves half a PNG at the real name
+  } finally {
+    fs.rmSync(tmpOut, {force: true});
+  }
   return {hook: hook.length, body: body.length, every: 1.5};
 };
 

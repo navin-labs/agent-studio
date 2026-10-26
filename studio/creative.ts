@@ -143,6 +143,14 @@ if (import.meta.main) {
     if (v.length) process.exit(1);
     console.log(`unique: ${doc.id} differs from the last ${Math.min(before.length, LIMITS.textWindow)} films`);
     if (cmd === 'brief') appendJsonl(filmsFile(), [{id: doc.id, channel: doc.channel, film: doc.film, theme: doc.theme ?? 'paper', brief: doc.brief, status: 'briefed', at: new Date().toISOString()} satisfies FilmEntry]);
+  } else if (cmd === 'status' && a) {
+    // free: which boards would pass QA's creative gate now, and exactly why not (no model call; a stale or missing review needs the Critic)
+    const bad = process.argv.slice(3).filter((f) => {
+      const errs = creativeErrors(load(f));
+      console.log(`${errs.length ? 'FAIL' : 'ok  '} ${path.basename(f)}${errs.length ? `: ${errs.join('; ')}` : ''}`);
+      return errs.length;
+    });
+    process.exit(bad.length ? 1 : 0);
   } else if (cmd === 'review' && a && b) {
     const doc = load(a);
     const e = films.find((f) => f.id === doc.id);
@@ -172,7 +180,7 @@ if (import.meta.main) {
     const look = cat.looks[style.look];
     console.log(JSON.stringify({style, format: cat.formats[style.format], look}, null, 1));
   } else {
-    console.error('usage: node studio/creative.ts history [n] | check <board> | brief <board> | review <board> <review.json> | style <board>');
+    console.error('usage: node studio/creative.ts history [n] | check <board> | brief <board> | review <board> <review.json> | style <board> | status <board>...');
     process.exit(2);
   }
 }

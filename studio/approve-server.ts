@@ -2,13 +2,14 @@
 // here (http://host.docker.internal:5680/approve?...). Everything is verified by ledger.ts; this only moves bytes.
 // /dispatch-check?id=&channel=&platform=youtube lets a channel's n8n YouTube workflow confirm that exactly this video of exactly
 // that channel is being dispatched now, before it uploads (defence in depth; channel and platform are required).
-// Also polls Telegram for Approve taps when configured (studio/telegram.ts). Listens on 127.0.0.1 only. The secret stays in agent-studio/.env (APPROVAL_SECRET); n8n never holds it.
+// Also polls Telegram for Approve taps when configured (studio/telegram.ts). Listens on 127.0.0.1 only. The secret stays in the repo-root .env (APPROVAL_SECRET); n8n never holds it.
 //
 // node studio/approve-server.ts            (APPROVE_PORT, default 5680)
 // node studio/approve-server.ts --install  run it at login via launchd (log: state/approve.log)
 import {daysDue, recordDays, step as expStep} from './experiment.ts';
 import {spawnSync} from 'node:child_process';
 import fs from 'node:fs';
+import {timingSafeEqual} from 'node:crypto';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
@@ -87,6 +88,84 @@ export const post = async (route: string, raw: string, tooBig = false, opts?: {p
   }
 };
 
+// ---- the HTTP layer ----
+export const LIMITS = {body: 5_000_000, bodyMs: 30_000};
+const HOSTS = new Set(['127.0.0.1', 'localhost', 'host.docker.internal', '[::1]']);
+const POST_ROUTES = new Set(['/metrics', '/experiment-days', '/feed']);
+const same = (a: string, b: string) => a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
+// What a browser page on the internet could do to a loopback service: a DNS-rebinding page sends another Host, a cross-site form or
+// fetch sends Origin and (without a preflight) a text/plain body. n8n sends none of these, so refusing them costs nothing.
+export const guard = (method: string, route: string, h: http.IncomingHttpHeaders, token = ''): {status: number; body: string} | null => {
+  const host = String(h.host ?? '').replace(/:\d+$/, '');
+  if (!HOSTS.has(host)) return {status: 421, body: 'unexpected Host'};
+  if (h.origin !== undefined) return {status: 403, body: 'browser requests are refused'};
+  if (method !== 'GET' && method !== 'POST') return {status: 405, body: 'GET or POST only'};
+  if (method === 'POST') {
+    if (!POST_ROUTES.has(route)) return {status: 404, body: JSON.stringify({errors: [`no POST route ${route}`]})};
+    if (!String(h['content-type'] ?? '').toLowerCase().startsWith('application/json')) return {status: 415, body: JSON.stringify({errors: ['send application/json']})};
+  }
+  if (token && route !== '/health' && route !== '/approve' && !same(String(h['x-forge-token'] ?? ''), token)) return {status: 401, body: 'token required'};
+  return null;
+};
+
+export const makeServer = (secret: string, o: {token?: string; limits?: Partial<typeof LIMITS>; paths?: Parameters<typeof record>[1]; root?: string; fetch?: Get} = {}) => {
+  const L = {...LIMITS, ...o.limits};
+  return http.createServer((req, res) => {
+    const route = (req.url ?? '').split('?')[0];
+    const send = (status: number, body: unknown, close = false) => {
+      const text = typeof body === 'string' ? body : JSON.stringify(body);
+      res.writeHead(status, {'content-type': text.startsWith('<!doctype') ? 'text/html; charset=utf-8' : text.startsWith('[') || text.startsWith('{') ? 'application/json' : 'text/plain', 'cache-control': 'no-store', 'content-length': Buffer.byteLength(text), ...(close ? {connection: 'close'} : {})});
+      res.end(text);
+      console.log(`${new Date().toISOString()} ${req.method} ${route} -> ${status}`); // never log the query (it carries the signature)
+    };
+    const refused = guard(req.method ?? '', route, req.headers, o.token);
+    if (refused) return send(refused.status, refused.body, true);
+    if (req.method === 'GET') {
+      const {status, body} = handle(req.url ?? '/', secret, o.paths ? {paths: o.paths as never} : undefined);
+      return send(status, body);
+    }
+    // POST from n8n: /metrics (YouTube statistics rows), /experiment-days (experiment analytics) and /feed ({url} or {url, body}).
+    // The body is bounded three ways: declared length, bytes actually received, and a total deadline (a trickling client is cut off).
+    if (Number(req.headers['content-length'] ?? 0) > L.body) {
+      send(413, {errors: [`body over ${L.body} bytes`]}, true);
+      return void req.destroy();
+    }
+    const chunks: Buffer[] = [];
+    let size = 0;
+    let done = false;
+    const finish = (status: number, body: unknown) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      send(status, body, true);
+    };
+    const timer = setTimeout(() => {
+      finish(408, {errors: ['request body too slow']});
+      req.destroy();
+    }, L.bodyMs);
+    req.on('data', (c: Buffer) => {
+      size += c.length;
+      if (size > L.body) {
+        finish(413, {errors: [`body over ${L.body} bytes`]});
+        req.destroy(); // stop reading; nothing past the cap is ever buffered
+      } else chunks.push(c);
+    });
+    req.on('error', () => {
+      done = true;
+      clearTimeout(timer);
+    });
+    req.on('close', () => clearTimeout(timer));
+    req.on('end', async () => {
+      if (done) return;
+      const {status, body} = await post(route, Buffer.concat(chunks).toString('utf8'), false, {paths: o.paths, root: o.root, fetch: o.fetch}).catch((e: Error): {status: number; body: unknown} => {
+        console.error(e.message);
+        return {status: 500, body: {errors: ['internal error']}};
+      });
+      finish(status, body);
+    });
+  });
+};
+
 const install = () => {
   const label = 'com.theautomationguy.approve';
   const root = path.join(import.meta.dirname, '..');
@@ -119,33 +198,17 @@ else if (import.meta.main) {
   if (fs.existsSync(envFile)) process.loadEnvFile(envFile);
   const secret = process.env.APPROVAL_SECRET ?? '';
   if (secret.length < 16) {
-    console.error('Set APPROVAL_SECRET (16+ characters) in agent-studio/.env first.');
+    console.error('Set APPROVAL_SECRET (16+ characters) in the repo-root .env first.');
     process.exit(1);
   }
   const port = Number(process.env.APPROVE_PORT ?? 5680);
-  http
-    .createServer((req, res) => {
-      // POST from n8n: /metrics (YouTube statistics rows), /experiment-days (experiment analytics) and /feed ({url}: the Mac fetches that
-      // listed feed; or {url, body}). post() routes them (unknown routes: 404) and checks each before anything is written; a body over 5 MB is refused.
-      const route = (req.url ?? '').split('?')[0];
-      if (req.method === 'POST') {
-        let raw = '';
-        let big = false;
-        req.on('data', (c) => (raw.length + c.length > 5_000_000 ? (big = true) : (raw += c)));
-        req.on('end', async () => {
-          const {status, body} = await post(route, raw, big);
-          console.log(`${new Date().toISOString()} POST ${route} -> ${status}`);
-          res.writeHead(status, {'content-type': 'application/json'});
-          res.end(JSON.stringify(body));
-        });
-        return;
-      }
-      const {status, body} = req.method === 'GET' ? handle(req.url ?? '/', secret) : {status: 405, body: 'GET only'};
-      console.log(`${new Date().toISOString()} ${req.method} ${(req.url ?? '').split('?')[0]} -> ${status}`); // never log the query (it carries the signature)
-      res.writeHead(status, {'content-type': body.startsWith('<!doctype') ? 'text/html; charset=utf-8' : body.startsWith('[') ? 'application/json' : 'text/plain', 'cache-control': 'no-store'});
-      res.end(body);
-    })
-    .listen(port, '127.0.0.1', () => console.log(`approve receiver on http://127.0.0.1:${port} (n8n: http://host.docker.internal:${port}/approve)`));
+  const apiToken = process.env.LOCAL_API_TOKEN ?? '';
+  if (apiToken && apiToken.length < 16) {
+    console.error('LOCAL_API_TOKEN must be 16+ characters (or unset).');
+    process.exit(1);
+  }
+  makeServer(secret, {token: apiToken}).listen(port, '127.0.0.1', () => console.log(`approve receiver on http://127.0.0.1:${port} (n8n: http://host.docker.internal:${port}/approve)`));
+  console.log(apiToken.length >= 16 ? 'helper endpoints: LOCAL_API_TOKEN required (header x-forge-token)' : 'helper endpoints: NO token (set LOCAL_API_TOKEN, 16+ characters, and send it from n8n); Host, Origin and JSON checks still apply');
   // Telegram approvals from the phone (studio/telegram.ts): outbound long-polling only
   const {TELEGRAM_BOT_TOKEN: token, TELEGRAM_CHAT_ID: chatId} = process.env;
   if (token && chatId) poll(telegram(token), {chatId, secret}).catch((e) => console.error(e.message));

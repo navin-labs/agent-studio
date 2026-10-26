@@ -87,7 +87,7 @@ if (import.meta.main) {
   const url = process.env.APPROVAL_WEBHOOK_URL;
   const secret = process.env.APPROVAL_SECRET;
   if (!url || !secret) {
-    console.error('Set APPROVAL_WEBHOOK_URL and APPROVAL_SECRET (16+ characters) in agent-studio/.env first.');
+    console.error('Set APPROVAL_WEBHOOK_URL and APPROVAL_SECRET (16+ characters) in the repo-root .env first.');
     process.exit(1);
   }
   const r = buildPage(channel, week, {url, secret});

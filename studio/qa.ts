@@ -10,7 +10,7 @@ import {createHash} from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {lengthIssue, type Storyboard, validateStoryboard} from '../engine/src/composer/storyboard.ts';
-import {type Probe, probeVideo} from '../engine/scripts/probe.ts';
+import {type Probe, probeOrBroken} from '../engine/scripts/probe.ts';
 import {loadSchema, validate} from '../schemas/validate.ts';
 import {readFingerprints} from './ledger.ts';
 import {checkNovelty, type Fingerprint} from './novelty.ts';
@@ -83,6 +83,7 @@ export const evaluate = (x: QaInputs): QaResult => {
   add('audio', !p ? ['no video file'] : [...(p.audio ? [] : ['the video has no audio stream']), ...(x.channel?.voice && !x.voice ? ['rendered without its voiceover (not a board error): set VOICE=on in engine/.env, then render again'] : [])]);
   add('format', !p ? ['no video file'] : [
     ...(p.container === 'mp4' ? [] : [`container is ${p.container}, needs mp4`]),
+    ...(p.complete === false && p.container === 'mp4' ? ['the mp4 is incomplete (it ends before its last box: a render or copy was cut short)'] : []),
     ...(!x.spec ? [`the style preset has no ${x.variant.platform} spec`] : p.width === x.spec.size.width && p.height === x.spec.size.height ? [] : [`frame is ${p.width}x${p.height}, the ${x.variant.platform} preset needs ${x.spec.size.width}x${x.spec.size.height}`]),
     ...(Math.abs(p.fps - 30) < 0.01 ? [] : [`${p.fps.toFixed(2)} fps, needs 30`]),
   ]);
@@ -223,7 +224,7 @@ export const runQa = async (boardPath: string, opts: {out?: string; date?: strin
       render: readJson(file(out, v, 'render.json')),
       sha256: shas.get(v.platform) ?? null,
       siblings: Object.fromEntries(variants.filter((o) => o.platform !== v.platform).map((o) => [o.platform, readJson(file(out, o, 'manifest.json'))?.video_sha256 ?? shas.get(o.platform)])),
-      probe: fs.existsSync(file(out, v, 'mp4')) ? await probeVideo(file(out, v, 'mp4')) : null,
+      probe: fs.existsSync(file(out, v, 'mp4')) ? await probeOrBroken(file(out, v, 'mp4')) : null,
       textBoxes: readJson(file(out, v, 'text-boxes.json')),
       sheet: fs.existsSync(file(out, v, 'contact.png')),
       voice: manifest?.voice ?? null,

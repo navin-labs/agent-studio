@@ -2,7 +2,7 @@
 
 Why: everything is built and tested; this is the one list for launch day. Do it top to bottom. Nothing publishes until step 6.
 
-`STUDIO` = `~/Dev/projects/agent-studio`. Commands run in `STUDIO` unless noted.
+`STUDIO` = `~/Dev/projects/forge-content-studio` (the clone; older notes say agent-studio, the project's former name). Commands run in `STUDIO` unless noted.
 
 State: in production since Sun 4 Oct 2026. C1 (c1-automation) and C2 (c2-reach) are live, `DISPATCH_LIVE=on`, the three launchd services and the agent's four scheduled tasks run; each channel posts every other day from 4 Oct. C3 is not open. This file stays the checklist for setting up a new install or a new channel; installing from scratch is `docs/INSTALL.md`, daily operation is `docs/OPERATIONS.md`.
 
@@ -58,8 +58,8 @@ Custom thumbnails need each YouTube channel phone-verified at youtube.com/verify
 | Skill name in Forge | File | Schedule in Forge |
 |---|---|---|
 | Weekly Writer | `agents/writer/FORGE_WEEKLY_WRITER.md` | Thursday 12:00 IST, for each live channel and next week (the studio writes the recipes Thursday morning and says so on Telegram) |
-| Queue Publisher | `agents/publisher/FORGE_QUEUE_PUBLISHER.md` (reads the manifests in `queue/c1-automation/instagram/` and every other channel and platform folder) | every hour |
-| Metrics Reporter | `agents/learn/FORGE_METRICS_REPORTER.md` | every day |
+| Queue Publisher (skill id `meta-social-publishing`) | `agents/publisher/FORGE_QUEUE_PUBLISHER.md` (reads the manifests in `queue/c1-automation/instagram/` and every other channel and platform folder) | every hour |
+| Metrics Reporter (skill id `meta-social-analytics`) | `agents/learn/FORGE_METRICS_REPORTER.md` | every day |
 
 The old "Instagram Growth Pipeline" skill (reel-engine) is replaced by these three: remove it from Forge. If an older copy of these skills is installed, install these versions again (the queue layout changed on 2026-10-03).
 

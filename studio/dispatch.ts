@@ -10,7 +10,7 @@ import {createHash, createHmac, timingSafeEqual} from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {loadSchema, validate} from '../schemas/validate.ts';
-import {appendJsonl, currentStatus, findVideo, type LedgerEntry, ledgerFile, lkey, PATHS, type Paths, sha256} from './ledger.ts';
+import {appendLedger, currentStatus, findVideo, type LedgerEntry, lkey, PATHS, type Paths, sha256, withLedgerLock} from './ledger.ts';
 import {ownWebhook, pending, sendable, type Platform, PLATFORMS, queueDir, queueFile, ROUTE, type Variant, youtubeWebhookPath} from './variant.ts';
 import {captionOf, categoryOf, seoCheck, youtubeMeta} from './seo.ts';
 
@@ -162,7 +162,7 @@ export const dispatch = async (pl: Plan, opts: {live: boolean; hold?: boolean; f
   const at = new Date(opts.now ?? Date.now()).toISOString();
   const sent: string[] = [];
   const failed: string[] = [];
-  const write = (row: LedgerEntry) => appendJsonl(ledgerFile(p), [{...row, updated_at: at}]);
+  const write = (row: LedgerEntry) => appendLedger(p, [{...row, updated_at: at}]);
   const keys = [...new Set([...pl.youtube.map((j) => lkey(j.storyboard_id, 'youtube')), ...pl.resume, ...pl.queue.map((q) => lkey(q.storyboard_id, q.platform))])];
   for (const key of keys) {
     let e = currentStatus(p).get(key)!;
@@ -180,7 +180,21 @@ export const dispatch = async (pl: Plan, opts: {live: boolean; hold?: boolean; f
     }
     // the claim: from here on, never a blind retry; it records the slot, so a resolved unknown upload keeps its publish time
     const slot = opts.hold ? undefined : (j ?? q)?.scheduled_for;
-    if (e.status === 'approved') write((e = {...e, status: 'dispatching', ...(slot ? {scheduled_for: slot} : {})}));
+    if (e.status === 'approved') {
+      // compare-and-set under the ledger lock: the claim is made only if the ledger STILL holds this exact approval (the check above
+      // read it before a slow hash; an approval or a rejection may have landed since). Two claimers cannot both win.
+      const was = e;
+      const claimed = withLedgerLock(p, () => {
+        const cur = currentStatus(p).get(key);
+        if (cur?.status !== 'approved' || cur.sha256 !== was.sha256) return false;
+        write((e = {...was, status: 'dispatching', ...(slot ? {scheduled_for: slot} : {})}));
+        return true;
+      });
+      if (!claimed) {
+        failed.push(`${e.platform} ${id}: the ledger changed while it was being claimed; not sent`);
+        continue;
+      }
+    }
     if (j) {
       // the video travels with the job (n8n in Docker cannot read the Mac's files); n8n asks the Mac receiver before uploading
       const form = new FormData();
@@ -220,7 +234,8 @@ export const dispatch = async (pl: Plan, opts: {live: boolean; hold?: boolean; f
 // The next tick marks that variant published once (a YouTube variant once its scheduled publish time has passed). A posted file
 // whose manifest is missing or malformed, whose channel/platform does not match its folder or the ledger, or whose URL is not on
 // that platform, is reported and never trusted.
-export const markPublished = (p: Paths = PATHS, now = Date.now()) => {
+export const markPublished = (p: Paths = PATHS, now = Date.now()) => withLedgerLock(p, () => markPublishedLocked(p, now));
+const markPublishedLocked = (p: Paths, now: number) => {
   const published: string[] = [];
   const problems: string[] = [];
   const rows: LedgerEntry[] = [];
@@ -255,17 +270,18 @@ export const markPublished = (p: Paths = PATHS, now = Date.now()) => {
       rows.push({...e, status: 'published', updated_at: new Date(now).toISOString()});
       published.push(`${e.storyboard_id} youtube`);
     }
-  appendJsonl(ledgerFile(p), rows);
+  appendLedger(p, rows);
   return {published, problems};
 };
 
 // Navin's answer for a stuck video (YouTube result unknown): the video id he found in YouTube Studio, or "none" (not uploaded).
-export const resolve = (id: string, youtubeId: string, p: Paths = PATHS, now = Date.now()) => {
+export const resolve = (id: string, youtubeId: string, p: Paths = PATHS, now = Date.now()) => withLedgerLock(p, () => resolveLocked(id, youtubeId, p, now));
+const resolveLocked = (id: string, youtubeId: string, p: Paths, now: number) => {
   const e = currentStatus(p).get(lkey(id, 'youtube'));
   if (e?.status !== 'dispatching' || youtubeUrl(e)) throw new Error(`${id} is not stuck (status ${e?.status ?? 'unknown'})`);
   const at = new Date(now).toISOString();
-  if (youtubeId === 'none') appendJsonl(ledgerFile(p), [{...e, status: 'approved', updated_at: at}]); // retried by the next run
-  else if (/^[A-Za-z0-9_-]{11}$/.test(youtubeId)) appendJsonl(ledgerFile(p), [{...e, post_urls: [...(e.post_urls ?? []), `https://www.youtube.com/shorts/${youtubeId}`], updated_at: at}]); // the next run finishes the local steps
+  if (youtubeId === 'none') appendLedger(p, [{...e, status: 'approved', updated_at: at}]); // retried by the next run
+  else if (/^[A-Za-z0-9_-]{11}$/.test(youtubeId)) appendLedger(p, [{...e, post_urls: [...(e.post_urls ?? []), `https://www.youtube.com/shorts/${youtubeId}`], updated_at: at}]); // the next run finishes the local steps
   else throw new Error('give the 11-character YouTube video id, or "none"');
 };
 
@@ -291,7 +307,7 @@ if (import.meta.main && process.argv[2] === '--resolve') {
   const envFile = path.join(import.meta.dirname, '..', '.env');
   if (fs.existsSync(envFile)) process.loadEnvFile(envFile);
   const live = process.argv.includes('--live') && process.env.DISPATCH_LIVE === 'on';
-  if (process.argv.includes('--live') && !live) console.log('--live ignored: DISPATCH_LIVE=on is not set in agent-studio/.env (dry run)');
+  if (process.argv.includes('--live') && !live) console.log('--live ignored: DISPATCH_LIVE=on is not set in the repo-root .env (dry run)');
   const pl = plan();
   console.log(`${live ? 'LIVE' : 'DRY RUN'}: ${pl.youtube.length} YouTube, ${pl.queue.length} Forge queue (Instagram, Facebook)`);
   pl.youtube.forEach((j) => console.log(`  youtube   ${j.storyboard_id} at ${j.scheduled_for}`));

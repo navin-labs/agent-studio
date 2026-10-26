@@ -50,7 +50,7 @@ const PROVIDERS = {
   // Wikimedia Commons: archival photos, patent drawings, portraits (CC0 and public domain only, licence read per file)
   wikimedia: async (q) => {
     const u = `https://commons.wikimedia.org/w/api.php?action=query&format=json&generator=search&gsrnamespace=6&gsrlimit=12&gsrsearch=${encodeURIComponent(`${q} filetype:bitmap`)}&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=1600&iiextmetadatafilter=LicenseShortName|Artist`;
-    const pages = Object.values((await (await get(u, {'User-Agent': 'agent-studio/1.0 (asset pipeline)'})).json()).query?.pages ?? {}).sort((a, b) => a.index - b.index);
+    const pages = Object.values((await (await get(u, {'User-Agent': 'forge-content-studio/1.0 (asset pipeline)'})).json()).query?.pages ?? {}).sort((a, b) => a.index - b.index);
     return pages
       .map((p) => p.imageinfo[0])
       .filter((i) => /^(cc0|public domain|pd|pdm)/i.test(i.extmetadata?.LicenseShortName?.value ?? ''))
@@ -125,7 +125,7 @@ export const fetchFootage = async (noun) => {
   const raw = path.join(ROOT, 'test/out/assets', id);
   fs.mkdirSync(dir, {recursive: true});
   fs.mkdirSync(raw, {recursive: true});
-  const ua = {'User-Agent': 'agent-studio/1.0 (asset pipeline)'};
+  const ua = {'User-Agent': 'forge-content-studio/1.0 (asset pipeline)'};
   const q = `https://commons.wikimedia.org/w/api.php?action=query&format=json&generator=search&gsrnamespace=6&gsrlimit=20&gsrsearch=${encodeURIComponent(`${noun} filetype:video`)}&prop=imageinfo&iiprop=url|size|extmetadata&iiurlwidth=640&iiextmetadatafilter=LicenseShortName|Artist`;
   const pages = Object.values((await (await get(q, ua)).json()).query?.pages ?? {}).sort((a, b) => a.index - b.index);
   const cands = pages

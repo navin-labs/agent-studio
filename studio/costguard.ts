@@ -18,6 +18,14 @@ export const LIMITS = {
   MAX_CRITIC_CALLS: 1,
 };
 export type Limits = typeof LIMITS;
+// A ceiling that is NaN, zero, negative or infinite compares false against everything and so is no ceiling at all (a typo in an
+// environment variable did exactly that). Refuse such a guard before any call; and refuse values no film needs.
+export const HARD_MAX = {MAX_RUN_COST_USD: 25, MAX_WALL_CLOCK_MS: 3_600_000, MAX_TOTAL_CALLS_PER_RUN: 50};
+export const assertLimits = (l: Limits) => {
+  for (const [k, v] of Object.entries(l)) if (typeof v !== 'number' || !Number.isFinite(v) || v <= 0) throw new Error(`cost limit ${k} must be a positive number, got ${String(v)}`);
+  for (const [k, max] of Object.entries(HARD_MAX)) if (l[k as keyof Limits] > max) throw new Error(`cost limit ${k} is ${l[k as keyof Limits]}, above the hard maximum ${max}`);
+  if (l.WARN_COST_USD > l.MAX_RUN_COST_USD) throw new Error('the cost warning level is above the cost ceiling');
+};
 
 // (no constructor parameter properties: Node runs this file with type stripping only)
 export class CostLimitExceededError extends Error {
@@ -61,6 +69,7 @@ export type ExecRequest = {prompt: string; model: string; lean?: boolean; system
 export type ExecResult = {text: string; usage: Usage; cost_usd: number | null; isError: boolean};
 export type Exec = (req: ExecRequest) => Promise<ExecResult>;
 
+export const MAX_OUTPUT_CHARS = 2_000_000;
 // The real executor: one headless `claude -p` session, JSON report, aborted by the signal or the timeout.
 export const claudeExec: Exec = (req) =>
   new Promise((resolve, reject) => {
@@ -74,7 +83,13 @@ export const claudeExec: Exec = (req) =>
     if (req.disallowed) args.push('--disallowedTools', req.disallowed);
     const child = spawn('claude', args, {cwd: req.cwd, stdio: ['ignore', 'pipe', 'inherit'], signal: req.signal});
     let out = '';
-    child.stdout.on('data', (d) => (out += d));
+    child.stdout.on('data', (d) => {
+      out += d;
+      if (out.length > MAX_OUTPUT_CHARS) {
+        out = ''; // a runaway session cannot fill memory: stop it; the empty report counts as an error call
+        child.kill('SIGKILL');
+      }
+    });
     const timer = setTimeout(() => child.kill('SIGKILL'), req.timeoutMs);
     child.on('error', (e) => (clearTimeout(timer), reject(e)));
     child.on('close', () => {
@@ -105,7 +120,7 @@ export const parseClaudeJson = (out: string): ExecResult => {
 // cache writes 1.25x and reads 0.1x of input). Better to stop early than late.
 const estimateCost = (u: Usage) => ((u.input_tokens + u.cache_write_tokens * 1.25 + u.cache_read_tokens * 0.1) * 15 + u.output_tokens * 75) / 1e6;
 
-export type CallRecord = {stage: string; model: string; retry: number; input_tokens: number; output_tokens: number; cache_write_tokens: number; cache_read_tokens: number; estimated_cost_usd: number; cost_source: 'cli' | 'estimate'; elapsed_ms: number; status: 'ok' | 'error'; at: string};
+export type CallRecord = {stage: string; model: string; retry: number; input_tokens: number; output_tokens: number; cache_write_tokens: number; cache_read_tokens: number; estimated_cost_usd: number; cost_source: 'cli' | 'estimate' | 'unknown' | 'none' | 'reconciled'; elapsed_ms: number; status: 'ok' | 'error'; at: string};
 export type RunLedger = {run_id: string; board: string; started_at: string; limits: Limits; calls: CallRecord[]; retries: Record<string, number>; critic_calls: number; total_cost_usd: number; status: 'running' | 'done' | 'aborted' | 'human-review'; reason?: string};
 
 export type CallRequest = {stage: string; model: string; prompt: string; lean?: boolean; system?: string; tools?: string; allowed?: string; disallowed?: string; appendSystem?: string; retry?: number; critic?: boolean; gates?: string[]; cwd?: string};
@@ -117,6 +132,7 @@ export class CostGuard {
   private readonly t0: number;
   constructor(dir: string, board: string, opts: {limits?: Partial<Limits>; exec?: Exec; now?: () => number; log?: (s: string) => void} = {}) {
     this.limits = {...LIMITS, ...opts.limits};
+    assertLimits(this.limits);
     this.now = opts.now ?? Date.now;
     this.exec = opts.exec ?? claudeExec;
     this.log = opts.log ?? ((s) => console.error(s));
@@ -164,7 +180,17 @@ export class CostGuard {
     if (this.spent + likely > L.MAX_RUN_COST_USD) fail('MAX_RUN_COST_USD', `a ${stage} call costs about $${likely.toFixed(3)} and the run has spent $${this.spent.toFixed(3)} of $${L.MAX_RUN_COST_USD.toFixed(2)}`);
   }
 
-  async call(req: CallRequest): Promise<ExecResult> {
+  // Calls run strictly one at a time, in the order asked. The ceilings are checked against what earlier calls SPENT, so two calls
+  // started together would both see the same remaining budget and could together overshoot it; a queue makes every check see the
+  // result of the call before it.
+  private queue: Promise<unknown> = Promise.resolve();
+  call(req: CallRequest): Promise<ExecResult> {
+    const run = this.queue.then(() => this.callOnce(req));
+    this.queue = run.catch(() => undefined);
+    return run;
+  }
+
+  private async callOnce(req: CallRequest): Promise<ExecResult> {
     const L = this.limits;
     this.assertRoom(req.stage);
     const retry = req.retry ?? 0;
@@ -181,19 +207,27 @@ export class CostGuard {
     if (tokens > L.MAX_INPUT_TOKENS) throw new PromptTooLargeError(tokens, L.MAX_INPUT_TOKENS, req.stage);
 
     const started = this.now();
+    const budget = Math.max(0.0001, L.MAX_RUN_COST_USD - this.spent); // what this call may spend; also what an unreported call is booked at
     let res: ExecResult;
     try {
       res = await this.exec({
         prompt: req.prompt, model: req.model, lean: req.lean, system: req.system, tools: req.tools, allowed: req.allowed, disallowed: req.disallowed, appendSystem: req.appendSystem, cwd: req.cwd ?? process.cwd(), signal: this.controller.signal,
-        maxBudgetUsd: Math.max(0.0001, L.MAX_RUN_COST_USD - this.spent), // the CLI stops the session itself at the remaining budget
+        maxBudgetUsd: budget, // the CLI stops the session itself at the remaining budget
         timeoutMs: Math.max(1000, L.MAX_WALL_CLOCK_MS - this.elapsed),
       });
     } catch (e) {
-      this.record(req, retry, {input_tokens: 0, output_tokens: 0, cache_write_tokens: 0, cache_read_tokens: 0}, null, this.now() - started, 'error');
+      const never = ['ENOENT', 'EACCES'].includes((e as NodeJS.ErrnoException).code ?? ''); // the CLI could not even start: it cost nothing
+      this.record(req, retry, {input_tokens: 0, output_tokens: 0, cache_write_tokens: 0, cache_read_tokens: 0}, null, this.now() - started, 'error', never ? 'none' : budget);
       if (this.controller.signal.aborted) throw new CostLimitExceededError('ABORTED', 'the run was aborted');
+      if (this.spent >= L.MAX_RUN_COST_USD) {
+        const msg = `a ${req.stage} call failed without reporting its cost and is booked at its $${budget.toFixed(2)} budget; the run's ceiling is $${L.MAX_RUN_COST_USD.toFixed(2)} (${(e as Error).message}). Check the provider's usage page, then reconcile`;
+        this.stop('aborted', msg);
+        throw new CostLimitExceededError('MAX_RUN_COST_USD', msg);
+      }
       throw e;
     }
-    this.record(req, retry, res.usage, res.cost_usd, this.now() - started, res.isError ? 'error' : 'ok');
+    const silent = res.isError && res.cost_usd === null && !(res.usage.input_tokens + res.usage.output_tokens + res.usage.cache_write_tokens + res.usage.cache_read_tokens);
+    this.record(req, retry, res.usage, res.cost_usd, this.now() - started, res.isError ? 'error' : 'ok', silent ? budget : undefined);
     if (req.critic) this.ledger.critic_calls++;
     this.ledger.retries[req.stage] = Math.max(this.ledger.retries[req.stage] ?? 0, retry);
     this.save();
@@ -206,8 +240,14 @@ export class CostGuard {
     return res;
   }
 
-  private record(req: CallRequest, retry: number, u: Usage, cost: number | null, elapsed: number, status: 'ok' | 'error') {
-    this.ledger.calls.push({stage: req.stage, model: req.model, retry, ...u, estimated_cost_usd: Number((cost ?? estimateCost(u)).toFixed(6)), cost_source: cost === null ? 'estimate' : 'cli', elapsed_ms: elapsed, status, at: new Date().toISOString()});
+  // cost_source: cli = the CLI's own figure; estimate = priced from the tokens it reported; none = the call never started (cost really 0);
+  // unknown = the call may have run and nothing was reported (killed, timed out, garbled): booked at the cap it was given, an UPPER bound
+  // by the flag (not a measurement), until someone reads the provider's usage page and runs `reconcile`; reconciled = that figure.
+  private record(req: CallRequest, retry: number, u: Usage, cost: number | null, elapsed: number, status: 'ok' | 'error', unknown?: number | 'none') {
+    const unk = typeof unknown === 'number';
+    const usd = unk ? unknown : unknown === 'none' ? 0 : cost ?? estimateCost(u);
+    const source: CallRecord['cost_source'] = unk ? 'unknown' : unknown === 'none' ? 'none' : cost === null ? 'estimate' : 'cli';
+    this.ledger.calls.push({stage: req.stage, model: req.model, retry, ...u, estimated_cost_usd: Number(usd.toFixed(6)), cost_source: source, elapsed_ms: elapsed, status, at: new Date().toISOString()});
   }
 
   // close the run: done, or the reason it stopped
@@ -233,6 +273,33 @@ export class CostGuard {
     const w = head.map((h, i) => Math.max(h.length, ...rows.map((r) => r[i].length)));
     const line = (r: string[]) => '| ' + r.map((c, i) => c.padEnd(w[i])).join(' | ') + ' |';
     const rule = '|-' + w.map((n) => '-'.repeat(n)).join('-|-') + '-|';
-    return [line(head), rule, ...rows.map(line), this.ledger.reason ? `stopped: ${this.ledger.reason}` : ''].filter(Boolean).join('\n');
+    const unk = this.ledger.calls.filter((c) => c.cost_source === 'unknown').length;
+    return [line(head), rule, ...rows.map(line), unk ? `${unk} call(s) reported no cost and are booked at their budget cap; check the provider's usage page, then: node studio/costguard.ts reconcile ${this.file} <call number> <usd>` : '', this.ledger.reason ? `stopped: ${this.ledger.reason}` : ''].filter(Boolean).join('\n');
+  }
+}
+
+// Replace an unknown call's booked figure with the real one read from the provider's usage page. Only unknown calls can be reconciled.
+export const reconcile = (ledgerFile: string, call: number, usd: number) => {
+  const l = JSON.parse(fs.readFileSync(ledgerFile, 'utf8')) as RunLedger;
+  const c = l.calls[call - 1];
+  if (!c) throw new Error(`no call ${call} in ${path.basename(ledgerFile)} (${l.calls.length} calls)`);
+  if (c.cost_source !== 'unknown') throw new Error(`call ${call} is ${c.cost_source}, not unknown: nothing to reconcile`);
+  if (!Number.isFinite(usd) || usd < 0) throw new Error('the cost must be a number of dollars, 0 or more');
+  c.estimated_cost_usd = Number(usd.toFixed(6));
+  c.cost_source = 'reconciled';
+  l.total_cost_usd = Number(l.calls.reduce((a, x) => a + x.estimated_cost_usd, 0).toFixed(6));
+  const tmp = `${ledgerFile}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(l, null, 2) + '\n');
+  fs.renameSync(tmp, ledgerFile);
+  return l;
+};
+if (import.meta.main && process.argv[2] === 'reconcile') {
+  const [f, n, usd] = process.argv.slice(3);
+  if (!f || !n || usd === undefined) (console.error('usage: node studio/costguard.ts reconcile <run-ledger.json> <call number> <usd>'), process.exit(2));
+  try {
+    console.log(`call ${n} reconciled; run total now $${reconcile(f, Number(n), Number(usd)).total_cost_usd}`);
+  } catch (e) {
+    console.error((e as Error).message);
+    process.exit(1);
   }
 }

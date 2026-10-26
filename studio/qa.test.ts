@@ -105,6 +105,8 @@ assert.deepEqual(failing((x) => (x.probe!.audio = false)), ['audio: the video ha
 assert.match(failing((x) => (x.voice = null)).join('\n'), /^audio: rendered without its voiceover \(not a board error\): set VOICE=on in engine\/.env/m, 'a voiced channel never passes silent (sound effects only)');
 assert.deepEqual(failing((x) => Object.assign(x.probe!, {width: 720, height: 1280, fps: 25})), ['format: frame is 720x1280, the youtube preset needs 1080x1920; 25.00 fps, needs 30']);
 assert.deepEqual(failing((x) => (x.probe = null)), ['audio: no video file', 'format: no video file', 'duration: no video file']);
+assert.deepEqual(failing((x) => Object.assign(x.probe!, {container: 'unreadable', width: 0, height: 0, fps: 0, seconds: 0, audio: false})).filter((e) => e.startsWith('format')), ['format: container is unreadable, needs mp4; frame is 0x0, the youtube preset needs 1080x1920; 0.00 fps, needs 30'], 'a file the parser cannot read fails the format check');
+assert.deepEqual(failing((x) => (x.probe!.complete = false)), ['format: the mp4 is incomplete (it ends before its last box: a render or copy was cut short)']);
 assert.deepEqual(failing((x) => (x.textBoxes = null)), ['safe-zones: no text-boxes.json: the render did not measure text']);
 assert.deepEqual(failing((x) => x.textBoxes!.issues.push({level: 'error', scene: 1, primitive: 'ui-inbox', text: 'BY HAND', problem: 'outside the youtube safe area (x 895..979, y 311..337)'})), [
   'safe-zones: scene 2 (ui-inbox) "BY HAND": outside the youtube safe area (x 895..979, y 311..337)',

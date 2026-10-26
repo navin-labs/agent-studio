@@ -1,6 +1,8 @@
 // Self-test for studio/script.ts: a crafted script passes, a flat one fails with its exact reasons.
 import assert from 'node:assert';
-import {hookType, rehookIssue, scriptErrors, sentences} from './script.ts';
+import fs from 'node:fs';
+import path from 'node:path';
+import {hookType, MAX_AVG_WORDS, MAX_LINE_WORDS, rehookIssue, scriptErrors, sentences} from './script.ts';
 
 const crafted = {
   scenes: [
@@ -50,4 +52,13 @@ assert.ok(!scriptErrors({...noHook, scenes: [noHook.scenes[0], {vo: `${dull} ${d
 assert.deepStrictEqual(sentences('One *two* three. Four five?  Six'), ['One two three.', 'Four five?', 'Six'], 'sentences strip emphasis marks');
 assert.strictEqual(rehookIssue(['Hook here.', 'A fact.', 'Another fact.', 'But look at this.'], [3, 8, 9, 4]), 're-hook: 20.0 s of voice (up to scene 3) with no turn, contrast or re-hook; the limit is 18 s', 'a 20 s run with no re-hook fails');
 assert.strictEqual(rehookIssue(['Hook here.', 'A fact.', 'But look at this.', 'More.'], [3, 8, 9, 4]), null, 'a re-hook resets the clock');
+// The Writer is told the exact readability limits the gate enforces (a Writer that is not told them writes 18-21 word sentences).
+const prompt = fs.readFileSync(path.join(import.meta.dirname, '../agents/writer/FORGE_WEEKLY_WRITER.md'), 'utf8');
+assert.ok(prompt.includes(`**${MAX_LINE_WORDS} words at most**`) && prompt.includes(`**${MAX_AVG_WORDS} words on average**`), 'the Writer prompt states the gate\'s sentence limits');
+// the same content as one long sentence fails; split where the second idea starts, it passes the readability rules
+const joined = {...crafted, scenes: crafted.scenes.map((s, i) => (i === 2 ? {vo: 'Most people would brush them off and forget about the whole thing but George de Mestral put one under a microscope.'} : s))};
+const longErrs = scriptErrors(joined).filter((x) => /^sentence \d+: \d+ words|^readability/.test(x));
+assert.ok(longErrs.some((x) => /sentence \d+: 21 words/.test(x)), `a 21-word sentence is named: ${longErrs.join(' | ')}`);
+assert.deepStrictEqual(scriptErrors(crafted).filter((x) => /^sentence|^readability/.test(x)), [], 'short sentences pass');
+
 console.log(`script ok: a crafted script passes; a flat one fails on ${e.length} exact reasons`);

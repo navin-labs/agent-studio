@@ -1,4 +1,4 @@
-# engine: the agent-studio renderer
+# engine: the FORGE Content Studio renderer
 
 The motion library and renderer inside agent-studio (Remotion 4, React 19, TypeScript). One storyboard JSON in, three finished platform videos out (YouTube, Instagram, Facebook), each checked by QA. How the studio around it works: `../docs/TECH.md`.
 

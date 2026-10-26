@@ -1,4 +1,4 @@
-# TECH: agent-studio
+# TECH: FORGE Content Studio (formerly agent-studio)
 
 Why: code picks the shape, an AI writes the words, a human approves once a week.
 

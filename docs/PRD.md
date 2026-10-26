@@ -1,4 +1,4 @@
-# PRD: agent-studio
+# PRD: FORGE Content Studio (formerly agent-studio)
 
 Why: publish original, sourced, on-brand motion videos on 3 channels every day, for near-zero token cost and 5 minutes of human time a week.
 

@@ -1,4 +1,4 @@
-# n8n workflows for agent-studio
+# n8n workflows for FORGE Content Studio
 
 n8n runs in Docker (http://localhost:5678), so it cannot see this repo. It relays; the Mac decides.
 
@@ -56,3 +56,16 @@ Verified 2026-10-02 from inside the container: Google Trends India -> 20 ideas (
 
 ## Upload contract (youtube-upload*.json)
 The Mac claims a variant (ledger `dispatching`, platform `youtube`) just before it posts the job, so `/dispatch-check` says yes for a fresh claim of that channel (30 minutes); `channel` and `platform=youtube` are required on every ask. Replies the Mac understands: `{uploaded: true, youtube_id}` (done) and `{uploaded: false, reason}` (certainly not uploaded: retried next hour). A workflow error (500) or anything else is "unknown": the Mac never re-sends it and tells Navin on Telegram to check YouTube Studio and run `node studio/dispatch.ts --resolve c1-2026-w41-1 QL_4Qj5fCmo` (or `none` if it is not in YouTube Studio).
+
+## Receiver protection and the optional token
+The Mac receiver (port 5680) always refuses: a Host other than 127.0.0.1, localhost or host.docker.internal; any request with an Origin header; methods other than GET and POST; POSTs that are not `application/json`. The workflows here satisfy all four (`node studio/n8n-compat.test.ts` checks it from the JSON files).
+
+**The helper endpoints are NOT authenticated by default.** `LOCAL_API_TOKEN` is off until you set it, and the receiver prints "NO token" at start while it is off. Turn it on only in this order, because setting it first makes every call below fail with 401 and stops metrics, feeds, packaging checks and the YouTube upload pre-check (an upload whose `/dispatch-check` is refused is not sent):
+
+1. Choose a token of 16+ random characters. Put it in n8n's environment as `FORGE_LOCAL_TOKEN` and set `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` (Code nodes cannot read `$env` otherwise). Restart n8n.
+2. In each Code node that calls the receiver, add one header to the `this.helpers.httpRequest({...})` call: `headers: { 'x-forge-token': $env.FORGE_LOCAL_TOKEN }`. 14 calls in 7 workflows: `feed.json` (/feeds, /feed), `youtube-stats.json` and `youtube-stats-c2.json` (/metrics-due, /metrics, /experiment-days-due, /experiment-days), `youtube-packaging-c1.json` and `-c2.json` (/packaging-check), `youtube-upload.json` and `-c2.json` (/dispatch-check). `approval-webhook.json` stays as it is: `/approve` is signed, not token-protected.
+3. Re-import or save the workflows, then run `node studio/n8n-compat.test.ts --require-token` against the exported JSON in this folder (update the files here too). It must print `14 of 14 send x-forge-token` and exit 0. Until it does, do not go on.
+4. Put `LOCAL_API_TOKEN=<the same value>` in the repo-root `.env` and restart the receiver (`launchctl kickstart -k gui/$(id -u)/com.theautomationguy.approve`). The log must say `helper endpoints: LOCAL_API_TOKEN required`.
+5. Check, from the Mac: `curl -s -o /dev/null -w '%{http_code}' 127.0.0.1:5680/feeds` is `401`; with `-H 'x-forge-token: <token>'` it is `200`; `/health` is `200` either way. Then run each workflow once by hand.
+
+Rollback: remove `LOCAL_API_TOKEN` from `.env` and restart the receiver; the workflows keep sending a header the receiver then ignores. This folder's workflows have NOT been changed by the production-readiness work and the token is OFF; the live n8n instance was not touched.
